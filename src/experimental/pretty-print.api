@@ -1,0 +1,173 @@
+
+#  Expression evaluation
+#####################################################################
+The embedded script must be capable of accessing all of the
+information which the debugger has for a given variable.  This
+should include types, locations, members, dynamic information,
+etc etc.  This could be done in two ways.  In the first, the
+debugger exposes an interface to all of it's internals.  This
+would be a very big and elaborate interface.  The second would
+expose only the expression parser, and relies on the script to
+construct strings whose result is the value they desire.  This
+would act much like what inline assembly does for C/C++.
+
+#  Types and Debugger interface
+#####################################################################
+We define only two new types.  The first is a program value that
+is entirely opaque to the script.  In order to access anything
+useful out of the type it must call a member function that will
+return a type which is native to the scripting language.  The
+second is an evaluation context to be used to modify the context
+under which children of the current object are printed.
+
+#  Matching against types
+#####################################################################
+The user has to be able to specify the types for which their code
+should be called.  This can be implemented in two possible ways.
+In the first, the user provides a pointer to a function that takes
+a string argument and returns a boolean.  It is passed a printout
+of the type and returns true if it will take care of printing. The
+second is to have the user provide a string representation of a type.
+This type is then parsed and checked when printing any type.  The
+advantage of the first is that it gives the user complete control,
+but the disadvantage is that the user probably won't be able to deal
+with derived, typedef'ed, and qualified types intelligently.  As an
+example, usually the user wants "const TYPE" to print the same as
+"TYPE".  To get the best of both worlds we have the user provide a
+string which sets the basic type to match, but the user can also 
+provide a pointer to a function that takes a string returns a
+boolean and acts like a veto to any matched type.  This veto function
+is a member of a optional struct passed to the register function. 
+Other members of this struct control behavior with derived types,
+qualifiers, etc.  As a special case, the user can provide a template
+with the name "_" which matches all of the templated types.  So for
+example, "std::list<_>" will match against all permutations of an
+STL list.
+
+
+#  Program Value (prgval) Member Functions
+#####################################################################
+prgval get_member(string)     # Get member from derived type
+number get_location()         # Fortran doesn't have '&' operator
+number get_float()            # Convert value to float
+string get_string()           # Convert value to string
+number get_boolean()          # Convert value to boolean
+number get_integer()          # Convert value to integer
+
+#  Evaluation Context (evlctx) Member Functions
+#####################################################################
+void set_sigdigs(number)      # Set number of significant digits
+void set_nrepeat(number)      # Set threshold for using repeat printing
+void set_use_7bit(number)     # Set true to use octal for 8-bit chars
+void set_format(string)       # Set format string (as in "/x" or "/d")
+
+void get_sigdigs(number)      # Obvious counterparts to above functions
+void get_nrepeat(number)      #
+void get_use_7bit(number)     #
+void get_format(string)       #
+
+void print_value(pgrval)      # Invoke print function for black box type
+void print_type(pgrval)       # Print the type of a black box
+
+void print_char(char)         # Print to the output stream, makes use
+void print_float(number)      # of context parameters for formatting
+void print_double(number)
+void print_boolean(number)
+void print_integer(number)
+
+# args is table of prgvals
+prgval eval(string, args)     # Evaluate first argument and return result
+string show(string, args)     # Show expanded string (just for debugging)
+
+#  Matching Criteria (criteria) Member Functions
+#####################################################################
+void set_veto(function)       # Set pointer to veto function
+void set_propagate(bool)      # Allow derived types (default: off)
+void set_qualifiers(bool)     # Filter off qualifiers (default: on)
+void set_typedefs(bool)       # Allow typedef'ed objects (default: on)
+
+#  Global function to register printing routine
+#####################################################################
+void register(function string, string, criteria)
+    # first argument is a pointer to print function
+    # second argument is string of type to match
+    # third argument is languages to allow
+    # fourth argument is a criteria object (optional)
+    #
+    # Note: expressions will be evaluated in
+    # the language of the current context so
+    # long as it matches one of those provided
+
+
+#####################################################################
+#  Example in which a typedef'ed long holds the value of a pointer  #
+#  to a structure which is itself a union of objects.  Of course,   #
+#  none of this isn't implemented and I don't know any lua so take  #
+#  it for what it's worth ;)                                        #
+#####################################################################
+
+/*
+enum {
+  VALUE_INTEGER,
+  VALUE_FLOATING,
+  VALUE_RECURSIVE
+};
+
+struct value_st {
+  int type;
+  union {
+     double  a;
+     long    b;
+     value   c;
+  };
+};
+
+typedef value long;
+
+We want something like the following output:
+ (value*)0xffffaslk : 1.000000000
+ (value*)0xffffaslk : 10
+ (value*)0xffffaslk : "hello, there"
+
+*/
+
+function matches(ctx, tp, name)
+   local args, vl
+
+   args[0] = tp
+   vl = ctx.eval("$1 == "..name, args)
+   return vl.get_boolean()
+end
+
+function print_value(ctx, obj)
+   local args, st, tp, vl
+
+   store_ctx = ctx
+      vl = obj.get_integer()
+      ctx.print_string("(value*) ")
+      ctx.set_format("x")
+      ctx.print_integer(vl)
+      ctx.print_string(" : ")
+   ctx = store_ctx
+
+   args[0] = obj
+   st = ctx.eval("*(struct value_st*)$1", args)
+   tp = st.get_member("type")
+ 
+   if matches(ctx, tp, "VALUE_INTEGER") then
+      vl = st.get_member("a")
+      vl = vl.get_integer()
+      ctx.print_integer(vl)
+   elif matches(ctx, tp, "VALUE_FLOATING") then
+      vl = st.get_member("b")
+      vl = vl.get_float()
+      ctx.print_float()
+   elif matches(ctx, tp, "VALUE_RECURSIVE") then
+      vl = st.get_member("c")
+      print_value(ctx, vl)
+   end 
+
+end
+
+register(print_value, "value", "c,c++")
+

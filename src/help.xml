@@ -1,0 +1,1622 @@
+<!--
+Copyright (c) 2004-2005 PathScale, Inc.  All rights reserved.
+Unpublished - rights reserved under the copyright laws of the United
+States. USE OF A COPYRIGHT NOTICE DOES NOT IMPLY PUBLICATION OR
+DISCLOSURE. THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE
+SECRETS OF PATHSCALE, INC. USE, DISCLOSURE, OR REPRODUCTION IS
+PROHIBITED WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF PATHSCALE,
+INC.
+
+U.S. Government Restricted Rights:
+The Software is a "commercial item," as that term is defined at 48
+C.F.R. 2.101 (OCT 1995), consisting of "commercial computer software"
+and "commercial computer software documentation," as such terms are used
+in 48 C.F.R. 12.212 (SEPT 1995).  Consistent with 48 C.F.R. 12.212 and
+48 C.F.R. 227-7202-1 through 227-7202-4 (JUNE 1995), all U.S. Government
+End Users acquire the Software with only those rights set forth in the
+accompanying license agreement. PathScale, Inc. 477 N. Mathilda Ave;
+Sunnyvale, CA 94085.
+/-->
+
+<mainhelp>
+This is the Help system for the PathScale Debugger (pathdb).  Type 'help' followed by a topic or
+command name. Help is available for the following topics:
+.list
+.le; Breakpoints - information on breakpoints
+.le; Running - how to run the program
+.le; Locations - how to specify locations used by some commands.
+.le; Commands - information on all the commands available
+.le; Formats - formats for the print function
+.le; Expressions - expression support
+.le; Parameters - debugger parameters
+.elist 
+.p
+Note that the first letter is uppercase, to distinguish the topic from a command of the
+same name.
+</mainhelp>
+
+<topic name="Breakpoints" summary="Information on breakpoints">
+Breakpoints are special instructions inserted into the program by the debugger
+that make the program stop when executed.  A breakpoint is inserted at
+a particular address.  When the program hits a breakpoint, the debugger gains control
+of the program and typically returns to the command prompt, allowing the user
+to issue commands to control the program.
+.p
+Breakpoints are usually set by use of the 'break' command, but other commands exist to set
+different types of breakpoints.  The following commands are available for setting and manipulating
+breakpoints:
+.list
+.le; break - set a software breakpoint
+.le; hbreak - set a hardware breakpoint
+.le; tbreak - set a temporary breakpoint
+.le; thbreak - set a temporary hardware breakpoint
+.le; watch - set a watchpoint, watching for a change in an expression's value
+.le; awatch - set a watchpoint, watching for access to an address
+.le; rwatch - set a watchpoint, watching the program reading an address
+.le; catch - set a catchpoint
+.le; commands - set the commands for a breakpoint
+.le; condition - set the condition for a breakpoint
+.le; ignore - set the ignore count for a breakpoint
+.le; delete - delete breakpoints based on breakpoint number
+.le; clear - delete breakpoints based on location
+.le; disable - disable breakpoints
+.le; enable - enable breakpoints
+.le; info breakpoints - get information on breakpoints
+.elist 
+.p
+Breakpoints, watchpoints, and catchpoints can all be conditional and can execute a set of commands
+when triggered.  
+</topic>
+
+<topic name="Running" summary="Information on running programs">
+The debugger works by attaching itself
+to a process containing the program being debugged.  When attached, the debugger lets the user
+control the program by issuing commands.  The following commands are available for controlling
+the program:
+.list
+.le; run - start the program running (or restart it from the beginning)
+.le; rerun - step some number of commands backwards in the program by rerunning and replaying commands
+.le; kill - kill the program
+.le; step - step the program by a number of lines, stepping into functions
+.le; next - step the program by a number of lines, stepping over function calls
+.le; continue - continue execution of the program
+.elist 
+</topic>
+
+<topic name="Locations" summary="Information on specifying locations">
+Locations can be specified as follows:
+.list
+.le; An address, specified by a '*' followed by an expression
+.le; A function name, optionally enclosed in quotes
+.le; A filename followed by a colon, then a line number of function name
+.le; A number representing a line number in the current file
+.elist  
+In addition, some commands (like 'list') accept a '+' or '-' sign followed by a number.  This
+means + or - a number of lines.
+
+</topic>
+
+<topic name="Commands" summary="All available commands">
+The following commands are available.  Type 'help' followed by the command name for
+information on that command.
+.p
+</topic>
+
+
+<topic name="Formats" summary="Information on specifying formats">
+Certain commands ('print', 'output', 'call', 'display' and 'x') can take a format specifier
+as their first argument.  If this is present, it must be prefixed by a '/' character.
+.p
+The syntax of the format specifier is:
+.pre
+
+/ [count] [code] [size] (no spaces are allowed)
+
+.epre
+The 'count' specifier is a decimal number specifying the number of elements to which
+this format applies.  The 'code' specifies the output format for the elements.  The 'size'
+specifies the size of each element.
+.p
+The 'code' is specified by a single lowercase letter.  The allowed codes are:
+.list
+.le; 'o' - octal 
+.le; 'x' - hexadecimal
+.le; 'd' - decimal
+.le; 'u' - unsigned decimal
+.le; 't' - binary
+.le; 'f' - floating point
+.le; 'a' - address
+.le; 'c' - character
+.le; 's' - string
+.le; 'i' - instruction disassembly
+.elist  
+.p
+The size is also specified by a single lowercase letter:
+.list
+.le; 'b' - byte (8 bits)
+.le; 'h' - half word (16 bits)
+.le; 'w' - word (32 bits)
+.le; 'g' - giant word (64 bits)
+.elist  
+
+</topic>
+
+<topic name="Expressions" summary="Information on expression support">
+The PathScale debugger has extensive support for expressions in both C (and C++) and
+Fortran 90 languages.  The expression parser is context sensitive and thus depends on 
+which language the current function is written in.
+.p
+In C/C++ mode, the following expression operators are available (listed in priority order):
+.pre
+
+                ::
+   () [:] ++ -- . -&gt; (postfix operators)
+- + * & ! ~ ++ -- sizeof  cast  (unary operators)
+                * / %
+                 + -
+               &lt;&lt; &gt;&gt;
+               &lt; &lt= &gt; &gt;=
+                == !=
+                  &
+                  ^
+                  |
+                 && 
+                 ||
+                 ?:
+ = += -= *= /= %= &= |= ^= &lt;&lt;= &gt;&gt;=
+                  ,
+
+.epre
+The highest priority is the 'primary' expression which consists of:
+.list
+.le; (expression)
+.le; identifier [@ line-number]
+.le; number (integer or floating point)
+.le; "string" or 'string'
+.le; 'character'
+.le; $regname or $debug_var
+.le; {vector literal, ...}
+.le; type specification
+.elist
+.p
+The syntax 'identifier @ line-number' allows a way to distinguish among variables with the
+same name in nested lexical scopes.  All identifiers are case-sensitive.
+.p
+Numbers are in the standard C syntax (prefix 0 for octal, 0x for hex).  No suffixes
+are supported at present.
+.p
+The postfix '()' operator allows functions to be called in the program being debugged.
+The array subscripting operator '[]' allows a range to be specified using a ':' to
+separate the lower and upper bounds of the range (e.g. print foo[3:5])
+.p
+In Fortran mode, the expression operators are (in order of priority):
+.pre
+
+                    % (member selector)
+                    () (array, function call or intrinsic)
+                    cast
+                    **
+                    * /
+                   + - (unary)
+                   + - (binary)
+                    //
+          .eq. .ne. .lt. .le. .gt. .ge.
+                   .not.
+                   .and.
+                    .or.
+                 .negv. .eqv.
+    = += -= *= /= %= &= |= ^= &lt;&lt;= &gt;&gt;=
+                     ,
+
+.epre
+Note that some of the operators available in Fortran mode are strictly not Fortran
+operators, but are useful for debugger functionality.
+.p
+The highest priority is the 'primary expression', which is one of:
+.list
+.le; (expression)
+.le; intrinsic
+.le; identifier [@ line-number]
+.le; $regname
+.le; $debug_var
+.le; number (in Fortran syntax)
+.le; 'string' or "string"
+.le; 'character'
+.le; .true. or .false.
+.le; {vector literal, ...}
+.elist
+.p
+Numbers are in both C and Fortran syntax, so both 0x and 'Z can be used to specify a
+hex number.  All identifiers are case-blind.
+.p
+The instrinsics supported are:
+.list
+.le; KIND()
+.le; LOC()
+.le; ALLOCATED()
+.le; ASSOCIATED()
+.le; UBOUND()
+.le; LBOUND()
+.le; LEN()
+.le; SIZE()
+.le; ADDR()
+.elist
+.p
+Both C/C++ and Fortran expressions support type casts.  The syntax of the type is
+language dependent.  The following are examples of type casts in C and Fortran:
+.pre
+
+
+print (const int *)foo                   - C
+print (integer(kind=8), pointer)bar      - Fortran
+
+.epre
+
+</topic>
+
+<topic name="Parameters" summary="Information on debugger parameters">
+Parameters are variables that control the behavior of the debugger.  They are set using the
+'set' command and shown using the 'show' command.  Here are the default values of the
+supported parameters.  
+.p
+.pre
+
+args:  Argument list to give to program is "".
+can-use-hw-watchpoints:  Ability to use hardware watchpoints is 1.
+confirm:  Confirmation of dangerous commands is on.
+endian:  The target endianness is "auto" (currently little endian).
+follow-fork-mode:  What to do with fork is "parent".
+frame-debug:  Debug stack frame debugger code is off.
+height:  Height of the window is 42.
+language:  The current language is "auto" (currently c).
+listsize:  Number of lines to list is 10.
+multi-process:  Handle multiple processes is off.
+pagination:  Whether to stop at end of page is on.
+print address:  Printing of addresses is on.
+print array:  Pretty printing of arrays is on.
+print elements:  Limit on string chars or array elements to print is 200.
+print null-stop:  Printing of char arrays to stop at first null char is off.
+print object:  Printing of dynamic object types is on.
+print pretty:  Pretty printing of structures is on.
+print repeats:  Threshold for repeated print elements is 10.
+print sevenbit-strings:  Printing of 8-bit characters in strings as \nnn is on.
+print sigdigits:  Number of significant digits for floating point values is 10.
+print simplify-template:  Simplification of templates in printing is on.
+print static-members:  Printing of C++ static members is on.
+print std-list:  Printing of std::list is on.
+print std-map:  Printing of std::map is on.
+print std-string:  Printing of std::string is on.
+print std-vector:  Printing of std::vector is on.
+print union:  Printing of union members is on.
+prompt:  The prompt is "pathdb> ".
+shell-mode:  Unknown commands invoked as shell command is on.
+stop-on-solib-events:  Stopping for shared library events is 0.
+thread-debug:  Debug thread debugger code is off.
+width:  Width of the window is 124.
+
+.epre
+If the 'set' command is used to set the value of an unknown parameter, it will
+try to set the value of a variable in the program.
+.p
+Examples of setting parameter values:
+.pre
+
+set elements 300
+set confirm off
+set pretty
+set prompt (pathdb) 
+
+.epre
+Most parameters are similar to the parameter of the same name in GDB.  A few of the
+new ones are:
+.list
+.le; follow-fork-mode - can take additional value of "both", causing the debugger to follow both parent and child
+.le; multi-process - when on, the debugger will track multiple processes
+.le; frame-debug - when on, print lots of internal debug information for stack frames
+.le; print simplify-template - when on, standard templates are simplified for ease of reading
+.le; print std-list - when on, the contents std::list objects are printed
+.le; print std-vector - when on, the contents std::vector objects are printed
+.le; print std-map - when on, the contents std::map objects are printed
+.le; print std-string - when on, the contents std::string objects are printed
+.le; shell-mode - when on, all unknown commands are passed directly to the shell
+.le; thread-debug - when on, print internal debugger debug information about threads
+.elist
+</topic>
+
+<command name="advance" args="location">
+    <purpose>
+        Continue execution until the specified location is reached.
+    </purpose>
+    <help>
+    </help>
+</command>
+
+<command name="alias" args="[name [value]]">
+    <purpose>
+        With no args, show all aliases.  With one arg, show the named
+        alias.  With two args, set the named alias to the named value.
+    </purpose>
+    <help>
+        This command lets you define aliases for other commands.  To list the defined aliases, omit the arguments. 
+To show the definition of a defined alias, give its name as the only argument.  To define a new alias, provide the
+name of the alias as the first argument and its definition as the second.
+    </help>
+    <seealso commands="define,unalias"/>
+</command>
+
+<command name="attach" args="pid">
+    <purpose>   
+        Attach to a running process.
+    </purpose>
+    <help>
+        Attach the debugger to a running process.  Give the process id as the argument.  The process must
+be owned by the current user and be running.  The debugger attaches to the process and stops it running,
+thus allowing it to be debugged.  To detach from the process and let it continue, use the detach command
+or quit the debugger.
+    </help>
+    <seealso commands="detach"/>
+</command>
+
+<command name="backtrace" args="[levels]">
+    <purpose>
+        Show the stack backtrace for the specified number of levels (Default: all levels).
+    </purpose>
+    <help>
+        Print the functions through which the program has progressed to reach the current point.  Each
+function is known as a 'frame'.  For each frame (starting at main), the debugger prints the value of
+the program counter, the name of the function (if known), the function arguments and their values,
+and finally the source file and line number (if known).  The topmost frame is printed first and is numbered #0.  
+.p
+The following is an example of a backtrace command:
+.pre
+
+pathdb> backtrace
+=>#0  AN.in.EXP1 (t=1, x=1, n=1) at /home/dallison/bk/pathdb/src/exp1.f:27
+  #1  0x0000000000400c04 in MAIN__ () at /home/dallison/bk/pathdb/src/exp1.f:10
+  #2  0x00000000004010cc in __f90_main ()
+  #3  0x00000000004010a4 in main ()
+
+.epre
+The current frame is marked with '=&gt;'.  You can use the 'up' and 'down' commands to change
+the current frame.
+
+    </help>
+    <seealso commands="up,down,frame"/>
+</command>
+
+<command name="break" args="location">
+    <purpose>
+        Set a breakpoint at the specified location.
+    </purpose>
+    <help>
+        Set a breakpoint at a location.  The location is specified by:
+.list
+.le; A * followed by an address
+.le; A line number in the current file
+.le; A filename and line number, specified by filename:lineno
+.le; A function name
+.elist 
+.p
+The result will be a breakpoint inserted at the given address in the program.  If the address
+cannot be determined, the option to create a 'pending breakpoint' will be given.  The debugger will
+try to resolve pending breakpoints to addresses whenever a shared library is loaded.
+.p
+If the function name given to the command is ambiguous, a menu of alternative functions will be
+presented.  This is particularly useful for C++ member functions.  For example:
+.pre
+
+pathdb> b evaluate
+Choose one of the following functions:
+0.  cancel
+1.  CallExpression::evaluate
+2.  ArrayExpression::evaluate
+a.  all
+
+.epre
+.p
+The command may be followed by the following clauses:
+.list
+.le; if &lt;expression&gt; - set the condition on the breakpoint (see the 'condition' command)
+.le; thread &lt;thread-num&gt; - only activate breakpoint for the given thread number
+.elist 
+
+    </help>
+    <seealso commands="watch,hbreak,tbreak,catch,rwatch,awatch,commands,condition"/>
+</command>
+
+<command name="call" args="expression">
+    <purpose>
+        Call a function in the program being debugged.  Record the value and print it if the type is
+        not void.
+    </purpose>
+    <help>
+Cause the program to execute the given expression.  Typically, the expression will be a function
+call.  The program being debugged executes the expression and if the result is non-void, the
+debugger prints the result and inserts it into the value history.
+.p
+The number of arguments passed to the function must match those defined for the function.  If the
+function being called is one of a set of C++ overloads, the types of the arguments will be used
+to determine which overload to call.
+    </help>
+    <seealso commands="print,output"/>
+</command>
+
+<command name="catch" args="">
+    <purpose>
+        Show the expressions that can be caught in the current function.
+    </purpose>
+    <help>
+        Insert a catchpoint into the program being debugged.  A catchpoint is a special breakpoint
+that is set to trigger on certain events.
+    </help>
+
+    <command name="catch" args="">
+        <purpose>
+             Catch C++ exception catches.
+        </purpose>
+        <help>
+             Create a catchpoint that will be activate when a C++ exception is caught.
+        </help>
+    </command>
+
+    <command name="exec" args="">
+        <purpose>
+        Catch calls to exec system call.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="exit" args="">
+        <purpose>
+        Catch calls to exit.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="fork" args="">
+        <purpose>
+        Catch a call to fork.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="load" args="">
+        <purpose>
+        Catch loads of shared libraries.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="print" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="start" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="signal" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="stop" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="thread_exit" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="thread_join" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="thread_start" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="throw" args="">
+        <purpose>
+        Catch C++ exception throws.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="unload" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="vfork" args="">
+        <purpose>
+        Not implemented.
+        </purpose>
+        <help>
+        </help>
+     </command>
+</command>
+
+<command name="cd" args="[dir]">
+    <purpose>
+        Change the current working directory to that specified.  No arg means to change to the home directory.
+    </purpose>
+    <help>
+        The current directory is changed for the debugger to that given.  Tilde expansions are
+        performed.
+    </help>
+    <seealso commands="pwd"/>
+</command>
+
+<command name="clear" args="[location]">
+    <purpose>
+        Clear breakpoints at the specified location (line or address). If no location is specified, it clears the breakpoint at the current locations.
+    </purpose>
+    <help>
+        Clear any breakpoints that are set at the specified location.  The location may be specified by:
+.list
+.le; An empty argument list, meaning the current location
+.le; A * followed by an address
+.le; A line number
+.le; A file name and line number, specified by filename:lineno
+.le; A function name
+.elist 
+.p
+Like the 'break' command, a menu of functions will be presented if the function name is ambiguous.
+    </help>
+    <seealso commands="delete,break"/>
+</command>
+
+<command name="commands" args="[breakpoint-number]">
+    <purpose>
+        Specify a set of commands to be executed when the breakpoint is activated. If no breakpoint is specified, the last one set is targeted. 
+    </purpose>
+    <help>
+        This command allows a set of commands to be attached to a breakpoint.  If the breakpoint
+is activated, the set of commands will be executed, in sequence.  If the first command is 'silent'
+then the breakpoint will not print its information when activated.
+.p
+The commands are entered, one line at a time, ending with the word 'end' on a line by itself.  If the
+argument list to the command is empty, the last breakpoint set will be used.
+    </help>
+    <seealso commands="break,condition,ignore"/>
+</command>
+
+<command name="condition" args="breakpoint-number [condition]">
+    <purpose>
+        Set or clear the condition on the specified breakpoint.
+    </purpose>
+    <help>
+        Set the conditions for the activation of the breakpoint.  The condition is an expression
+in the syntax of the current language that is evaluated in the context of the breakpoint.  If the
+expression evaluates to a non-zero value, then the breakpoint is activated when hit.
+.p
+For example:
+.pre
+
+pathdb> condition 12 i &lt; 4 || is_valid(j)
+
+.epre
+    </help>
+    <seealso commands="break,commands,ignore"/>
+</command>
+
+<command name="continue" args="[signal-number]">
+    <purpose>
+        Continue execution of the program being debugged. If a signal number is specified, continue executing by sending specified signal.
+    </purpose>
+    <help>
+        This command causes the program being debugged to continue execution.  If an argument is
+passed, it is a signal number that is sent to the program, otherwise no signal is sent.  The program
+will continue execution until either stopped by a breakpoint, interrupted by the user, or it completes.
+    </help>
+    <seealso commands="step,next,run"/>
+</command>
+
+<command name="define" args="">
+    <purpose>
+        Define a new command as a sequence of existing commands.
+    </purpose>
+    <help>
+        This command allows a new command to be defined.  Unlike the 'alias' command, this
+new command can contain multiple commands and arguments.  The arguments are specified by
+use of the special token $arg followed by a number.  There can be up to 10 arguments passed and
+are named $arg0 to $arg9.
+.p
+The command contents are entered, one line at a time, terminating with 'end' by itself.
+    </help>
+    <seealso commands="alias"/>
+</command>
+
+<command name="delete" args="[breakpoint-number ...]">
+    <purpose>
+       Delete breakpoints, watchpoints, or displays.
+    </purpose>
+    <help>
+        The 'delete' command is usually used to delete breakpoints, but it can also be used
+to delete other things.  If it is used without an argument, it means 'breakpoints'
+    </help>
+
+    <command name="breakpoints">
+        <purpose>
+           Delete all breakpoints
+        </purpose>
+        <help>
+           Delete all the breakpoints from the program.
+        </help>
+    </command>
+</command>
+
+<command name="detach" args="">
+    <purpose>
+        Detach from a running process that is currently being controlled by the debugger.
+    </purpose>
+    <help>
+    </help>
+    <seealso commands="attach,file"/>
+</command>
+
+<command name="dir" args="[directory]">
+    <purpose>
+        Set the search directory for source file searches.
+    </purpose>
+    <help>
+        This command allows a directory to be added to the list of those searched for source files.  Modern
+compilers try to be as helpful as possible by inserting the names of directories into the debug output, but
+sometimes this is not sufficient to allow the debugger to find the file.  
+.p
+Without an argument, the 'dir' command sets the directory search path to the default.
+    </help>
+</command>
+
+<command name="disable" args="breakpoint-number ...">
+    <purpose>
+        Disable the numbered breakpoints.
+    </purpose>
+    <help>
+    </help>
+</command>
+
+<command name="disassemble" args="[start [end]]">
+    <purpose>
+        Disassemble the object code in the specified address range. If no start or stop addres is specified, the current function is disassembled.
+    </purpose>
+    <help>
+The disassemble command shows an assembly language listing around the specified address.  The 
+command can take 0, 1, or 2 arguments.  When no arguments are supplied, the previous
+address disassembled, or the current address is used.  With 1 argument, the function containing
+the address is disassembled.  With 2 arguments, the code between the two given addresses
+is shown.
+.p
+For example, the following shows a partial disassembly listing of a function called 'print':
+.pre
+
+
+pathdb> disass
+0x40054c &lt;print>:       55                      push   %rbp
+0x40054d &lt;print+1>:     48 89 e5                mov    %rsp, %rbp
+0x400550 &lt;print+4>:     48 83 c4 e0             add    0xffffffffffffffe0, %rsp
+0x400554 &lt;print+8>:     89 7d f0                mov    %rdi, -16(%rbp) &lt;stream>
+0x400557 &lt;print+11>:    48 89 75 f8             mov    %rsi, -8(%rbp) &lt;string>
+0x40055b &lt;print+15>: *  be 00 00 00 00          mov    0x0, %rsi
+0x400560 &lt;print+20>:    89 75 e4                mov    %rsi, -28(%rbp) &lt;i>
+0x400563 &lt;print+23>:    48 63 7d e4             arpl   %di, -28(%rbp) &lt;i>
+
+.epre
+The '*' shows the current value of the program counter 'PC'.  The number on the left
+is the address, followed by the function name and offset.  Then follows the actual
+instructions in hex, then in assembly language.  The symbols in angle brackets after the
+assembly are the local variables that are referenced by the instruction.
+
+.elist 
+
+    </help>
+    <seealso commands="x"/>
+</command>
+
+<command name="display" args="expression">
+    <purpose>
+        Print the value of the expression every time the debugger stops the program being debugged.
+    </purpose>
+    <help>
+This command is very like the 'print' command, except it records the command in a special
+list that causes it to be executed every time the program stops.  You would use this
+command to watch the values of variables as you step through a program.
+.p
+The expression to be printed is evaluated in the context in which the 'display' command
+was issued and can therefore refer to local variables.  The display is disabled when
+the local variables go out of scope.
+    </help>
+    <seealso commands="print,undisplay"/>
+</command>
+
+<command name="down" args="[levels]">
+    <purpose>
+        Move the current stack frame down the stack by the specified number of levels. If the number of levels is unspecified, the stack frame is moved down one level. 
+    </purpose>
+    <help>
+This moves the 'current frame' down the stack.  Moving down the stack means decreasing the
+frame number towards 0, or moving to the called functions.  You cannot move beyond the
+bottom of the stack (frame #0).  Moving among the stack frames allows you to examine the
+local variables and registers in all the functions on the stack.
+    </help>
+    <seealso commands="backtrace,up,frame"/>
+</command>
+
+<command name="enable" args="breakpoint-number ...">
+    <purpose>
+        Enable or set the disposition on a set of breakpoints.
+    </purpose>
+    <help>
+    </help>
+
+    <command name="delete">
+        <purpose>
+            Set the disposition so that the breakpoints will be deleted when hit.
+        </purpose>
+        <help>
+        </help>
+    </command>
+    <command name="display">
+        <purpose>
+            Enable the named displays.
+        </purpose>
+        <help>
+        </help>
+    </command>
+    <command name="once">
+        <purpose>
+           Set the disposition so that the breakpoints will be disabled when hit.
+        </purpose>
+        <help>
+        </help>
+    </command>
+</command>
+
+<command name="env" args="">
+    <purpose>
+       Show the values of all the environment variables.
+    </purpose>
+    <help>
+This command prints the values of all the current environment variables.
+    </help>
+</command>
+
+<command name="file" args="[file]">
+    <purpose>
+        Change the file being debugged. If no file is specified, the current file is unloaded.
+    </purpose>
+    <help>
+This command makes the debugger change the executable file being debugged to that given.  If a
+file is currently being debugged, it can either be forgotten, or the new file added to the list
+of files.  In either case, the new file becomes current.  
+    </help>
+</command>
+
+<command name="finish" args="">
+    <purpose>
+        Continue execution until the current function returns.
+    </purpose>
+    <help>
+Continue execution of the program until the current function returns to its caller.  In addition,
+the value returned by the function (if it is not void) will be printed and saved to the value
+history. 
+    </help>
+    <seealso commands="run,return,continue"/>
+</command>
+
+<command name="frame" args="[frame-number]">
+    <purpose>
+        Select the specified frame number or show the current frame. If no frame is specified, information about the current frame is printed. 
+    </purpose>
+    <help>
+Set the 'current frame' to that given by the 'frame number'.  If no argument is given, the
+current frame is printed to the screen.  This is similar to the 'up' and 'down' commands
+except it moves directly to the frame.
+    </help>
+    <seealso commands="up,down,backtrace"/>
+</command>
+
+<command name="handle" args="<signal|all> [no]pass|[no]stop|[no]print|[no]ignore...">
+    <purpose>
+        Specify how signals are to be handled when raised by the program being debugged. If the signal-number is 'all', then all signals are handled in the specified manner. 
+    </purpose>
+    <help>
+When signals are received by the program being debugged, they are passed up to the debugger.
+The debugger needs to be told what to do with them.  For each signal, the choice is:
+.list
+.le; Print the reception of the signal to the screen ('print' option)
+.le; Pass the signal back to the program being debugged ('pass' option)
+.le; Stop the debugger ('stop' option)
+.elist 
+A signal has a name (see /usr/include/bits/signum.h).  This name should be used
+to identify which signal the command will apply to.  You can also use a signal
+number or the text 'all' (no quotes) to specify all signals.  You can then specify
+what to do with the signal using the options.  More than one option can
+be used on the same command.
+    </help>
+</command>
+
+<command name="hbreak" args="location">
+    <purpose>
+        Set a hardware-assisted breakpoint at the specified location. If no location is given, the current location is used. 
+    </purpose>
+    <help>
+This command is very similar to the 'break' command but it creates a hardware-assisted
+breakpoint (using the debug registers of the processor) instead of a software breakpoint.
+There is a limited number of debug registers available (four on current architectures), so
+this command should be used sparingly.
+    </help>
+    <seealso commands="break"/>
+</command>
+
+<command name="history" args="">
+    <purpose>
+        Show all the commands typed by the user.
+    </purpose>
+    <help>
+Print a list of all the commands typed by the user.  This is not just for the
+current session, but since the debugger was first run.  The commands are saved
+as they are typed in the file $HOME/.pathdbhistory.  
+    </help>
+</command>
+
+<command name="if" args="expression">
+    <purpose>
+        Execute a sequence of commands if the expression evaluates to non-zero.
+    </purpose>
+    <help>
+        The expression must be on the same line as the 'if' command.
+        The commands to execute are entered, one per line, terminated
+        by 'end' on its own.  The 'else' command allows the else limb
+        of the 'if' to be specified.  The 'if' limb is executed only
+        if the expression evaluates to non-zero, otherwise the 'else'
+        limb (if it exists) is executed.  </help>
+    <seealso commands="while"/>
+</command>
+
+<command name="ignore" args="breakpoint-number n">
+    <purpose>
+        Set the ignore-count for the specified breakpoint. If no breakpoint is specified, the last breakpoint set is used. 
+    </purpose>
+    <help>
+When a breakpoint it hit by the program, a counter is incremented keeping track of the
+number of times it has been hit.  This command allows the user to specify that the
+first 'n' times the breakpoint is hit, the breakpoint should be ignored and have no
+affect on the program.  The condition expression and commands are not executed if the
+breakpoint is ignored.
+    </help>
+    <seealso commands="break,condition,commands"/>
+</command>
+
+<command name="info" args="name">
+    <purpose>
+        Provide information on the named entity.
+    </purpose>
+    <help>
+On its own, this command prints information about all its subcommands. 
+    </help>
+    <command name="address" args="symbol">
+        <purpose>
+            Show where the specified symbol is stored.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="all-registers" args="">
+        <purpose>
+            Show the current values of all registers.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="args" args="">
+        <purpose>
+            Show the values of all the arguments to the current function.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="breakpoints" args="">
+        <purpose>
+           Show all breakpoints, watchpoints, or catchpoints.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="catch" args="">
+        <purpose>
+            Show the exceptions that can be caught within the current frame.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="copying" args="">
+        <purpose>
+            Show the copyright information for the debugger. 
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="display" args="">
+        <purpose>
+            Show the expressions printed when the program hits a breakpoint or otherwise stops execution.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="frame" args="">
+        <purpose>
+           Show information on the current stack frame.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="functions" args="">
+        <purpose>
+            List all function names.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="line" args="">
+        <purpose>
+            Show information about the current line.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="locals" args="">
+        <purpose>
+             Show the names and values of all the variables local to the current function.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="proc" args="">
+        <purpose>
+           Show information about the running process.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="program" args="">
+        <purpose>
+           Show the status of the program begin debugged.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="registers" args="[reg]">
+        <purpose>
+            Show the values of the machine registers or, if an argument is supplied, the contents
+        of the named register.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="scope" args="location">
+        <purpose>
+            List the variables in the named scope.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+
+    <command name="signals" args="">
+        <purpose>
+           Show how the debugger handles signals caught by the debugged program.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="source" args="">
+        <purpose>
+           Show information about the current source file.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="sources" args="">
+        <purpose>
+           Show the source files in the program.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="stack" args="">
+        <purpose>
+           Show a stack backtrace of current position.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="symbol" args="address">
+        <purpose>
+            Show what symbol is at the specified address.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="threads" args="">
+        <purpose>
+            List all the currently running threads.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+
+    <command name="variables" args="">
+        <purpose>
+           List all global and static variables.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="warranty" args="">
+        <purpose>
+            Show the warranty information.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="watchpoints" args="">
+        <purpose>
+           Show all breakpoints, watchpoints, and catchpoints.
+        </purpose>
+        <help>
+        </help>
+    </command>
+</command>
+
+<command name="kill" args="">
+    <purpose>
+        Kill the program being debugged.
+    </purpose>
+    <help>
+This kills the process containing the program being debugged.  Once killed, you cannot
+examine the memory of the process or do anything that requires an active process.  
+    </help>
+    <seealso commands="run"/>
+</command>
+
+<command name="list" args="[line-number]">
+    <purpose>
+        List the source lines at the specified locations.
+    </purpose>
+    <help>
+List source code.  If no arguments, list the lines around the current location, or the
+last place listed.  A sequence of 'list' commands with no arguments lists successive
+lines in the file.
+.p
+With one argument, list the lines around the specified location.  See 'Locations' for information
+on specifying locations.  With two arguments, list from the first to the second location (they
+must be in the same file).
+    </help>
+    <seealso commands="Locations"/>
+</command>
+
+<command name="make" args="[make-args]">
+    <purpose>
+        Run the ``make'' program using the rest of the line as arguments.
+    </purpose>
+    <help>
+    </help>
+</command>
+
+<command name="memdump" args="address [size]">
+    <purpose>
+        Dump the address specified in hex and ASCII.
+    </purpose>
+    <help>
+This is a simple memory dumper that takes an address and optional size (default 128 bytes)
+and dumps the contents of the memory in hex and ASCII.  Here is an example:
+.pre
+
+pathdb> memdump main
+00400F38 55 48 89 E5 48 81 C4 70 FE FF FF CC 8D 7D E0 E8  UH..H..p.....}..
+00400F48 14 08 00 00 48 8D 7D C0 48 8D 75 E0 E8 E7 07 00  ....H.}.H.u.....
+00400F58 00 48 8D 7D E0 E8 0C 08 00 00 48 8D 7D B0 E8 55  .H.}......H.}..U
+
+.epre
+    </help>
+    <seealso commands="x"/>
+</command>
+
+<command name="next" args="[number]">
+    <purpose>
+        Step the program being debugged by a number of lines, stepping over called functions. If no number is specified, then step one line.
+    </purpose>
+    <help>
+Single the step the program by a number of lines.  It the argument is omitted, the program
+is stepped by one line.  If the lines contain calls to functions, these are stepped over
+and not followed.  The function is still executed, but the debugger does not stop when
+it enters the function.
+    </help>
+    <seealso commands="step,stepi,nexti,continue"/>
+</command>
+
+<command name="nexti" args="[number]">
+    <purpose>
+        Step the program being debugged by a number of instructions, stepping over called functions. If no number is specified, step one instruction. 
+    </purpose>
+    <help>
+Step the program by a number of machine instructions (default 1).  If the instructions contain
+'call' instructions these are stepped over.  They are still executed but the debugger
+will not stop when it enters them.
+    </help>
+    <seealso commands="step,stepi,next,continue"/>
+</command>
+
+<command name="output" args="expression">
+    <purpose>
+        Print the value of the expression with no line feed and do not insert the value into a debugger variable.
+    </purpose>
+    <help>
+Print the value of the expression to the screen with no line feed.  The value is not inserted
+into the value history and thus not recorded in a debugger variable.
+    </help>
+    <seealso commands="print,display"/>
+</command>
+
+<command name="print" args="[/format] expression">
+    <purpose>
+        Print the value of the expression and store result in debugger variable.
+    </purpose>
+    <help>
+Print the value of the expression in the given format.  The syntax of the expression is governed
+by the language of the current location, so if the location is in a Fortran subroutine then the
+expression should use Fortran operators and constructs.  The debugger parameter 'language' controls
+which language is in effect.
+.p
+See the topic 'Expressions' for information about the expression operators supported.
+    </help>
+    <seealso commands="Format,Expressions,output,x,display"/>
+</command>
+
+<command name="process" args="process-number">
+    <purpose>
+        Switch to another process. If no process is specified, print the current process identifier. 
+    </purpose>
+    <help>
+The debugger can handle multiple processes at once.  The command sets the 'current process' to that
+specified by the process number.  See the 'processes' command for information on processes.
+    </help>
+    <seealso commands="processes"/>
+</command>
+
+<command name="processes" args="">
+    <purpose>
+        List all the processes being debugged.
+    </purpose>
+    <help>
+Present a list of all the processes owned by the debugger.  Here is an example:
+.pre
+
+pathdb> processes
+Index    PID      State      Command
+0        28854    READY      /home/dallison/bk/pathdb/src/foo
+
+.epre
+Each process has an index, a process id, a state, and the command used to run it.  The 'process'
+command can be used to set the current process.
+    </help>
+    <seealso commands="process"/>
+</command>
+
+<command name="ptype" args="expression">
+    <purpose>
+        Print the type of the expression.
+    </purpose>
+    <help>
+Print the type of the given expression.  If the type corresponds to an aggregate (structure or union), then the 
+contents of the aggregate are displayed.  If the expression is a a dynamically typed object (in
+a C++ inheritance hierarchy), the dynamic type of the object is displayed (unless the 'print object' parameter
+is off).  For example, in a C++ program:
+.pre
+
+pathdb> ptype y
+type = Expression *
+pathdb> ptype *y
+type = class CallExpression: public Expression {
+  public:
+    int d;
+    void CallExpression();
+    void evaluate();
+    void print();
+    int operator+(int i);
+    int operator-();
+    int operator-(int j);
+    int operator[](int i);
+    CallExpression * operator*();
+    int operator()(int i);
+    void f1(int i);
+    void f1(char c);
+    void dothrow();
+    void dothrow1();
+}
+
+.epre
+
+    </help>
+    <seealso commands="Expressions,Parameters,print,whatis"/>
+</command>
+
+<command name="pwd" args="">
+    <purpose>
+        Print the current working directory.
+    </purpose>
+    <help>
+    </help>
+</command>
+
+<command name="quit" args="">
+    <purpose>
+        Quit the debugger.
+    </purpose>
+    <help>
+    </help>
+</command>
+
+<command name="rerun" args="[number]">
+    <purpose>  
+        Step backwards by a number of commands.
+    </purpose>
+    <help>
+This command reruns the program from the beginning, replaying all the (state changing) commands typed by the
+user up to 'ncommands' from the current position.  This is an effective 'step backwards' in the program
+by a number of commands.
+    </help>
+    <seealso commands="run"/>
+</command>
+
+<command name="return" args="[expression]">
+    <purpose>  
+        Return from the current function with the value specified.
+    </purpose>
+    <help>
+Cause the current function to return, possibly with a value.  The value is specified by the
+expression argument and must match the return type of the function.
+    </help>
+    <seealso commands="finish"/>
+</command>
+
+<command name="run" args="[args]">
+    <purpose>
+        Run the program being debugged with specified arguments.
+    </purpose>
+    <help>
+Run the program from the beginning, optionally passing arguments to it.  If the command has
+no arguments then the previous set of arguments are used (or none if there were none).  All breakpoints
+that currently exist in the program will be reinstated and the program will begin execution from
+the beginning.
+    </help>
+    <seealso commands="cont,step,kill,next"/>
+</command>
+
+<command name="rwatch" args="location">
+    <purpose>
+        Create a watchpoint for a read of the specified location.
+    </purpose>
+    <help>
+This command creates a watchpoint that will trigger when the specified location is read by the
+program.  The location is an expression that contains variables or represents an address.  When the
+variables or address are read, the program will stop.
+.p
+Watchpoints are hardware assisted unless there is no hardware support for them or there are
+no available debug registers.  A hardware watchpoint is much faster than a software watchpoint.
+    </help>
+    <seealso commands="watch,awatch,break"/>
+</command>
+
+<command name="set" args="var value">
+    <purpose>
+        Set the value of control parameters or program variables.
+    </purpose>
+    <help>
+    </help>
+
+    <command name="args" args="args">
+        <purpose>
+            Set the arguments to be passed to program being debugged.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="variable" args="var = value">
+        <purpose>
+            Set the value of a program variable.
+        </purpose>
+        <help>
+        </help>
+    </command>
+</command>
+
+<command name="setenv" args="[name [value]]">
+    <purpose>
+        Set or print an environment variable.
+    </purpose>
+    <help>
+        With no args, print the environment variables.  With one or two args, set the named environment variable
+        to the given value.
+    </help>
+</command>
+
+<command name="shell" args="[command-args]">
+    <purpose>
+        Execute the rest of the line as a shell command.
+    </purpose>
+    <help>
+         With no arguments, spawn an interactive shell.  The shell spawned is that 
+         specified in the $SHELL environment variable (default /bin/sh).
+
+    </help>
+</command>
+
+<command name="show" args="">
+    <purpose>
+        Show the values of debugger parameters.
+    </purpose>
+    <help>
+    </help>
+
+    <command name="version" args="">
+        <purpose>
+           Show the version of the debugger. 
+        </purpose>
+        <help>
+        </help>
+    </command>
+</command>
+
+<command name="source" args="file">
+    <purpose>
+        Execute debugger commands from the specified file. 
+    </purpose>
+    <help>
+    </help>
+</command>
+
+<command name="step" args="[number]">
+    <purpose>
+        Step the program being debugged by a number of lines, stepping into called functions. If no number is specified, then step one line. 
+    </purpose>
+    <help>
+       Cause the program to step forward by the specified number of lines.  If no argument is
+       given, the program steps one line.  If the lines being stepped contain calls to functions,
+       the functions are 'stepped into'.
+    </help>
+    <seealso commands="next,stepi,nexti,cont"/>
+</command>
+
+<command name="stepi" args="[number]">
+    <purpose>
+        Step the program being debugged by a number of instructions, following called functions. If no number is specified, then step one function. 
+    </purpose>
+    <help>
+Cause the program to step number of machine instructions.  Like the 'step' command, if the
+argument is omitted, one machine instruction is executed.  If the instructions being
+stepped include 'call' instructions, the call is taken.
+    </help>
+    <seealso commands="next,step,nexti,cont"/>
+</command>
+
+
+<command name="target" args="">
+    <purpose>
+        Specify a target.
+    </purpose>
+    <help>
+    </help>
+
+    <command name="core" args="file">
+        <purpose>
+            Attach to a core file as a target.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="child" args="">
+        <purpose>
+            Use a UNIX child process as a target.
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+    <command name="exec" args="file">
+        <purpose>
+            Use an executable file as a target (same as file command).
+        </purpose>
+        <help>
+        </help>
+    </command>
+
+</command>
+
+<command name="tbreak" args="location">
+    <purpose>
+        Set a temporary breakpoint at the specified location.
+    </purpose>
+    <help>
+A temporary breakpoint is a breakpoint with a disposition set to 'del'.  It will be deleted
+after it is hit.
+    </help>
+    <seealso commands="break,thbreak"/>
+</command>
+
+<command name="thbreak" args="location">
+    <purpose>
+        Set a temporary hardware-assisted breakpoint at the specified location.
+    </purpose>
+    <help>
+Like 'tbreak', except that the hardware debug registers will be used instead of a software
+breakpoint.
+    </help>
+    <seealso commands="tbreak"/>
+</command>
+
+<command name="thread" args="thread-number">
+    <purpose>
+        Switch to another thread, thus setting the current thread. If no thread is specified, show information on the current thread. 
+    </purpose>
+    <help>
+The debugger supports programs containing multiple threads.  This command allows the user to
+select a thread as the 'current thread', to which all subsequent commands apply.  Use the
+command 'info threads' to see all the threads running in the program.
+    </help>
+</command>
+
+<command name="unalias" args="alias">
+    <purpose>
+        Delete the specified alias.
+    </purpose>
+    <help>
+    </help>
+    <seealso commands="alias"/>
+</command>
+
+<command name="undisplay" args="[display-number]">
+    <purpose>
+        Remove the specified display. If no display is specified, remove all displays. 
+    </purpose>
+    <help>
+    </help>
+    <seealso commands="display"/>
+</command>
+
+<command name="until" args="[location]">
+    <purpose>
+        Single step until the location is reached, or until the function returns. If no location is specified, then step one line. 
+    </purpose>
+    <help>
+If no arguments, single step the program until the current function returns.  With one argument, single
+step until the location specified has been reached.
+    </help>
+    <seealso commands="Locations,step,finish"/>
+</command>
+
+<command name="up" args="[levels]">
+    <purpose>
+        Move the current stack frame down the stack by the specified number of levels. If the number of levels is unspecified, move the stack up one level.
+    </purpose>
+    <help>
+Moving up the stack means increasing the frame number.  The bottom of the stack has frame number #0.  This
+command moves the current frame to the calling function.
+    </help>
+    <seealso commands="down,frame,backtrace"/>
+</command>
+
+<command name="watch" args="location">
+    <purpose>
+        Create a watchpoint for a change in the value of the specified location.
+    </purpose>
+    <help>
+Create a hardware watchpoint (or software watchpoint if there are no debug registers available) that watches
+for a change in value of the expression.  When the value of the expression changes, the debugger
+will stop the program and display the old and new values of the expression.
+    </help>
+    <seealso commands="awatch,rwatch,break"/>
+</command>
+
+<command name="whatis" args="expression">
+    <purpose>
+        Print the type of the expression.
+    </purpose>
+    <help>
+Print the type of the expression.  Unlike 'ptype' the contents of aggregates (structures and unions)
+are not displayed.
+    </help>
+    <seealso commands="ptype,print"/>
+</command>
+
+<command name="while" args="expression">
+    <purpose>
+        Execute a sequence of commands while the expression evaluates to non-zero.
+    </purpose>
+    <help>
+        The expression must be on the same line as the 'while' command.  The commands to execute
+        are entered, one per line, terminated by 'end' on its own.
+    </help>
+</command>
+
+<command name="x" args="[/format] address">
+    <purpose>
+        Examine memory at the specified address, using the format specified.
+    </purpose>
+    <help>
+This produces a dump of the program memory in the specified format for the specified number of elements.
+Typically this will be used to produce a hex dump of memory using a command such as:
+.pre
+
+pathdb> x/10x 0x507520
+0x507520:   0x00403da0  0x00000000  0x00507088  0x00000000
+0x507530:   0x00507298  0x00000000  0x0050729c  0x00000000
+0x507540:   0x0050729c  0x00000000
+
+.epre
+The command parsed as 'examine 0x507520 for 10 elements, each of which is 32 bits and print
+result in hex'.  The 'w' size format code is missing and is default. 
+    </help>
+    <seealso commands="print,Formats"/>
+</command>

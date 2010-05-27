@@ -1,0 +1,45 @@
+SIGHUP        Yes       Yes     Yes             Hangup
+SIGINT        Yes       Yes     No              Interrupt
+SIGQUIT       Yes       Yes     Yes             Quit
+SIGILL        Yes       Yes     Yes             Illegal instruction
+SIGTRAP       Yes       Yes     No              Trace/breakpoint trap
+SIGABRT       Yes       Yes     Yes             Aborted
+SIGEMT        Yes       Yes     Yes             Emulation trap
+SIGFPE        Yes       Yes     Yes             Arithmetic exception
+SIGKILL       Yes       Yes     Yes             Killed
+SIGBUS        Yes       Yes     Yes             Bus error
+SIGSEGV       Yes       Yes     Yes             Segmentation fault
+SIGSYS        Yes       Yes     Yes             Bad system call
+SIGPIPE       Yes       Yes     Yes             Broken pipe
+SIGALRM       No        No      Yes             Alarm clock
+SIGTERM       Yes       Yes     Yes             Terminated
+SIGURG        No        No      Yes             Urgent I/O condition
+SIGSTOP       Yes       Yes     Yes             Stopped (signal)
+SIGTSTP       Yes       Yes     Yes             Stopped (user)
+SIGCONT       Yes       Yes     Yes             Continued
+SIGCHLD       No        No      Yes             Child status changed
+SIGTTIN       Yes       Yes     Yes             Stopped (tty input)
+SIGTTOU       Yes       Yes     Yes             Stopped (tty output)
+SIGIO         No        No      Yes             I/O possible
+SIGXCPU       Yes       Yes     Yes             CPU time limit exceeded
+SIGXFSZ       Yes       Yes     Yes             File size limit exceeded
+SIGVTALRM     No        No      Yes             Virtual timer expired
+SIGPROF       No        No      Yes             Profiling timer expired
+SIGWINCH      No        No      Yes             Window size changed
+SIGLOST       Yes       Yes     Yes             Resource lost
+SIGUSR1       Yes       Yes     Yes             User defined signal 1
+SIGUSR2       Yes       Yes     Yes             User defined signal 2
+SIGPWR        Yes       Yes     Yes             Power fail/restart
+SIGPOLL       No        No      Yes             Pollable event occurred
+SIGWIND       Yes       Yes     Yes             SIGWIND
+SIGPHONE      Yes       Yes     Yes             SIGPHONE
+SIGWAITING    No        No      Yes             Process's LWPs are blocked
+SIGLWP        No        No      Yes             Signal LWP
+SIGDANGER     Yes       Yes     Yes             Swap space dangerously low
+SIGGRANT      Yes       Yes     Yes             Monitor mode granted
+SIGRETRACT    Yes       Yes     Yes             Need to relinquish monitor mode
+SIGMSG        Yes       Yes     Yes             Monitor mode data available
+SIGSOUND      Yes       Yes     Yes             Sound completed
+SIGSAK        Yes       Yes     Yes             Secure attention
+SIGPRIO       Yes       Yes     Yes             SIGPRIO
+

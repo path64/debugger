@@ -1,0 +1,2005 @@
+^one_byte
+# 0:0-7
+add Eb,Gb
+add Ev,Gv
+add Gb,Ev
+add Gv,Ev
+add %al,Ib
+add %Xax,Iv
+push %es
+pop %es
+
+# 1:0-7
+adc Eb,Gb
+adc Ev,Gv
+adc Gb,Ev
+adc Gv,Ev
+adc %al,Ib
+adc %Xax,Iv
+push %ss
+pop %ss
+
+# 2:0-7
+and Eb,Gb
+and Ev,Gv
+and Gb,Ev
+and Gv,Ev
+and %al,Ib
+and %Xax,Iv
+xxx
+daa
+
+
+# 3:0-7
+xor Eb,Gb
+xor Ev,Gv
+xor Gb,Ev
+xor Gv,Ev
+xor %al,Ib
+xor %Xax,Iv
+xxx
+aaa
+
+# 4:0-7
+inc %Xax
+inc %Xcx
+inc %Xdx
+inc %Xbx
+inc %Xsp
+inc %Xbp
+inc %Xsi
+inc %Xdi
+
+# 5:0-7
+push %rax/%r8
+push %rcx/%r9
+push %rdx/%r10
+push %rbx/%r11
+push %rsp/%r12
+push %rbp/%r13
+push %rsi/%r14
+push %rdi/%r15
+
+# 6:0-7
+pusha
+popa
+bound Gv,Ma
+movsx Gv,Ed
+xxx
+xxx
+xxx
+xxx
+
+# 7:0-7
+jo Jb
+jno Jb
+jb Jb
+jnb Jb
+jz Jb
+jnz Jb
+jbe Jb
+jnbe Jb
+
+# 8:0-7
+~1 Eb,Ib
+~1 Ev,Iv
+~1 Eb,Ib
+~1 Ev,Iv
+test Eb,Gb
+test Ev,Gv
+xchg Eb,Gb
+xchg Ev,Gv
+
+# 9:0-7
+nop
+xchg %Xcx
+xchg %Xdx
+xchg %Xbx
+xchg %Xsp
+xchg %Xbp
+xchg %Xsi
+xchg %Xdi
+
+# a:0-7
+mov %al,Ob
+mov %Xax,Ov
+mov Ob,%al
+mov Ov,%Xax
+movs Yb,Xb
+movs Yv,Xv
+cmps Yb,Xb
+cmps Xv,Yv
+
+# b:0-7
+mov %al/%r8b,Ib
+mov %cl/%r9b,Ib
+mov %dl/%r10b,Ib
+mov %bl/%r11b,Ib
+mov %ah/%r12b,Ib
+mov %ch/%r13b,Ib
+mov %dh/%r14b,Ib
+mov %bh/%r15b,Ib
+
+# c:0-7
+~2 Eb,Ib
+~2 Ev,Ib
+ret Iw
+ret
+les Gv,Mp
+lds Gv,Mp
+~11 Eb,Ib
+~11 Ev,Iv
+
+# d:0-7
+~2 Eb,1
+~2 Ev,1
+~2 Eb,%cl
+~2 Ev,%cl
+aam Ib
+aad Ib
+xxx
+xlat
+
+# e:0-7
+loopne Jb
+loope Jb
+loop Jb
+jcxz Jb
+in %al,Ib
+in %Xax,Ib
+out Ib,%al
+out Ib,%Xax
+
+# f:0-7
+lock
+xxx
+repne
+rep
+hlt
+cmc
+~3 Eb
+~3 Ev
+
+# 0:8-f
+or Eb,Gb
+or Ev,Gv
+or Gb,Eb
+or Gv,Ev
+or %al,Ib
+or %Xax,Iz
+push %cs
+xxx
+
+# 1:8-f
+sbb Eb,Gb
+sbb Ev,Gv
+sbb Gb,Eb
+sbb Gv,Ev
+sbb %al,Ib
+sbb %Xax,Iz
+push %ds
+pop %ds
+
+# 2:8-f
+sub Eb,Gb
+sub Ev,Gv
+sub Gb,Eb
+sub Gv,Ev
+sub %al,Ib
+sub %Xax,Iz
+xxx
+das
+
+
+# 3:8-f
+cmp Eb,Gb
+cmp Ev,Gv
+cmp Gb,Eb
+cmp Gv,Ev
+cmp %al,Ib
+cmp %Xax,Iz
+xxx
+aas
+
+# 4:8-f
+dec %Xax
+dec %Xcx
+dec %Xdx
+dec %Xbx
+dec %Xsp
+dec %Xbp
+dec %Xsi
+dec %Xdi
+
+# 5:8-f
+pop %rax/%r8
+pop %rcx/%r9
+pop %rdx/%r10
+pop %rbx/%r11
+pop %rsp/%r12
+pop %rbp/%r13
+pop %rsi/%r14
+pop %rdi/%r15
+
+# 6:8-f
+push Iz
+imul Gv,Ev,Iz
+push Ib
+imul Gv,Ev,Ib
+ins Yb,%dx
+ins Yz,%dx
+outs %dx,Xb
+outs %dx,Xz
+
+# 7:8-f
+js Jb
+jss Jb
+jp Jb
+jnp Jb
+jl Jb
+jnl Jb
+jle Jb
+jnle Jb
+
+# 8:8-f
+mov Eb,Gb
+mov Ev,Gv
+mov Gb,Eb
+mov Gv,Ev
+mov Ew,Sw
+lea Gv,M
+mov Sw,Ew
+pop Ev
+
+# 9:8-f
+cbw
+cwd
+call Ap
+fwait
+pushf Fv
+popf Fv
+sahf
+lahf
+
+# a:8-f
+test %al,Ib
+test %Xax,Iz
+stos Yb,%al
+stos Yv,%Xax
+lods %al,Xb
+lods %Xax,Xv
+scas %al,Yb
+scas %Xax,Yv
+
+# b:8-f
+mov %Xax/%r8,Iv
+mov %Xcx/%r9,Iv
+mov %Xdx/%r10,Iv
+mov %Xbx/%r11,Iv
+mov %Xsp/%r12,Iv
+mov %Xbp/%r13,Iv
+mov %Xsi/%r14,Iv
+mov %Xdi/%r15,Iv
+
+# c:8-f
+enter Iw,Ib
+leave 
+retf Iw
+retf
+int3
+int Ib
+into
+iret
+
+# d:8-f
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+ 
+# e:8-f
+call Jz
+jmp Jz
+jmp Ap
+jmp Jb
+in %al,%dx
+in %Xax,%dx
+out %dx,%al
+out %dx,%Xax
+
+# f:8-f
+clc
+stc
+cli
+sti
+cld
+std
+~4
+~5
+^---
+
+^groups
+
+~1 80
+add Eb,Ib
+or Eb,Ib
+adc Eb,Ib
+sbb Eb,Ib
+and Eb,Ib
+sub Eb,Ib
+xor Eb,Ib
+cmp Eb,Ib
+
+~1 81
+add Ev,Iz
+or Ev,Iz
+adc Ev,Iz
+sbb Ev,Iz
+and Ev,Iz
+sub Ev,Iz
+xor Ev,Iz
+cmp Ev,Iz
+
+~1 82
+add Eb,Ib
+or Eb,Ib
+adc Eb,Ib
+sbb Eb,Ib
+and Eb,Ib
+sub Eb,Ib
+xor Eb,Ib
+cmp Eb,Ib
+
+~1 83
+add Ev,Ib
+or Ev,Ib
+adc Ev,Ib
+sbb Ev,Ib
+and Ev,Ib
+sub Ev,Ib
+xor Ev,Ib
+cmp Ev,Ib
+
+~2 c0
+rol Eb,Ib
+ror Eb,Ib
+rcl Eb,Ib
+rcr Eb,Ib
+shl Eb,Ib
+shr Eb,Ib
+xxx Eb,Ib
+sar Eb,Ib
+
+~2 c1
+rol Ev,Ib
+ror Ev,Ib
+rcl Ev,Ib
+rcr Ev,Ib
+shl Ev,Ib
+shr Ev,Ib
+xxx Ev,Ib
+sar Ev,Ib
+
+~2 d0
+rol Eb,1
+ror Eb,1
+rcl Eb,1
+rcr Eb,1
+shl Eb,1
+shr Eb,1
+xxx Eb,1
+sar Eb,1
+
+~2 d1
+rol Ev,1
+ror Ev,1
+rcl Ev,1
+rcr Ev,1
+shl Ev,1
+shr Ev,1
+xxx Ev,1
+sar Ev,1
+
+~2 d2
+rol Eb,%cl
+ror Eb,%cl
+rcl Eb,%cl
+rcr Eb,%cl
+shl Eb,%cl
+shr Eb,%cl
+xxx Eb,%cl
+sar Eb,%cl
+
+~2 d3
+rol Ev,%cl
+ror Ev,%cl
+rcl Ev,%cl
+rcr Ev,%cl
+shl Ev,%cl
+shr Ev,%cl
+xxx Ev,%cl
+sar Ev,%cl
+
+~3 f6
+test Eb,Ib
+xxx
+not Eb
+neg Eb
+mul Eb
+imul Eb
+div Eb
+idiv Eb
+
+~3 f7
+test Ev,Iz
+xxx
+not Ev
+neg Ev
+mul Ev
+imul Ev
+div Ev
+idiv Ev
+
+~4 fe
+inc Eb
+dec Eb
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+~5 ff
+inc Ev
+dec Ev
+call Ev
+call Ep
+jmp Ev
+jmp Ep
+push Ev
+xxx
+
+~6 0f00
+sldt Mw,Rv
+str Mw,Rv
+lldt Ew
+ltr Ew
+verr Ew
+verw Ew
+xxx
+xxx
+
+~7 0f01
+sgdt Ms
+sidt Ms
+lgdt Ms
+lidt Ms
+smsw Mw
+xxx
+lmsw Ew
+invlpg Mb
+
+~8 0fba
+xxx
+xxx
+xxx
+xxx
+bt Ev,Ib
+bts Ev,Ib
+btr Ev,Ib
+btc Ev,Ib
+
+~9 0fc7
+xxx
+cmpxchg8b Mq
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+~10 0fb9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+~11 c6
+mov Eb,Ib
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+~11 c7
+mov Ev,Iz
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+~12 0f71
+xxx
+xxx
+psrlw PRq,Ib
+xxx
+psraw PRq,Ib
+xxx
+psllw PRq,Ib
+xxx
+
+~12 660f71
+xxx
+xxx
+psrlw VRdq,Ib
+xxx
+psraw VRdq,Ib
+xxx
+psllw VRdq,Ib
+xxx
+
+~13 0f72
+xxx
+xxx
+psrld PRq,Ib
+xxx
+psrad PRq,Ib
+xxx
+pslld PRq,Ib
+xxx
+
+
+~13 660f72
+xxx
+xxx
+psrld VRdq,Ib
+xxx
+psrad VRdq,Ib
+xxx
+pslld VRdq,Ib
+xxx
+
+
+~14 0f73
+xxx
+xxx
+psrlq PRq,Ib
+xxx
+xxx
+xxx
+psllq PRq,Ib
+xxx
+
+~14 660f73
+xxx
+xxx
+psrlq VRdq,Ib
+psrldq VRdq,Ib
+xxx
+xxx
+psllq VRdq,Ib
+pslldq VRdq,Ib
+
+~15 0fae
+fxsave M
+fsrstor M
+ldmxcsr Md
+stmxcsr Md
+xxx
+lfence
+mfence
+sfence
+
+~16 0f18
+prefetch %nta
+prefetch %t0
+prefetch %t1
+prefetch %t2
+nop
+nop
+nop
+nop
+
+
+# this is called group P in the AMD doc
+~17 0f0d
+prefetch
+prefetch
+xxx
+prefetch
+xxx
+xxx
+xxx
+xxx
+
+
+^---
+
+^two_byte
+# no prefix
+
+# table A-3
+
+~6
+~7
+lar Gv,Ew
+lsl Gv,Ew
+xxx
+syscall
+clts
+sysret
+
+movups Vps,Wps
+movups Wps,Vps
+movlps Vps,Mq
+movlps Mq,Vps
+unpcklps Vps,Wq
+unpckhps Vps,Wq
+movhps Vps,Mq
+movhps Mq,Vps
+
+mov Rd,Cd
+mov Rd,Dd
+mov Cd,Rd
+mov Dd,Rd
+xxx
+xxx
+xxx
+xxx
+
+wrmsr
+rdtsc
+rdmsr
+rdpmc
+sysenter
+sysexit
+xxx
+xxx
+
+cmovo Gv,Ev
+cmovno Gv,Ev
+cmovb Gv,Ev
+cmovnb Gv,Ev
+cmovz Gv,Ev
+cmovnz Gv,Ev
+cmovbe Gv,Ev
+cmovnbe Gv,Ev
+
+
+movmskps Gd,VRps
+sqrtps Vps,Wps
+rsqrtps Vps,Wps
+rcpps Vps,Wps
+andps Vps,Wps
+andnps Vps,Wps
+orps Vps,Wps
+xorps Vps,Wps
+
+
+punpcklbw Pq,Qd
+punpcklwd Pq,Qd
+punpckldq Pq,Qd
+packsswb Pq,Qd
+pcmpgtb Pq,Qd
+pcmpgtw Pq,Qd
+pcmpgtd Pq,Qd
+packuswb Pq,Qd
+
+pshufw Pq,Qd,Ib
+~12
+~13
+~14
+pcmpeqb Pq,Qd
+pcmpeqw Pq,Qd
+pcmpeqd Pq,Qd
+emms
+
+jo Jz
+jno Jz
+jb Jz
+jnb Jz
+jz Jz
+jnz Jz
+jbe Jz
+jnbe Jz
+
+
+seto Eb
+setno Eb
+setb Eb
+setnb Eb
+setz Eb
+setnz En
+setbe Ez
+setnbe Ez
+push %fs
+pop %fs
+cpuid
+bt Ev,Gv
+shld Ev,Gv,Ib
+shld Ev,Gv,%cl
+xxx
+xxx
+
+cmpxchg Eb,Gb
+cmpxchg Ev,Gv
+lss Gz,Mp
+btr Ev,Gv
+lfs Gz,Mp
+lgs Gz,Mp
+movzx Gv,Eb
+movzx Gv,Ew
+
+
+xadd Eb,Gb
+xadd Ev,Gv
+cmpps Vps,Wps,Ib
+movnti Md,Gd
+pinsrw Pq,Ew,Ib
+pextrw Gd,PRq,Ib
+shufps Vps,Wps,Ib
+~9
+
+xxx
+psrlw Pq,Qd
+psrld Pq,Qd
+psrlq Pq,Qd
+paddq Pq,Qd
+pmullw Pq,Qd
+xxx
+pmovmskb Pq,PRd
+
+pavgb Pq,Qd
+psraw Pq,Qd
+psrad Pq,Qd
+pavgw Pq,Qd
+pmulhuw Pq,Qd
+pmulhw Pq,Qd
+xxx
+movntq Mq,Pq
+
+xxx
+psllw Pq,Qd
+pslld Pq,Qd
+psllq Pq,Qd
+pmuludq Pq,Qd
+pmaddwd Pq,Qd
+psadbw Pq,Qd
+maskmovq Pq,PRd
+
+# table A-4
+
+invd
+wbinvd
+xxx
+ud2
+xxx
+~17
+femms
+xxx
+
+~16
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+
+movaps Vps,Wps
+movaps Wps,Vps
+cvtpi2ps Vps,Qd
+movntps Mdq,Vps
+cvttps2pi Pq,Wps
+cvtps2pi Pq,Wps
+ucomiss Vss,Wss
+comiss Vps,Wps
+
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+cmovs Gv,Ev
+cmovns Gv,Ev
+cmovp Gv,Ev
+cmovnp Gv,Ev
+cmovl Gv,Ev
+cmovnl Gv,Ev
+cmovle Gv,Ev
+cmovnle Gv,Ev
+
+addps Vps,Wps
+mulps Vps,Wps
+cvtps2pd Vps,Wps
+cvtdq2ps Vps,Wps
+subps Vps,Wps
+minps Vps,Wps
+divps Vps,Wps
+maxps Vps,Wps
+
+punpckhbw Pq,Qd
+punpckhwd Pq,Qd
+punpckhdq Pq,Qd
+packssdw Pq,Qd
+xxx
+xxx
+movd Pq,Ed
+movq Pq,Qd
+
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+movd Ed,Pd
+movq Qd,Pq
+
+js Jz
+jns Jz
+jp Jz
+jnp Jz
+jl Jz
+jnl Jz
+jle Jz
+jnle Jz
+
+
+sets Eb
+setns Eb
+setp Eb
+setnp Eb
+setl Eb
+setnl Eb
+setle Eb
+setnle Eb
+
+push %gs
+pop %gs
+rsm
+bts Ev,Gv
+shrd Ev,Gv,Ib
+shrd Ev,Gv,%cl
+~15
+imul Gv,Ev
+
+xxx
+~10
+~8
+btc Ev,Gv
+bsf Gv,Ev
+bsr Gv,Ev
+movsx Gv,Eb
+movsx Gv,Ew
+
+bswap %rax,%r8
+bswap %rcx,%r9
+bswap %rdx,%r10
+bswap %rbx,%r11
+bswap %rsp,%r12
+bswap %rbp,%r13
+bswap %rsi,%r14
+bswap %rdi,%r15
+
+psubusb Pq,Qd
+psubusw Pq,Qd
+pminub Pq,Qd
+pand Pq,Qd
+paddusb Pq,Qd
+paddusw Pq,Qd
+pmaxub Pq,Qd
+pandn Pq,Qd
+
+
+psubsb Pq,Qd
+psubsw Pq,Qd
+pminsw Pq,Qd
+por Pq,Qd
+paddsb Pq,Qd
+paddsw Pq,Qd
+pmaxsw Pq,Qd
+pxor Pq,Qd
+
+
+psubb Pq,Qd
+psubw Pq,Qd
+psubd Pq,Qd
+psubq Pq,Qd
+paddb Pq,Qd
+paddw Pq,Qd
+paddd Pq,Qd
+xxx
+
+^---
+
+^two_byte_F3
+
+# two type opcodes with prefix F3
+
+# low nibble 0-7
+# 0
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 1
+movss Vss,Wss
+movss Wpd,Vpd
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 2
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 3
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 4
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 5
+xxx
+sqrtss Vss,Wss
+rsqrtss Vss,Wss
+rcpss Vss,Wss
+xxx
+xxx
+xxx
+xxx
+
+# 6
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 7
+pshufhw Vq,Wq,Ib
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 8
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# a
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# b
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# c
+xadd Eb,Gb
+xadd Ev,Gv
+cmpss Vss,Wss,Ib
+xxx
+xxx
+xxx
+xxx
+~9
+
+# d
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+movq2dq Vdq,PRq
+xxx
+
+# e
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+cvtdq2pd Vpd,Wq
+xxx
+
+# f
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# low nibble 8-f 
+# 0
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 1
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 2
+xxx
+xxx
+cvtsi2ss Vss,Ed
+xxx
+cvttss2si Gd,Wss
+cvtss2si Gd,Wss
+xxx
+xxx
+
+# 3
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 4
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 5
+addss Vss,Wss
+mulss Vss,Wss
+cvtss2sd Vsd,Wsd
+cvttps2dq Vdq,Wps
+subss Vss,Wss
+minss Vss,Wss
+divss Vss,Wss
+maxss Vss,Wss
+
+# 6
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+movdqu Vdq,Wdq
+
+# 7
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+movq Vq,Wq
+movdqu Wdq,Vdq
+
+# 8
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# a
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# b
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# c
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# d
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# e
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# f
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+^---
+
+^two_byte_66
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+movupd Vpd,Wpd
+movupd Wpd,Vpd
+movlpd Vsd,Mq
+movlpd Mq,Vsd
+unpcklpd Vpd,Wq
+unpckhpd Vpd,Wq
+movhpd Vsd,Mq
+movhpd Mq,Vsd
+
+# 2
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 3
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 4
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+
+# 5
+movmskpd Gd,VRpd
+sqrtpd Vpd,Wpd
+xxx
+xxx
+andpd Vpd,Wpd
+andnpd Vpd,Wpd
+orpd Vpd,Wpd
+xorpd Vpd,Wpd
+
+# 6
+punpcklbw Vdq,Wq
+punpcklwd Vdq,Wq
+punpckldq Vdq,Wq
+packsswb Vdq,Wq
+pcmpgtb Vdq,Wq
+pcmpgtw Vdq,Wq
+pcmpgtd Vdq,Wq
+packuswb Vdq,Wq
+
+# 7
+pshufd Vdq,Wdq,Ib
+~12
+~13
+~14
+pcmpeqb Vdq,Wdq
+pcmpeqw Vdq,Wdq
+pcmpeqd Vdq,Wdq
+xxx
+
+# 8
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# a
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# b
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# c
+xadd Eb,Gb
+xadd Ev,Gv
+cmppd Vpd,Wpd,Ib
+xxx
+pinsrw Vdq,Ew,Ib
+pextrw Gd,VRdq,Ib
+shufpd Vpd,Wpd,Ib
+~9
+
+# d
+xxx
+psrlw Pdq,Wdq
+psrld Pdq,Wdq
+psrlq Pdq,Wdq
+paddq Pdq,Wdq
+pmullw Pdq,Wdq
+movq Wq,Vq
+pmovmskb Gd,VRdq
+
+# e
+pavgb Vdq,Wdq
+psraw Vdq,Wdq
+psrad Vdq,Wdq
+pavgw Vdq,Wdq
+pmulhuw Vdq,Wdq
+pmulhw Vdq,Wdq
+cvtpd2dq Vq,Wpd
+movntq Mdq,Vdq
+
+# f
+xxx
+psllw Vdq,Wdq
+pslld Vdq,Wdq
+psllq Vdq,Wdq
+pmuludq Vdq,Wdq
+pmaddwd Vdq,Wdq
+psadbw Vdq,Wdq
+maskmovq Vdq,VRdq
+
+# table A-4
+
+# 0
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 1
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 2
+movapd Vpd,Wpd
+movapd Wpd,Vpd
+cvtpi2pd Vpd,Qd
+movntpd Mdq,Vpd
+cvttpd2pi Pq,Wpd
+cvtpd2pi Pq,Wpd
+ucomisd Vsd,Wsd
+comisd Vpd,Wsd
+
+# 3
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 4
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 5
+addpd Vpd,Wpd
+mulpd Vpd,Wpd
+cvtpd2ps Vpd,Wpd
+cvtps2dq Vpd,Wpd
+subpd Vpd,Wpd
+minpd Vpd,Wpd
+divpd Vpd,Wpd
+maxpd Vpd,Wpd
+
+# 6
+punpckhbw Vdq,Wq
+punpckhwd Vdq,Wq
+punpckhdq Vdq,Wq
+packssdw Vdq,Wdq
+punpcklqdq Vdq,Wq
+punpckhqdq Vdq,Wq
+movd Vdq,Eq
+movq Vdq,Wdq
+
+# 7
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+movd Ed,Vd
+movdqa Wdq,Vdq
+
+# 8
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# a
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# b
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# c
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# d
+psubusb Pdq,Wdq
+psubusw Pdq,Wdq
+pminub Pdq,Wdq
+pand Pdq,Wdq
+paddusb Pdq,Wdq
+paddusw Pdq,Wdq
+pmaxub Pdq,Wdq
+pandn Pdq,Wdq
+
+
+# e
+psubsb Pdq,Wdq
+psubsw Pdq,Wdq
+pminsw Pdq,Wdq
+por Pdq,Wdq
+paddsb Pdq,Wdq
+paddsw Pdq,Wdq
+pmaxsw Pdq,Wdq
+pxor Pdq,Wdq
+
+
+# f
+psubb Pdq,Wdq
+psubw Pdq,Wdq
+psubd Pdq,Wdq
+psubq Pdq,Wdq
+paddb Pdq,Wdq
+paddw Pdq,Wdq
+paddd Pdq,Wdq
+xxx
+
+^---
+
+^two_byte_F2
+# two type opcodes with prefix F2
+
+# low nibble 0-7
+# 0
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 1
+movsd Vdq,Wsd
+movsd Wpd,Vpd
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 2
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 3
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 4
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 5
+xxx
+sqrtsd Vsd,Wsd
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 6
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 7
+pshuflw Vq,Wq,Ib
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 8
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# a
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# b
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# c
+xadd Eb,Gb
+xadd Ev,Gv
+cmpsd Vsd,Wsd,Ib
+xxx
+xxx
+xxx
+xxx
+~9
+
+# d
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+movdq2q Pq,VRq
+xxx
+
+# e
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+cvtpd2dq Vq,Wpd
+xxx
+
+# f
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# low nibble 8-f 
+# 0
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 1
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 2
+xxx
+xxx
+cvtsi2sd Vsd,Ed
+xxx
+cvttsd2si Gd,Wsd
+cvtsd2si Gd,Wsd
+xxx
+xxx
+
+# 3
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 4
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 5
+addsd Vsd,Wsd
+mulsd Vsd,Wsd
+cvtsd2ss Vss,Wsd
+xxx
+subsd Vsd,Wsd
+minsd Vsd,Wsd
+divsd Vsd,Wsd
+maxsd Vsd,Wsd
+
+# 6
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 7
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 8
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# 9
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# a
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# b
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# c
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# d
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# e
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+# f
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+xxx
+
+^---
+
+# x87 instructions where the opcode is 00-BF.  This is the first row in each
+# table
+
+# encoding for the argument type:
+#  $w  - 32 bit word
+#  $z  - 32 or 64 bit word
+#  $s  - 16 bit word
+#  $e  - 14/28 env (whatever that means)
+#  $r  - 80 bit 
+#  $y  - 98 bit
+
+^x87_alt
+fadd $w
+fmul $w
+fcom $w
+fcomp $w
+fsub $w
+fsubr $w
+fdiv $w
+fdivr $w
+
+fld $w
+xxx
+fst $w
+fstp $w
+fldenv $e
+fldcw $s
+fstenv $e
+fstcw $s
+
+fiadd $w
+fimul $w
+ficom $w
+ficomp $w
+fisub $w
+fisubr $w
+fidiv $w
+fidivr $w
+
+fild $w
+xxx
+fist $w
+fistp $w
+xxx
+fld $r
+xxx
+fstp $r
+
+fadd $z
+fmul $z
+fcom $z
+fcomp $z
+fsub $z
+fsubr $z
+fdiv $z
+fdivr $z
+
+fld $z
+xxx
+fst $z
+fstp $z
+frstor $y
+xxx
+fsave $y
+fstsw $s
+
+fiadd $s
+fimul $s
+ficom $s
+ficomp $s
+fisub $s
+fisubr $s
+fidiv $s
+fidivr $s
+
+fild $s
+xxx
+fist $s
+fistp $s
+fbld $r
+fild $z
+fbstp $r
+fistp $z
+
+^---
+
+

@@ -1,0 +1,135 @@
+# -*- rpm-spec -*-
+
+%define _topdir		%%hg_root%%/pathscale
+%define pkg_ver		%%pkg_ver%%
+%define pkg_rel		%%pkg_rel%%
+%define _rpmdir		%{_topdir}/rpms
+%define _sourcedir	%%hg_root%%
+%define _builddir	%{_tmppath}
+%define target		%%target%%
+%define xprefix		%%prefix%%
+%define xarch		%%arch%%
+%define _objdir         %{_topdir}/obj-%{xarch}
+%define distro_name	%%distro_name%%
+%define distro_type	%%distro_type%%
+%define autoreq_enable  %%autoreq_enable%%
+
+%define __os_install_post /usr/lib/rpm/brp-compress
+
+Name: pathscale-pathdb
+Summary: PathScale Debugger.
+Version: %{pkg_ver}
+Release: %{pkg_rel}
+Group: System Environment/Base
+License: Proprietary
+URL: http://www.pathscale.com/
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Requires: pathscale-sub-client = %{pkg_ver}
+Requires: pathscale-compilers-libs = %{pkg_ver}
+Vendor: PathScale, Inc.
+Prefix: %{xprefix}
+Packager: PathScale Builder <builder@pathscale.com>
+Source: /dev/null
+
+Autoreq: %{autoreq_enable}
+
+%description
+The %{name} package contains the PathScale Debugger.
+
+Copyright 2004, 2005, 2006 PathScale, Inc.  All Rights Reserved.
+
+Unpublished -- rights reserved under the copyright laws of the United
+States.  USE OF A COPYRIGHT NOTICE DOES NOT IMPLY PUBLICATION OR
+DISCLOSURE.  THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE
+SECRETS OF PATHSCALE, INC.  USE, DISCLOSURE, OR REPRODUCTION IS
+PROHIBITED WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF PATHSCALE,
+INC.
+
+%package -n pathscale-pathdb-devel
+Summary: Development package for the PathScale Debugger
+Version: %{pkg_ver}
+Release: %{pkg_rel}
+Group: System Environment/Base
+License: Proprietary
+URL: http://www.pathscale.com/
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Vendor: PathScale, Inc.
+Prefix: %{xprefix}
+Packager: PathScale Builder <builder@pathscale.com>
+Source: /dev/null
+
+%description -n pathscale-pathdb-devel
+The %{name} package contains the PathScale Debugger.
+
+Copyright 2004, 2005 PathScale, Inc.  All Rights Reserved.
+
+Unpublished -- rights reserved under the copyright laws of the United
+States.  USE OF A COPYRIGHT NOTICE DOES NOT IMPLY PUBLICATION OR
+DISCLOSURE.  THIS SOFTWARE CONTAINS CONFIDENTIAL INFORMATION AND TRADE
+SECRETS OF PATHSCALE, INC.  USE, DISCLOSURE, OR REPRODUCTION IS
+PROHIBITED WITHOUT THE PRIOR EXPRESS WRITTEN PERMISSION OF PATHSCALE,
+INC.
+
+
+%prep
+mkdir -p %{buildroot} %{_rpmdir}
+
+%build
+true
+
+%install
+rm -rf %{buildroot}
+dest=%{buildroot}/%{prefix}/bin
+etc=%{buildroot}/%{prefix}/etc
+lib=%{buildroot}/%{prefix}/%{_lib}
+include=%{buildroot}/%{prefix}/include/pathdb
+man=%{buildroot}/%{prefix}/man/man1
+doc=%{buildroot}/%{prefix}/share/doc/pathscale-pathdb-%{pkg_ver}
+share=%{buildroot}/%{prefix}/share/pathdb
+install -dD -m 755 $dest
+install -dD -m 755 $include
+install -dD -m 755 $lib
+install -dD -m 755 $man
+install -dD -m 755 $doc
+install -dD -m 755 $etc
+install -dD -m 755 $share
+install -m 755 %{_objdir}/pathdb $dest/pathdb-%{xarch}-%{pkg_ver}
+install -m 644 %{_objdir}/libpathdb.a $lib
+install -m 644 %{_topdir}/../src/help.xml $etc/pathdb-help.xml
+install -m 644 %{_topdir}/../src/*.h $include
+install -m 644 %{_topdir}/../docs/pathdb.1 $man
+install -m 644 %{_topdir}/../docs/PathDB_UserGuide.pdf $doc
+install -m 644 %{_topdir}/../docs/release_notes_pathdb.txt $doc
+install -m 644 %{_topdir}/../etc/pathdb.el $share/emacs.el
+strip $dest/pathdb-%{xarch}-%{pkg_ver}
+
+%post
+cd $RPM_INSTALL_PREFIX/bin
+rm -f pathdb
+if [ -f pathdb-x86_64-%{pkg_ver} ] ; then
+    ln -s pathdb-x86_64-%{pkg_ver} pathdb
+else
+    ln -s pathdb-i386-%{pkg_ver} pathdb
+fi
+
+%postun
+if [ "$1" = 0 ] ; then
+    rm -f $RPM_INSTALL_PREFIX/bin/pathdb
+fi
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root,-)
+%{prefix}/bin/pathdb-%{xarch}-%{pkg_ver}
+%doc %{prefix}/etc/pathdb-help.xml
+%doc %{prefix}/man/man1/*
+%docdir %{prefix}/share/doc/pathscale-pathdb-%{pkg_ver}
+%{prefix}/share/doc/pathscale-pathdb-%{pkg_ver}
+%{prefix}/share/pathdb
+
+%files -n pathscale-pathdb-devel
+%defattr(-,root,root,-)
+%{prefix}/%{_lib}/libpathdb.a
+%{prefix}/include/pathdb
