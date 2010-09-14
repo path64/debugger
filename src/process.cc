@@ -50,6 +50,7 @@ author: David Allison <dallison@pathscale.com>
 #include "dbg_proc_service.h"
 #include <sys/syscall.h>
 #include <sys/stat.h>
+#include <sys/ptrace.h>
 
 static std::string toString (int n) {
     char buf[30] ;
@@ -3894,7 +3895,7 @@ void Process::follow_fork (pid_t childpid, bool is_vfork) {
             target->cont (pid, 0) ;
             int status ;
             waitpid (pid, &status, 0) ;
-            if ((status >> 16) != PTRACE_EVENT_VFORKDONE) {             // XXX: ptrace stuff
+            if ((status >> 16) != PTRACE_EVENT_VFORK_DONE) {             // XXX: ptrace stuff
                 std::cerr << "didn't get VFORKDONE event\n" ;
             }
             attach_breakpoints (pid) ;           // reattach the breakpoints

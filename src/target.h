@@ -102,6 +102,7 @@ public:
     void write_string (int pid, Address addr, std::string s) ;
 } ;
 
+#if 0
 // these might be defined in a system header someday
 #ifndef PTRACE_EVENT_FORK
                                                                                                                                   
@@ -125,6 +126,7 @@ public:
 #define PTRACE_EVENT_VFORKDONE  5
 #define PTRACE_EVENT_EXIT       6
                                                                                                                                   
+#endif
 #endif
 
 

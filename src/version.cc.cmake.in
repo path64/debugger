@@ -1,0 +1,7 @@
+const char* cset_rev = "${PATHDB_REV}";
+const char* cset_key = "${PATHDB_KEY}";
+const char* build_root = "${PATHDB_BUILD_ROOT}";
+const char* build_host = "${PATHDB_BUILD_HOST}";
+const char* build_date = "${PATHDB_BUILD_DATE}";
+const char* psc_full_ver = "${PATHDB_FULL_VER}";
+
