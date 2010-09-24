@@ -176,7 +176,8 @@ enum Intrinsic {
 
 // a variable created by the debugger
 
-struct DebuggerVar {
+class DebuggerVar {
+    public:
     DebuggerVar (Value &val, DIE *type) : value(val), type(type) {}
     Value value ;
     DIE *type ;

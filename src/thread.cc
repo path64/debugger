@@ -40,96 +40,72 @@ Thread::Thread (Architecture * arch, Process * proc, int pid, void*tid)
     proc(proc),
     pid(pid),
     tid(tid),
-    regs_dirty(false),
-    fpregs_dirty(false), running(false), disabled(false), status(0) {
+    running(false), disabled(false), status(0) {
 
-    regsize = arch->get_reg_size() ;
-    fpregsize = arch->get_fpreg_size() ;
-    regs = new unsigned char [arch->get_regbuffer_size()] ;
-    fpregs = new unsigned char [arch->get_fpregbuffer_size()] ;
-    num = nextid++ ;
+    regs = arch->main_register_set_properties()->new_empty_register_set();
+    fpregs = arch->fpu_register_set_properties()->new_empty_register_set();
+    num = nextid++;
 }
 
 Thread::~Thread() {
 }
 
-Address Thread::get_reg(std::string name) {
-    int offset = arch->translate_regname (name) ;
-    Address rval = 0 ;
-    memcpy (&rval, regs + offset, regsize) ;
-    return rval ;
+Address Thread::get_reg(const std::string &name)
+{
+	return regs->get_register_as_integer(name);
 }
 
-Address Thread::get_reg(int num) {
-    int offset = arch->translate_regnum (num) ; 
-    Address rval = 0 ;
-    memcpy (&rval, regs + offset, regsize) ;
-    return rval ;
+Address Thread::get_reg(int num)
+{
+	// FIXME: Is num meant to be the dwarf register num here?
+	return regs->get_register_as_integer(num);
 }
 
-void Thread::set_reg(std::string name, Address value) {
-    //std::cout << "setting reg %"  <<  name  <<  " to value: "  <<  "0x" << std::hex << value << std::dec << '\n' ;
-    int offset = arch->translate_regname (name) ;
-    memcpy (regs + offset, &value, regsize) ;
-    regs_dirty = true ;
+void Thread::set_reg(const std::string &name, Address value)
+{
+	regs->set_register(name, value);
 }
 
-void Thread::set_reg(int num, Address value) {
-    int offset = arch->translate_regnum (num) ;
-    memcpy (regs + offset, &value, regsize) ;
-    regs_dirty = true ;
-}
-
-void Thread::soft_set_reg(int offset, Address value, bool force) {
-    memcpy (regs + offset, &value, regsize) ;
-    if (force) {
-       regs_dirty = true ;
-    }
+// FIXME: Is num meant to be the dwarf register num here?  If so, we should rename this function
+void Thread::set_reg(int num, Address value)
+{
+	regs->set_register(num, value);
 }
 
 
-Address Thread::get_fpreg(std::string name) {
-    int offset = arch->translate_regname (name) ;
-    Address rval = 0 ;
-    memcpy (&rval, fpregs + offset, fpregsize) ;
-    return rval ;
-
+double Thread::get_fpreg(const std::string &name)
+{
+	return regs->get_register_as_integer(name);
 }
 
-Address Thread::get_fpreg(int num) {
-    int offset = arch->translate_regnum (num) ; 
-    Address rval = 0 ;
-    memcpy (&rval, fpregs + offset, fpregsize) ;
-    return rval ;
+double Thread::get_fpreg(int num)
+{
+	return regs->get_register_as_integer(num);
 }
 
-void Thread::set_fpreg(std::string name, Address v) {
-    //std::cout << "setting reg %"  <<  name  <<  " to value: "  <<  "0x" << std::hex << value << std::dec << '\n' ;
-    int offset = arch->translate_regname (name) ;
-    memcpy (fpregs + offset, &v, fpregsize) ;
-    fpregs_dirty = true ;
+void Thread::set_fpreg(const std::string &name, double v)
+{
+	fpregs->set_register(name, v);
 }
 
-void Thread::soft_set_fpreg(int offset, Address v) {
-    memcpy (fpregs + offset, &v, fpregsize) ;
+void Thread::syncout()
+{
+	// FIXME: Allow other register sets.
+	if (regs->is_dirty())
+	{
+		proc->set_regs(regs, tid) ;
+		regs->clear_dirty_flag();
+	}
+	if (fpregs->is_dirty())
+	{
+		proc->set_fpregs(fpregs, tid) ;
+		fpregs->clear_dirty_flag();
+	}
 }
 
-void Thread::syncout() {
-    if (regs_dirty) {
-       //std::cout << "setting thread registers" << '\n' ;
-       proc->set_regs (regs, tid) ;
-       regs_dirty = false ;
-    }
-    if (fpregs_dirty) {
-        proc->set_fpregs (fpregs, tid) ;
-        fpregs_dirty = false ;
-    }
-}
-
-void Thread::syncin() {
-    proc->get_regs (regs, tid) ;
-    regs_dirty = false ;
-
+void Thread::syncin()
+{
+	proc->get_regs(regs, tid) ;
 #if 0
     unsigned char linebuf [16] ;
     unsigned char *ch = regs ;
@@ -155,33 +131,18 @@ void Thread::syncin() {
         size -= 16 ;
     }
 #endif
-    proc->get_fpregs (fpregs, tid) ;
-    fpregs_dirty = false ;
+	proc->get_fpregs(fpregs, tid) ;
+	regs->clear_dirty_flag();
+	fpregs->clear_dirty_flag();
 }
 
-// XXX: this needs to work on floating point regs too
-void Thread::print_regs(PStream &os, bool all) {
-    RegnameVec &regnames = arch->get_regnames(all) ;
-    for (uint i = 0 ; i < regnames.size(); i++) {
-        std::string reg = regnames[i] ;
-        Address value = get_reg(reg) ;
-        os.print ("%%%s\t0x%016llx %12lld ", reg.c_str(), value, value) ;
-        bool one = false ;
-        for (int i = 63 ; i >= 0 ; i--) {
-            Address v = (value & (1LL << i)) ; 
-            if (v != 0 || one) {
-                os.print ("%c", v ? '1' : '0') ;
-                one = true ;
-            }
-        }
-        if (!one) {
-            os.print ("0") ;
-        }
-        os.print ("\n") ;
-    }
+void Thread::print_regs(PStream &os, bool all)
+{
+	regs->print(os);
+	fpregs->print(os);
 }
 
-void Thread::print_reg(std::string name, PStream &os) {
+void Thread::print_reg(const std::string &name, PStream &os) {
     Address value = get_reg(name) ;
     os.print ("%%%s\t0x%016llx %12lld ", name.c_str(), value, value) ;
     bool one = false ;
@@ -198,16 +159,16 @@ void Thread::print_reg(std::string name, PStream &os) {
     os.print ("\n") ;
 }
 
-void Thread::save_regs (unsigned char *sr, unsigned char *sfpr) {
-    memcpy (sr, regs, arch->get_regbuffer_size()) ;
-    memcpy (sfpr, fpregs, arch->get_fpregbuffer_size()) ;
+void Thread::save_regs(RegisterSet *sr, RegisterSet *sfpr)
+{
+	sr->take_values_from(regs);
+	sfpr->take_values_from(fpregs);
 }
 
-void Thread::restore_regs (unsigned char *sr, unsigned char *sfpr) {
-    memcpy (regs, sr, arch->get_regbuffer_size()) ;
-    memcpy (fpregs, sfpr, arch->get_fpregbuffer_size()) ;
-    regs_dirty = true ;
-    fpregs_dirty = true ;
+void Thread::restore_regs(RegisterSet *sr, RegisterSet *sfpr)
+{
+	regs->take_values_from(sr);
+	fpregs->take_values_from(sfpr);
     syncout() ;
 }
 

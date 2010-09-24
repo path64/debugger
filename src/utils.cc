@@ -78,7 +78,7 @@ bool RegularExpression::matches(std::string s) {
     return (e != REG_NOMATCH);
 }
 
-struct {
+static struct {
     const char *comp ;
     const char *simp ;
 } replacements[] = {
@@ -228,7 +228,7 @@ static bool replace_tilde(std::string& path, unsigned& i) {
    }
 
    /* get home directory */
-   char* home_path;
+   const char* home_path;
    if (pw == NULL) {
        home_path = getenv("HOME");
    } else {

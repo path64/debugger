@@ -33,6 +33,7 @@ author: David Allison <dallison@pathscale.com>
 #include "process.h"
 #include "dwf_spec.h"
 
+#include <climits>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -306,7 +307,7 @@ void JunkStream::print (EvalContext &ctx, void *p)  {
    */
 }
 
-static char* unescape (int ch) {
+static const char* unescape (int ch) {
    switch (ch) {
    case '\a':  return "\\a";
    case '\b':  return "\\b";

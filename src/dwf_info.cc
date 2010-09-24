@@ -27,6 +27,7 @@ created on: Fri Aug 13 11:07:34 PDT 2004
 author: David Allison <dallison@pathscale.com>
 
 */
+#include <algorithm>
 
 #include "process.h"
 #include "dwf_info.h"

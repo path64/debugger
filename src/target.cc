@@ -42,6 +42,8 @@ author: David Allison <dallison@pathscale.com>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <signal.h>
+#include <climits> 
+#include <sys/ptrace.h>
 
 /* find the offset of X into struct user (from sys/user.h) */
 /* XXX: change long to Address, after Address is reset to long */
@@ -127,7 +129,7 @@ void LiveTarget::write_string (int pid, Address addr, std::string s) {
 
 PtraceTarget::PtraceTarget (Architecture *arch) : LiveTarget(arch), is_attached(false) {}
 
-
+#if 0
 ///////////////////////////////////////////////////////////////////////////////
 // Fork a process and attach for debugging
 ///////////////////////////////////////////////////////////////////////////////
@@ -849,3 +851,4 @@ CoreThread *CoreTarget::find_thread (int pid) {
     }
     throw Exception ("No thread for process id %d", pid) ;
 }
+#endif

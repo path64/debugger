@@ -22,7 +22,7 @@ DwEntry::read(BStream& bs, bool try_skip, Offset base) {
 
    /* first try for a sibling DIE */
    if (try_skip && abbrv->has_sibling()) {
-      spos = abbrv->get_off(bs, DW_AT_sibling, cunit);
+      spos = abbrv->get_off(bs, (DwAttrId)DW_AT_sibling, cunit);
       bs.seek(spos - base, BSTREAM_SET);
       return;
    }

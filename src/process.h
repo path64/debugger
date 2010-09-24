@@ -40,6 +40,7 @@ author: David Allison <dallison@pathscale.com>
 #include "cli.h"
 #include "pcm.h"
 #include "dis.h"
+#include "register_set.h"
 
 // imported classes
 class ProcessController ;
@@ -71,6 +72,8 @@ public:
     ObjectFile(std::string name, ELF * elf, std::istream & stream, SymbolTable * symtab) ;
     ~ObjectFile() ; 
     std::string name ; 
+	// FIXME: Should not be using ELF directly here!  Move ELF-specific stuff
+	// into a wrapper class so we can support Mach-o and so on.
     ELF * elf ; 
     std::istream & stream ; 
     SymbolTable * symtab ; 
@@ -80,46 +83,42 @@ public:
 class FDE;
 class Frame {
 public:
-    Frame (Process *proc, Architecture *arch, int n) ;
-    Frame (Process *proc, Architecture *arch, int n, Location &l, Address pc, Address sp, Address fp) ;
-    virtual ~Frame() ; 
-    void set_loc (Location &loc) ;
-    Location & get_loc () ;
-    FDE * get_fde () ;
-    virtual void print (PStream &os, bool indent, bool current) ;
-    void set_reg (int reg, Address value) ;
-    void set_fpreg (int reg, Address value) ;
-    void set_ra (Address value) ;
-    Address get_reg (int reg) ;
-    Address get_fpreg (int reg) ;
-    Address get_ra () ;
-    void publish_regs (Thread * thr, bool force = false) ;
-    void set_valid () ;
-    bool is_valid () ;
-    Address get_pc () ;
-    Address get_sp () ;
-    Address get_fp () ;
-    void set_pc (Address addr)  ;
-    void set_sp (Address addr)  ;
-    void set_fp (Address addr)  ;
-    void set_n (int i) { n = i ; }
-    unsigned char *get_regs() { return regs ; }
+	Frame(Process *proc, Architecture *arch, int n);
+	Frame(Process *proc, Architecture *arch, int n, Location &l, Address pc, Address sp, Address fp);
+	virtual ~Frame(); 
+	void set_loc(Location &loc);
+	Location & get_loc();
+	FDE* get_fde();
+	virtual void print(PStream &os, bool indent, bool current);
+	void set_reg(int reg, Address value);
+	void set_fpreg(int reg, double value);
+	void set_ra(Address value);
+	Address get_reg(int reg);
+	double get_fpreg(int reg);
+	Address get_ra() ;
+	void publish_regs(Thread * thr, bool force = false) ;
+	void set_valid();
+	bool is_valid();
+	Address get_pc();
+	Address get_sp();
+	Address get_fp();
+	void set_pc(Address addr);
+	void set_sp(Address addr);
+	void set_fp(Address addr);
+	void set_n (int i) { n = i; }
+	RegisterSet *get_regs() { return regs; }
 
 protected:
-    void init (Process *proc, Architecture *arch, int n) ;
+	void init(Process *proc, Architecture *arch, int n);
 
-    Process *proc ;
-    Architecture *arch ;
-    int n ; 
-    Location loc ; 
-    unsigned char *regs ; 
-    unsigned char * fpregs ; 
-    Address return_addr ; 
-    bool *reg_dirty ; 
-    bool *fp_reg_dirty ; 
-    bool valid ; 
-    int regsize ;
-    int fpregsize ;
+	Process *proc;
+	Architecture *arch;
+	int n;
+	Location loc;
+	Address return_addr;
+	bool valid;
+	RegisterSet *regs;
+	RegisterSet *fp_regs;
 } ;
 
 class Rule {
@@ -269,6 +268,8 @@ enum {
    PSTATE_QUIET_STEP  =  0x01
 };
 
+class StateHolder;
+
 class Process {
     typedef std::list<Thread*> ThreadList ;
     typedef std::list<Breakpoint*> BreakpointList ;
@@ -335,8 +336,8 @@ public :
     void set_reg (int num, Address value) ;
     Address get_debug_reg (int reg) ;
     void set_debug_reg (int reg, Address value) ;
-    void *save_and_reset_state() ;
-    void restore_state (void *state) ;
+    StateHolder* save_and_reset_state();
+    void restore_state(StateHolder *state);
 
 
     // breakpoint control
@@ -430,10 +431,10 @@ public :
     bool wait (int status = -1) ;
     int dowait(int &status) ;                      // wait for a thread or process to terminate with no hang
     bool is_child_pid(int pid) ;
-    void get_regs (unsigned char *regs, void *tid) ;
-    void set_regs (unsigned char *regs, void *tid) ;
-    void get_fpregs (unsigned char *regs, void *tid) ;
-    void set_fpregs (unsigned char *regs, void *tid) ;
+    void get_regs(RegisterSet *regs, void *tid) ;
+    void set_regs(RegisterSet *regs, void *tid) ;
+    void get_fpregs(RegisterSet *regs, void *tid) ;
+    void set_fpregs(RegisterSet *regs, void *tid) ;
     Breakpoint * new_breakpoint (BreakpointType type, std::string text, Address addr, bool pending=false) ;
     Watchpoint *new_watchpoint (BreakpointType type, std::string expr, Node *node, Address addr, int size, bool pending=false) ;
     Catchpoint * new_catchpoint (CatchpointType type, std::string data) ;

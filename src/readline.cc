@@ -265,7 +265,11 @@ void Readline::load_term() {
    /* set terminal output modes */
    st.c_oflag &=~ OCRNL;   /* no CR->NL translation */
    st.c_oflag &=~ ONLRET;  /* no CR filtering away */
+#ifdef OXTABS
+   st.c_oflag &=~ OXTABS;   /* no tab->spaces convert */
+#else
    st.c_oflag &=~ XTABS;   /* no tab->spaces convert */
+#endif
 
    /* do output settings on flush */
    if ( tcsetattr(0, TCSADRAIN, &st) ) {

@@ -30,15 +30,18 @@ ifeq ($(arch),)
    arch := $(shell uname -m | sed -e 's,i.86,i386,')
 endif
 
-hg_root := $(shell hg root)
-topdir := $(hg_root)/pathscale
-srcdir := $(hg_root)/src
-objdir := $(topdir)/obj-$(arch)
+#hg_root := $(shell hg root)
+#topdir := $(hg_root)/pathscale
+#srcdir := $(hg_root)/src
+#objdir := $(topdir)/obj-$(arch)
+topdir := $(shell pwd)
+srcdir := $(topdir)/../src
+objdir := $(topdir)/../obj-$(arch)
 
 submake := $(MAKE) -C $(objdir) -f $(topdir)/master.mk arch=$(arch)
 depmake := cd $(srcdir) && pathCC -MM *.cc > $(topdir)/depend.mk
 
-docs_dir := $(hg_root)/docs
+docs_dir := $(topdir)/../docs
 
 # Hand down basic stuff like all and clean
 #####################################################################

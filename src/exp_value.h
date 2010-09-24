@@ -37,7 +37,8 @@ enum ValueType {
     
 } ;
 
-struct Value {
+class Value {
+    public:
     Value() : type(VALUE_NONE), integer(0) {}
     Value (int64_t i): type(VALUE_INTEGER), integer(i) {}
     Value (int i): type(VALUE_INTEGER), integer(i) {}

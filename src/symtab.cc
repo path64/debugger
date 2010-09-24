@@ -35,6 +35,7 @@ author: David Allison <dallison@pathscale.com>
 #include "map_range.h"
 
 #include <set>
+#include <algorithm>
 
 // this is in libiberty.a but there appears to be no header for it
 extern "C" const char *cplus_demangle (const char *name, int options) ;

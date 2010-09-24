@@ -32,6 +32,7 @@ author: David Allison <dallison@pathscale.com>
 #define _TYPE_BASE_H_
 
 #include "dwf_attr.h"
+#include "dwarf.h"
 
 class DwCUnit;
 

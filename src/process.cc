@@ -38,7 +38,7 @@ author: David Allison <dallison@pathscale.com>
 #include "breakpoint.h"
 #include <errno.h>
 #include <unistd.h>
-#include <wait.h>
+#include <sys/wait.h>
 #include "dbg_thread_db.h"
 #include "dwf_cfa.h"
 #include "dwf_cunit.h"
@@ -50,6 +50,18 @@ author: David Allison <dallison@pathscale.com>
 #include "dbg_proc_service.h"
 #include <sys/syscall.h>
 #include <sys/stat.h>
+#include <sys/ptrace.h>
+
+// Linux doesn't distinguish between threads and processes, but other kernels
+// do so we don't need special handling.
+#ifndef __WALL
+#	define __WALL 0
+#endif
+// DW_CFA_offset_extended_sf is an extension, and may not be defined in the
+// system's libdwarf
+#ifndef DW_CFA_offset_extended_sf
+#	define DW_CFA_offset_extended_sf 0x11
+#endif
 
 static std::string toString (int n) {
     char buf[30] ;
@@ -118,27 +130,18 @@ Address LinkMap::get_addr() {
 }
 
 
-// the registers in a frame are stored in the same form as the native architecture.  A
-// register number is an offset into the array
-
-Frame::Frame (Process *proc, Architecture *arch, int n, Location &loc, Address pc, Address sp, Address fp):
-        regs(NULL),
-        fpregs(NULL),
-        reg_dirty(NULL),
-        fp_reg_dirty(NULL) {
-    init (proc, arch, n) ;
-    set_pc (pc) ;
-    set_sp (sp) ;
-    set_fp (fp) ;
-    set_loc (loc) ;
+Frame::Frame (Process *proc, Architecture *arch, int n, Location &loc, Address pc, Address sp, Address fp)
+{
+	init(proc, arch, n);
+	set_pc(pc);
+	set_sp(sp);
+	set_fp(fp);
+	set_loc(loc);
 }
 
-Frame::Frame (Process *proc, Architecture *arch, int n):
-        regs(NULL),
-        fpregs(NULL),
-        reg_dirty(NULL),
-        fp_reg_dirty(NULL) {
-    init (proc, arch, n) ;
+Frame::Frame (Process *proc, Architecture *arch, int n)
+{
+	init (proc, arch, n);
 }
 
 
@@ -152,60 +155,27 @@ void Frame::init (Process* _proc, Architecture* _arch, int _n) {
     valid = false;
     return_addr = 0;
 
-    /* find structure size */
-    regsize = arch->get_reg_size() ;
-    fpregsize = arch->get_fpreg_size() ;
-
-    /* registers are in native order */
-    if(regs == NULL) {
-       long sz = arch->get_regbuffer_size();
-       regs = new unsigned char[sz];
-    }
-    if(fpregs == NULL) {
-       long sz = arch->get_fpregbuffer_size();
-       fpregs = new unsigned char[sz];
-    }
-    if(reg_dirty == NULL) {
-       long sz = arch->get_regbuffer_size();
-       reg_dirty = new bool[sz];
-    }
-    if(fp_reg_dirty == NULL) {
-       long sz = arch->get_fpregbuffer_size();
-       fp_reg_dirty = new bool[sz];
-    }
-
-    /* clear out all register data */
-    memset (regs, 0, arch->get_regbuffer_size()) ;
-    memset (fpregs, 0, arch->get_fpregbuffer_size()) ;
-    memset (reg_dirty, 0, arch->get_regbuffer_size()) ;
-    memset (fp_reg_dirty, 0, arch->get_fpregbuffer_size()) ;
 }
 
 Frame::~Frame() {
-    if(regs) {
-       delete[] regs;
-    }
-    if(fpregs) {
-       delete[] fpregs;
-    }
-    if(reg_dirty) {
-       delete[] reg_dirty;
-    }
-    if(fp_reg_dirty) {
-       delete[] fp_reg_dirty;
-    }
+	// FIXME: Delete register sets.
 }
 
-void Frame::set_pc (Address addr) {
-    set_reg (arch->translate_regname("pc"), addr) ;
+void Frame::set_pc(Address addr)
+{
+	int num = regs->get_properties()->register_number_for_name("pc");
+	regs->set_register(num, addr);
 }
 
-void Frame::set_sp (Address addr) {
-    set_reg (arch->translate_regname("sp"), addr) ;
+void Frame::set_sp(Address addr)
+{
+	int num = regs->get_properties()->register_number_for_name("sp");
+	regs->set_register(num, addr);
 }
-
-void Frame::set_fp (Address addr) {
-    set_reg (arch->translate_regname("fp"), addr) ;
+void Frame::set_fp(Address addr) 
+{
+	int num = regs->get_properties()->register_number_for_name("fp");
+	regs->set_register(num, addr);
 }
 
 void Frame::set_loc (Location &l) {
@@ -228,78 +198,74 @@ void Frame::print(PStream &os, bool indent, bool current) {
     proc->print_loc(loc, this, os) ;
 }
 
-void Frame::set_reg(int reg, Address value) {
-    if (memcmp (regs + reg, &value, regsize) != 0) {
-        //std::cout << "setting frame reg " << reg << "\n" ;
-        memcpy (regs + reg, &value, regsize) ;
-        reg_dirty[reg] = true ;
-    }
+void Frame::set_reg(int reg, Address value)
+{
+	regs->set_register(reg, value);
 }
 
-void Frame::set_fpreg(int reg, Address value) {
-     if (memcmp (regs + reg, &value, fpregsize) != 0) {
-         //std::cout << "setting frame reg " << reg << "\n" ;
-         memcpy (fpregs + reg, &value, fpregsize) ;
-         fp_reg_dirty[reg] = true ;
-     }
+void Frame::set_fpreg(int reg, double value)
+{
+	fp_regs->set_register(reg, value);
 }
 
-void Frame::set_ra(Address value) {
-        return_addr = value ;
+void Frame::set_ra(Address value)
+{
+	return_addr = value ;
 }
 
-Address Frame::get_reg(int reg) {
-    Address val = 0;
-    memcpy (&val, regs + reg, regsize) ;
-    return val ; 
+Address Frame::get_reg(int reg)
+{
+	return regs->get_register_as_integer(reg);
 }
 
-Address Frame::get_fpreg(int reg) {
-    Address val = 0;
-    memcpy (&val, fpregs + reg, fpregsize) ;
-    return val ; 
+double Frame::get_fpreg(int reg)
+{
+	return fp_regs->get_register_as_double(reg);
 }
 
-Address Frame::get_ra() {
-        return return_addr ;
+Address Frame::get_ra()
+{
+	return return_addr;
 }
 
-void Frame::publish_regs(Thread * thr, bool force) {
-       int nregs = arch->get_num_regs() ;
-       for (int i = 0 ; i < nregs; i++) {
-           int reg = arch->regnum2offset (i) ;          // translate reg index to offset
-           if (reg_dirty[reg]) {
-               thr->soft_set_reg (reg, get_reg(reg), force) ;
-           }
-       }
-       nregs = arch->get_num_fpregs() ;
-       for (int i = 0 ; i < nregs; i++) {
-           int reg = arch->fpregnum2offset (i) ;          // translate reg index to offset
-           if (fp_reg_dirty[reg]) {
-               thr->soft_set_fpreg (reg, get_fpreg(reg)) ;
-           }
-       }
-  
+void Frame::publish_regs(Thread * thr, bool force)
+{
+	if (regs->is_dirty())
+	{
+		thr->soft_set_regs(regs, force);
+	}
+	if (fp_regs->is_dirty())
+	{
+		thr->soft_set_fp_regs(fp_regs, force);
+	}
 }
 
-void Frame::set_valid() {
-        valid = true ;
+void Frame::set_valid()
+{
+	valid = true ;
 }
 
-bool Frame::is_valid() {
-        return valid ;
+bool Frame::is_valid()
+{
+	return valid ;
 }
 
-Address Frame::get_pc() {
-       return get_reg (arch->translate_regname("pc")) ;
+Address Frame::get_pc()
+{
+	int num = regs->get_properties()->register_number_for_name("pc");
+	return regs->get_register_as_integer(num);
 }
 
-Address Frame::get_sp() {
-       return get_reg (arch->translate_regname("sp")) ;
+Address Frame::get_sp()
+{
+	int num = regs->get_properties()->register_number_for_name("sp");
+	return regs->get_register_as_integer(num);
 }
 
-Address Frame::get_fp() {
-       return get_reg (arch->translate_regname("fp")) ;
+Address Frame::get_fp()
+{
+	int num = regs->get_properties()->register_number_for_name("fp");
+	return regs->get_register_as_integer(num);
 }
 
 #if 0
@@ -325,7 +291,8 @@ Rule::Rule (CFARuleType type, int reg, int offset)
 Rule::~Rule() {
 }
 
-std::string Rule::toString() {
+std::string Rule::toString()
+{
    char buf[32] ;
    switch (type) {
    case CFA_UNDEFINED: ;
@@ -351,8 +318,8 @@ CFATable::CFATable (Architecture *arch, Process *proc, Address loc, int ra_reg)
     cfa(new Rule (CFA_CFA, 0, 0)),
     ra(new Rule (CFA_UNDEFINED, 0, 0)), saved_regs(NULL), saved_ra(NULL) {
 
-    regs = new Rule * [arch->get_num_regs()] ;
-    for (int i = 0 ; i < arch->get_num_regs(); i++) {
+    regs = new Rule * [arch->total_number_of_regs()] ;
+    for (int i = 0 ; i < arch->total_number_of_regs(); i++) {
         regs[i] = new Rule (CFA_UNDEFINED, i, 0) ;
     }
 }
@@ -397,8 +364,8 @@ void CFATable::set_reg(int reg, CFARuleType type, int offset) {
 }
 
 void CFATable::save() {
-    saved_regs = new Rule * [arch->get_num_regs()] ;
-    for (int i = 0 ; i < arch->get_num_regs(); i++) {
+    saved_regs = new Rule * [arch->total_number_of_regs()] ;
+    for (int i = 0 ; i < arch->total_number_of_regs(); i++) {
         saved_regs[i] = new Rule (regs[i]->type, regs[i]->reg, regs[i]->offset) ;
     }
     saved_ra = new Rule (ra->type, ra->reg, ra->offset) ;
@@ -428,7 +395,7 @@ Address CFATable::get_loc() {
 
 void CFATable::print() {
         std::cout <<"0x" << std::hex <<  loc << " " << cfa->toString() << " " ;
-        for (int i = 0 ; i < arch->get_num_regs(); i++) {
+        for (int i = 0 ; i < arch->total_number_of_regs(); i++) {
             std::cout << regs[i]->toString() << " " ;
         }
         std::cout << ra->toString() ;
@@ -470,7 +437,7 @@ void CFATable::apply(Frame *from, Frame * to) {
         to->set_fp (from->get_fp()) ;
 
         //std::cout << "applying cfa rules to registers" << '\n' ;
-        int nregs = arch->get_num_regs() ;
+        int nregs = arch->total_number_of_regs() ;
         for (int i = 0 ; i < nregs; i++) {
             Rule *rule = regs[i] ;
             switch (rule->type) {
@@ -1025,6 +992,8 @@ void Process::enable_threads() {
 
 // kill all the threads
 void Process::kill_threads() {
+	//FIXME: Factor out
+#if 0
     // first send them all SIGKILL signal
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
@@ -1052,6 +1021,7 @@ void Process::kill_threads() {
             }
         }
     }
+#endif
 }
 
 void Process::resume_threads() {
@@ -1091,6 +1061,8 @@ void Process::detach_threads() {
 
 
 void Process::stop_threads() {
+// FIXME: Factor out
+#if 0
     reap_threads() ;
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
@@ -1119,6 +1091,7 @@ void Process::stop_threads() {
         Thread *thr = *t ;      
         thr->syncin() ;
     }
+#endif
 }
 
 Process::ThreadList::iterator Process::find_thread (int pid) {
@@ -1846,34 +1819,39 @@ void Process::set_debug_reg (int reg, Address value) {
     target->set_debug_reg ((*current_thread)->get_pid(), reg, value) ;
 }
 
-struct StateHolder {
-    StateHolder (int regsize, int fpregsize) {
-        regs = new unsigned char [regsize] ;
-        fpregs = new unsigned char [fpregsize] ;
-    }
-    ~StateHolder() {
-        delete [] regs ;
-        delete [] fpregs ;
-    }
-    unsigned char *regs ;
-    unsigned char *fpregs ;
-    Breakpoint *hitbp ;
-} ;
+struct StateHolder
+{
+	StateHolder(RegisterSetProperties *props, RegisterSetProperties *fp_props)
+	{
+		regs = props->new_empty_register_set();
+		fpregs = props->new_empty_register_set();
+	}
+	~StateHolder()
+	{
+		delete regs;
+		delete fpregs;
+	}
+	RegisterSet *regs;
+	RegisterSet *fpregs;
+	Breakpoint *hitbp;
+};
 
-void *Process::save_and_reset_state() {
-    StateHolder *sh = new StateHolder (arch->get_regbuffer_size(), arch->get_fpregbuffer_size()) ;
-    (*current_thread)->save_regs (sh->regs, sh->fpregs) ;
-    sh->hitbp = hitbp ;
-    hitbp = NULL ;
-    return (void*)sh ;
+StateHolder* Process::save_and_reset_state()
+{
+	StateHolder *sh = new StateHolder(arch->main_register_set_properties(), 
+	                                  arch->fpu_register_set_properties());
+	(*current_thread)->save_regs(sh->regs, sh->fpregs) ;
+	sh->hitbp = hitbp;
+	hitbp = NULL;
+	return sh;
 }
 
-void Process::restore_state (void *state) {
-    StateHolder *sh = (StateHolder*)state ;
-    (*current_thread)->restore_regs (sh->regs, sh->fpregs) ;
-    hitbp = sh->hitbp ;
-    delete sh ;
-    invalidate_frame_cache() ;
+void Process::restore_state(StateHolder *sh)
+{
+	(*current_thread)->restore_regs(sh->regs, sh->fpregs) ;
+	hitbp = sh->hitbp ;
+	delete sh ;
+	invalidate_frame_cache() ;
 }
 
 
@@ -2700,8 +2678,8 @@ void Process::build_frame_cache() {
 
         /* first check for signal trampoline */
         if (arch->in_sigtramp(this, loc.get_symname())) {
-            unsigned char* r = nframe->get_regs();
-            arch->get_sigcontext_frame (this, sp, r);
+            RegisterSet *r = nframe->get_regs();
+            arch->get_sigcontext_frame(this, sp, r);
             goto next_iteration;
         } 
 
@@ -2919,6 +2897,7 @@ void Process::execute_cfa (Architecture *arch, CFATable *table,
                 }
                 break ; 
                 }
+#ifdef DW_CFA_MIPS_advance_loc8
             case DW_CFA_MIPS_advance_loc8: {
                 Address delta = stream.read8u() ;
                 table->advance_loc (delta) ;
@@ -2928,14 +2907,19 @@ void Process::execute_cfa (Architecture *arch, CFATable *table,
                 }
                 break ;
                 }
+#endif
+#ifdef DW_CFA_GNU_window_save
             case DW_CFA_GNU_window_save:
                 throw Exception ("DW_CFA_GNU_window_save not implemented") ;
+#endif
+#ifdef DW_CFA_GNU_args_size
             case DW_CFA_GNU_args_size: {
                 // XXX: ignore until I know what to do with it
                 int size = stream.read_uleb();
 		(void) size;
                 break ;
                 }
+#endif
             default:
                 throw Exception ("Unknown CFA opcode: %x",opcode) ;
             }
@@ -3894,9 +3878,12 @@ void Process::follow_fork (pid_t childpid, bool is_vfork) {
             target->cont (pid, 0) ;
             int status ;
             waitpid (pid, &status, 0) ;
-            if ((status >> 16) != PTRACE_EVENT_VFORKDONE) {             // XXX: ptrace stuff
+// FIXME: factor out
+#if 0
+            if ((status >> 16) != PTRACE_EVENT_VFORK_DONE) {             // XXX: ptrace stuff
                 std::cerr << "didn't get VFORKDONE event\n" ;
             }
+#endif
             attach_breakpoints (pid) ;           // reattach the breakpoints
         }
     } else if (followmode == FORK_BOTH) {  
@@ -4053,6 +4040,8 @@ bool Process::wait(int status) {
 
             if (signalnum == SIGTRAP) {  // SIGTRAP
                 if (status >> 16 != 0) {                         // extended wait status
+					// FIXME: factor out
+#if 0
                     int event = status >> 16 ;
                     //printf ("extended wait event: %d\n", event) ;
                     switch (event) {
@@ -4070,6 +4059,7 @@ bool Process::wait(int status) {
                     case PTRACE_EVENT_EXEC:             // XXX: do this
                         break ;
                     }
+#endif
                 }
 
                 bool switched_threads = false ;
@@ -4340,28 +4330,35 @@ bool Process::wait(int status) {
     return false ;
 }
 
-void Process::get_regs(unsigned char *regs, void *tid) {
-    if (thread_agent != NULL && tid != NULL) {
-        thread_db::read_thread_registers (thread_agent, tid, regs) ;
-    } else {
-        target->get_regs ((*current_thread)->get_pid(), regs) ;
-    }
+void Process::get_regs(RegisterSet *regs, void *tid)
+{
+	if (thread_agent != NULL && tid != NULL)
+	{
+		thread_db::read_thread_registers(thread_agent, tid, regs) ;
+	}
+	else
+	{
+		target->get_regs((*current_thread)->get_pid(), regs) ;
+	}
 }
 
-void Process::set_regs(unsigned char *regs, void *tid) {
-    if (thread_agent != NULL && tid != NULL) {
-        thread_db::write_thread_registers (thread_agent, tid, regs) ;
-    } else {
-        target->set_regs ((*current_thread)->get_pid(), regs) ;
-    }
+void Process::set_regs(RegisterSet *regs, void *tid)
+{
+	if (thread_agent != NULL && tid != NULL) {
+		thread_db::write_thread_registers(thread_agent, tid, regs) ;
+	}
+	else
+	{
+		target->set_regs((*current_thread)->get_pid(), regs) ;
+	}
 }
 
-void Process::get_fpregs(unsigned char *regs, void *tid) {
-    arch->get_fpregs ((void*)thread_agent, tid, (*current_thread)->get_pid(), target, regs) ;
+void Process::get_fpregs(RegisterSet *regs, void *tid) {
+    arch->get_fpregs((void*)thread_agent, tid, (*current_thread)->get_pid(), target, regs) ;
 }
 
-void Process::set_fpregs(unsigned char *regs, void *tid) {
-    arch->set_fpregs ((void*)thread_agent, tid, (*current_thread)->get_pid(), target, regs) ;
+void Process::set_fpregs(RegisterSet *regs, void *tid) {
+    arch->set_fpregs((void*)thread_agent, tid, (*current_thread)->get_pid(), target, regs) ;
 }
 
 Breakpoint * Process::new_breakpoint(BreakpointType type, std::string text, Address addr, bool pending) {
@@ -5364,7 +5361,9 @@ static Signal sigs[] = {
     {SIGPIPE, "SIGPIPE", "Broken pipe", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
     {SIGALRM, "SIGALRM", "Alarm clock", SIGACT_PASS},
     {SIGTERM, "SIGTERM", "Termination", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
+#ifdef SIGSTKFLT
     {SIGSTKFLT, "SIGSTKFLT", "Stack fault", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
+#endif
     {SIGCHLD, "SIGCHLD", "Child status has changed", SIGACT_PASS},
     {SIGCONT, "SIGCONT", "Continue", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
     {SIGSTOP, "SIGSTOP", "Stop, unblockable", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
@@ -5378,7 +5377,9 @@ static Signal sigs[] = {
     {SIGPROF, "SIGPROF", "Profiling alarm clock", SIGACT_PASS},
     {SIGWINCH, "SIGWINCH", "Window size change", SIGACT_PASS},
     {SIGIO, "SIGIO", "I/O now possible", SIGACT_PASS},
+#ifdef SIGPWR
     {SIGPWR, "SIGPWR", "Power failure restart", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
+#endif
     {SIGRTMIN, "SIGRTMIN", "Real-time signal", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
     {SIGRTMAX, "SIGRTMAX", "Real-time signal", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
     {0, NULL, NULL, 0}

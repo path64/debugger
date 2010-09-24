@@ -31,7 +31,7 @@ author: James Strother <jims@pathscale.com>
 #include <assert.h>
 #include <algorithm>
 #include "cli_param.h"
-
+#include <cstring>
 /*  This describes all of the options which are available to the
  *  user through the command line interface.  The first column is
  *  the relevent enumerated type, the second is the command name,

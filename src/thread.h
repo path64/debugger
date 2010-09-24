@@ -32,6 +32,7 @@ author: David Allison <dallison@pathscale.com>
 #define thread_h_included
 
 #include "dbg_types.h"
+#include "register_set.h"
 
 #include "pstream.h"
 
@@ -44,28 +45,33 @@ public:
     ~Thread() ;
 
     // integer registers
-    Address get_reg (std::string name) ;
+    Address get_reg (const std::string &name) ;
     Address get_reg (int num) ;                 // get register given DWARF regnum
-    void set_reg (std::string name, Address value) ;
+	void set_regs(RegisterSet *r);
+	void set_fp_regs(RegisterSet *r);
+	void soft_set_regs(RegisterSet *r, bool force=false);
+	void soft_set_fp_regs(RegisterSet *r, bool force=false);
+
+    void set_reg (const std::string &name, Address value) ;
     void set_reg (int num, Address value) ;
-    void soft_set_reg (int offset, Address value, bool force) ;             // set register but don't commit it (unless force)
 
     // floating point registers
-    Address get_fpreg (std::string name) ;
-    Address get_fpreg (int num) ;                 // get register given DWARF regnum
-    void set_fpreg (std::string name, Address v) ;
-    void soft_set_fpreg (int offset, Address v) ;             // set register but don't commit it
+    double get_fpreg(const std::string &name);
+    double get_fpreg(int num);                 // get register given DWARF regnum
+    void set_fpreg(const std::string &name, double v);
 
     void syncout () ;
     void syncin () ;
     void print_regs (PStream &os, bool all) ;
-    void print_reg (std::string name, PStream &os) ;
+    void print_reg (const std::string &name, PStream &os) ;
     void* get_tid() { return tid ; }
     int get_pid() { return pid ; }
     void set_pid (int p) { pid = p ; }
     int get_num() { return num ; }
-    void save_regs (unsigned char *sr, unsigned char *sfpr); 
-    void restore_regs (unsigned char *sr, unsigned char *sfpr); 
+	// FIXME: These should take something that allows more than two register
+	// sets (e.g. vector registers)
+    void save_regs(RegisterSet *main, RegisterSet *fpu);
+    void restore_regs(RegisterSet *main, RegisterSet *fpu); 
 
     bool is_running() { return running ; }
     void stop() { running = false ;}
@@ -82,22 +88,18 @@ public:
     static void reset() ;
 protected:
 private:
-    Architecture * arch ;
-    Process * proc ;
-    int pid ;
-    void * tid ;
-    int num ;
-    unsigned char * regs ;
-    unsigned char * fpregs ;
-    bool regs_dirty ;
-    bool fpregs_dirty ;
-    int regsize ;
-    int fpregsize ;
+	Architecture * arch;
+	Process * proc;
+	int pid;
+	void * tid;
+	int num;
+	RegisterSet *regs;
+	RegisterSet *fpregs;
 
-    bool running ;              // thread is running
-    bool disabled ;             // thread is disabled
-    int status ;
-    static int nextid ;
-} ;
+	bool running;              // thread is running
+	bool disabled;             // thread is disabled
+	int status;
+	static int nextid;
+};
 
 #endif

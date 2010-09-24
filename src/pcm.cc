@@ -28,6 +28,11 @@ author: David Allison <dallison@pathscale.com>
 
 */
 
+//FIXME: Build system bug work-around - remove when the build system is fixed.
+#ifndef PSC_BUILD_DATE
+#define PSC_BUILD_DATE ""
+#endif
+
 #include "pcm.h"
 
 #include "version_bk.h"
@@ -115,6 +120,10 @@ static std::string find_program (std::string program) {
 
 
 static Architecture *new_arch (std::string filename) {
+	// FIXME: This is wrong - you should be able to debug a 64-bit core on a
+	// 32-bit machine, and you should be able to do remote debugging of a
+	// 64-bit process from a 32-bit one.  We should also check the e_machine
+	// flag in the header and see if it corresponds to the current architecture.
     Architecture *arch ;
     if (is_elf64 (filename.c_str())) {
          if (sizeof(char*) == 4) {

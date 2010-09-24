@@ -46,7 +46,7 @@ author: David Allison <dallison@pathscale.com>
 
 class ProcessController ;
 class Command ;
-struct Format ;
+class Format ;
 class DebuggerVar ;
 
 class CommandInterpreter ;
@@ -83,6 +83,7 @@ private:
 class Command {
 public:
     Command (CommandInterpreter *cli, ProcessController *pcm, const char **commands) ;
+    virtual ~Command() { }
 
     virtual void check (std::string root, CommandVec &result) ;          // check if string matches command exactly
     virtual void check_abbreviation (std::string root, CommandVec &result) ;          // check if string matches command abbreviation
@@ -121,6 +122,7 @@ private:
 
 class ControlCommand : public Command {
 public:
+    virtual ~ControlCommand() { }
     ControlCommand(CommandInterpreter *cli, ProcessController *pcm) ;
     void execute (std::string root, std::string tail) ;
     bool is_dangerous (std::string cmd) ;
@@ -131,6 +133,7 @@ private:
 
 class DebuggerCommand : public Command {
 public:
+    virtual ~DebuggerCommand() { }
     DebuggerCommand(CommandInterpreter *cli, ProcessController *pcm) ;
     void execute (std::string root, std::string tail) ;
     void  complete (std::string root, std::string tail, int ch, std::vector<std::string> &result) ;
@@ -141,6 +144,7 @@ private:
 
 class BreakpointCommand : public Command {
 public:
+    virtual ~BreakpointCommand() { }
     BreakpointCommand(CommandInterpreter *cli, ProcessController *pcm) ;
     void execute (std::string root, std::string tail) ;
     void  complete (std::string root, std::string tail, int ch, std::vector<std::string> &result) ;
@@ -269,7 +273,8 @@ enum ComplexCommandCode {
     CMD_SEP             // command separator
 } ;
 
-struct ComplexCommand {
+class ComplexCommand {
+    public:
     ComplexCommand (ComplexCommandCode c, std::string h): code(c), head(h), left(NULL), right(NULL) {}
     ComplexCommand (ComplexCommandCode c, ComplexCommand *l, ComplexCommand *r): code(c), left(l), right(r) {}
     ~ComplexCommand() { if (left != NULL) delete left ; if (right != NULL) delete right ; }
@@ -414,7 +419,7 @@ private:
     ProcessController *pcm ;
     PStream &os ;
     std::vector<Command*> commands ;
-    sighandler_t oldint ;
+    void (*oldint)(int);
     bool program_running ;
     std::istream *instream ;            // current input stream (NULL means keyboard)
 

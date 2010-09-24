@@ -36,6 +36,7 @@ author: James Strother <jims@pathscale.com>
 
 class Completor {
 public:
+   virtual ~Completor() { }
    virtual std::string complete (std::string text, int ch) = 0;
    virtual void list_matches() = 0;
    virtual unsigned num_matches() = 0;

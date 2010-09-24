@@ -55,7 +55,8 @@ author: David Allison <dallison@pathscale.com>
 // count is the repeat count
 // if 'fill' is true then fill to left with zeroes
 
-struct Format { 
+class Format { 
+	public:
     Format (int cnt, char code, char sz) : count (cnt),code(code), size(sz), fill(false) {}
     Format () : count(1), code('n'), size('n'), fill(false) {}
     short count ;

@@ -28,8 +28,12 @@ author: David Allison <dallison@pathscale.com>
 
 */
 
+#ifdef __linux__
+
 #define __STDC_CONSTANT_MACROS
 #include "dbg_thread_db.h"
+#include <thread_db.h>
+#include <sys/procfs.h>         // for the notes
 #include "dbg_proc_service.h"
 #include <unistd.h>
 #include <errno.h>
@@ -39,7 +43,6 @@ author: David Allison <dallison@pathscale.com>
 #include <sys/user.h>
                                                                                                                                                    
 #include <dlfcn.h>
-
 
 class ProcessController ;
 ProcessController *pcm ;               // hack, the pcm object for symbol lookup
@@ -364,4 +367,4 @@ void write_thread_fpxregisters (td_thragent_t *agent, void *threadhandle, unsign
 
 }
 
-
+#endif

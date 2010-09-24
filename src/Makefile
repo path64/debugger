@@ -1,5 +1,5 @@
 all:
-	cd ../pathscale ; $(MAKE)
+	cd ../pathscale ; $(MAKE) CXXFLAGS=-fno-strict-aliasing
 
 clean:
 	cd ../pathscale ; $(MAKE) clean

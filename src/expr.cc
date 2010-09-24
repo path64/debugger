@@ -394,18 +394,27 @@ Value RealConstant::evaluate(EvalContext &context) {
     return r ;
 }
 
-RegisterExpression::RegisterExpression (SymbolTable *symtab, std::string name)
-    : Node(symtab), regname(name) {
-    RegisterType regtype = symtab->arch->get_register_type(name) ;
-    if (regtype == RT_INTEGRAL) {
-        type = symtab->new_scalar_type ("register", DW_ATE_signed, symtab->arch->get_reg_size()) ;                 
-    } else {
-        type = symtab->new_scalar_type ("register", DW_ATE_address, symtab->arch->get_reg_size()) ;                 
-    }
+RegisterExpression::RegisterExpression(SymbolTable *symtab, std::string name)
+    : Node(symtab), regname(name)
+{
+	// FIXME? Floating point registers?
+	RegisterType regtype = symtab->arch->type_of_register(name);
+	int t;
+	switch (regtype)
+	{
+		case RT_INTEGRAL:
+			t = DW_ATE_signed;
+			break;
+		case RT_ADDRESS:
+			t = DW_ATE_address;
+			break;
+		default:
+			assert(false && "Unreachable!");
+	}
+	type = symtab->new_scalar_type("register", t, symtab->arch->size_of_register(name));
 }
 
-RegisterExpression::~RegisterExpression() {
-}
+RegisterExpression::~RegisterExpression() {}
 
 Value RegisterExpression::evaluate(EvalContext &context) {
     return context.process->get_reg (regname) ;
@@ -2201,7 +2210,7 @@ Value CallExpression::evaluate(EvalContext &context) {
 
 
     // save the current process state
-    void *state = context.process->save_and_reset_state() ;
+    StateHolder *state = context.process->save_and_reset_state();
 
     Subprogram *subprog = NULL ;
 
@@ -2331,9 +2340,10 @@ Value CallExpression::evaluate(EvalContext &context) {
                     std::string struct_value = context.process->read_string (addr, size) ;
                     arch->write_call_arg (context.process, i + arg_adjust, struct_value.data(), size) ;
                 } else {
-                    int nregs = (size - 1) / arch->get_reg_size() + 1 ;               // probably 1 or 2
+                    int nregs = (size - 1) / arch->main_register_set_properties()->size_of_register() + 1 ;               // probably 1 or 2
                     for (int j = nregs-1 ; j >= 0 ; j--) {
-                        Address part = context.process->read (addr + j * arch->get_reg_size(), arch->get_reg_size()) ;
+                        int size = arch->main_register_set_properties()->size_of_register();
+                        Address part = context.process->read (addr + j * size, size);
                         arch->write_call_arg (context.process, i + arg_adjust + j, part, cls == X8664_AC_SSE) ;
                         num_fp_args += cls == X8664_AC_SSE ;
                     }
@@ -2402,10 +2412,11 @@ Value CallExpression::evaluate(EvalContext &context) {
             Address p = context.process->get_fpreg (arch->get_return_fpreg()) ;
             context.process->write (struct_return, p, 8 /*arch->get_fpreg_size()*/) ;   //XXX: fp regs are 16 bytes
         } else {
+            int size = arch->main_register_set_properties()->size_of_register();
             Address p1 = context.process->get_reg (arch->get_return_reg(1)) ; 
             Address p2 = context.process->get_reg (arch->get_return_reg(2)) ; 
-            context.process->write (struct_return, p1, arch->get_reg_size()) ;
-            context.process->write (struct_return + arch->get_reg_size(), p2, arch->get_reg_size()) ;
+            context.process->write(struct_return, p1, size);
+            context.process->write(struct_return + size, p2, size);
         }
         v = struct_return ;
     } else {
@@ -3029,12 +3040,12 @@ Token CExpressionHandler::getNextToken() {
             spelling += line[ch++] ;
         }
         if (arch != NULL) {
-            RegnameVec &regnames = arch->get_regnames(true) ;
-            for (uint i = 0 ; i < regnames.size() ; i++) {
-                if (spelling == regnames[i]) {
-                    return REGISTERNAME ;
-                }
-            }
+			// FIXME: Should search FPU registers too?
+			int num = arch->main_register_set_properties()->register_number_for_name(spelling);
+			if (RegisterSetProperties::invalid_register != num)
+			{
+				return REGISTERNAME;
+			}
         }
         spelling = "$" + spelling ;
         return DEBUGGERVAR ;
@@ -4375,12 +4386,11 @@ Token FortranExpressionHandler::getNextToken() {
             spelling += line[ch++] ;
         }
         if (arch != NULL) {
-            RegnameVec &regnames = arch->get_regnames(true) ;
-            for (uint i = 0 ; i < regnames.size() ; i++) {
-                if (spelling == regnames[i]) {
-                    return REGISTERNAME ;
-                }
-            }
+			int num = arch->main_register_set_properties()->register_number_for_name(spelling);
+			if (RegisterSetProperties::invalid_register != num)
+			{
+				return REGISTERNAME;
+			}
         }
         spelling = "$" + spelling ;
         return DEBUGGERVAR ;

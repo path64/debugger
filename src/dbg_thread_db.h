@@ -32,6 +32,8 @@ author: David Allison <dallison@pathscale.com>
 #define dbg_thread_db_h_included
 
 #include "dbg_types.h"
+#include "dbg_types.h"
+#include "register_set.h"
 
 #include <stdint.h>
 #include <thread_db.h>
@@ -51,12 +53,12 @@ void list_threads (const td_thragent_t *agent, std::vector<void*> &vec) ;
 void get_event_message (const td_thragent_t *agent, int &event_number, void *&thread_handle, void *&data) ;
 void enable_thread_events (td_thragent_t *agent, void *threadhandle, int v) ;
 
-void read_thread_registers (td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
-void write_thread_registers (td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
-void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
-void read_thread_fpxregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
-void write_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
-void write_thread_fpxregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
+void read_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
+void write_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
+void read_thread_fpregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
+void read_thread_fpxregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
+void write_thread_fpregisters(td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
+void write_thread_fpxregisters(td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
 
 void get_thread_info (td_thragent_t *agent, void *threadhandle, td_thrinfo_t &info) ;
 void suspend_thread (td_thragent_t *agent, void *threadhandle) ;

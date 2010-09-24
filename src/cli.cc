@@ -44,6 +44,7 @@ author: David Allison <dallison@pathscale.com>
 #include "process.h"
 #include <dirent.h>
 #include "arch.h"
+#include <algorithm>
 
 extern char **environ ;
 
@@ -860,7 +861,7 @@ void DebuggerCommand::execute (std::string root, std::string tail) {
         cli->help (tail) ;
     } else if (root == "shell") {
         if (tail == "") {
-            char *shell = getenv ("SHELL") ;
+            const char *shell = getenv ("SHELL") ;
             if (shell == NULL) {
                 shell = "/bin/sh" ;
             }

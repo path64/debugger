@@ -19,11 +19,11 @@
 
 # Query the state of the machine with buildmeister
 #####################################################################
-hg_root :=       $(shell hg root)
-hg_parent :=     $(shell hg path default)
+hg_root :=       $(shell pwd)/..
+hg_parent :=     $(hg_root)
 bm :=            $(hg_root)/../buildmeister
-hg_rev :=        $(shell hg parents --template '{rev}\n')
-hg_key :=        $(shell hg parents --template '{node}\n')
+hg_rev :=        .
+hg_key :=        .
 pkg_host :=      $(shell hostname -f)
 pkg_date :=      $(shell date +'%Y-%m-%d %H:%M:%S %z')
 pathdb_name :=   $(shell basename $(hg_root))
@@ -37,12 +37,12 @@ endif
 # This grabs the pathdb version number
 pkg_ver =       $(shell $(bm)/bin/get-package-version $(compiler_dir))
 pkg_rel =       $(shell $(bm)/bin/get-package-release $(pkg_ver))
-distro_name :=  $(shell $(bm)/bin/distro-info --name)
-distro_type :=  $(shell $(bm)/bin/distro-info --type)
+distro_name :=  $(shell uname -r)
+distro_type :=  $(shell uname)
 
 # This grabs the compiler version number.
-include $(compiler_dir)/pathscale/defs.mk
-compiler := $(shell $(bm)/bin/get-package-version $(compiler_dir))
+#include $(compiler_dir)/pathscale/defs.mk
+compiler := $(CXX)
 
 srcdir := $(hg_root)/src
 topdir := $(hg_root)/pathscale
@@ -52,8 +52,8 @@ psc_build_date := $(shell date '+"%F/%T"')
 
 # Setup build commands and environment
 #####################################################################
-CXX = pathCC
-CXXFLAGS = -Wall -Werror -ansi -pedantic -Wno-long-long 
+#CXX = pathCC
+CXXFLAGS = -Wall -Werror -ansi -Wno-long-long 
 
 CXXFLAGS += -DPSC_BUILD_DATE='$(psc_build_date)'
 

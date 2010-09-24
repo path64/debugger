@@ -38,7 +38,7 @@ author: David Allison <dallison@pathscale.com>
 #include "type_base.h"
 #include "file_info.h"
 
-class LazyDIE;
+struct LazyDIE;
 class Process;
 class LineInfo;
 class DwInfo;

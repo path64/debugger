@@ -32,6 +32,7 @@ author: David Allison <dallison@pathscale.com>
 /* provide the additional functions that libthread_db needs
 */
 
+#ifdef __linux__
 
 #include "dbg_proc_service.h"
 #include <sys/ptrace.h>
@@ -160,3 +161,4 @@ ps_err_e ps_get_thread_area(const struct ps_prochandle *ph, lwpid_t lwpid, int i
 
 }
 
+#endif

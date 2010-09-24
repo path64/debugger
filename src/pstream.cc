@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-
+#include <cstring>
 
 #define DEFAULT_WIDTH    72
 #define DEFAULT_HEIGHT   30

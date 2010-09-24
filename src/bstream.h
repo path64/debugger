@@ -33,6 +33,8 @@ author: David Allison <dallison@pathscale.com>
 
 #include <stdint.h>
 #include <vector>
+#include <iostream>
+#include <cstring>
 #include "dbg_types.h"
 
 class BVector {

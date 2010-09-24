@@ -36,18 +36,16 @@ author: David Allison <dallison@pathscale.com>
 #include "dbg_types.h"
 #include "dbg_elf.h"
 #include "pstream.h"
-#include <thread_db.h>
-#include <sys/procfs.h>         // for the notes
 #include <list>
 #include <map>
 #include <vector>
 #include <string>
-
 #include "map_range.h"
 
 typedef std::map<std::string,std::string> EnvMap;
 
 class Architecture ;
+class RegisterSet;
 
 class Target {
 public:
@@ -72,12 +70,14 @@ public:
     virtual void write (int pid, Address addr, Address data, int size=4) = 0 ;   // write a word
     virtual Address read (int pid, Address addr, int size=4) = 0 ;           // read a number of words
     virtual Address readptr (int pid, Address addr) = 0 ;
-    virtual void get_regs (int pid, unsigned char *regs) = 0 ;               // get register set
-    virtual void set_regs (int pid, unsigned char *regs) = 0 ;               // set register set
-    virtual void get_fpregs (int pid, unsigned char *regs) = 0 ;               // get floating point register set
-    virtual void set_fpregs (int pid, unsigned char *regs) = 0 ;               // set floating point register set
-    virtual void get_fpxregs (int pid, unsigned char *regs) = 0 ;               // get floating point extended register set
-    virtual void set_fpxregs (int pid, unsigned char *regs) = 0 ;               // set floating point extended register set
+	// FIXME: These six methods should only be two, with the register set to
+	// use as an argument
+    virtual void get_regs(int pid, RegisterSet *regs) = 0 ;               // get register set
+    virtual void set_regs(int pid, RegisterSet *regs) = 0 ;               // set register set
+    virtual void get_fpregs(int pid, RegisterSet *regs) = 0 ;               // get floating point register set
+    virtual void set_fpregs(int pid, RegisterSet *regs) = 0 ;               // set floating point register set
+    virtual void get_fpxregs(int pid, RegisterSet *regs) = 0 ;               // get floating point extended register set
+    virtual void set_fpxregs(int pid, RegisterSet *regs) = 0 ;               // set floating point extended register set
 
     virtual void cont (int pid, int signal) = 0 ;                                // continue execution
     virtual void step(int pid) = 0 ;                                           // single step
@@ -116,15 +116,16 @@ public:
 #define PTRACE_O_TRACEEXEC      0x10
 #define PTRACE_O_TRACEVFORKDONE 0x20
 #define PTRACE_O_TRACEEXIT      0x40
-                                                                                                                                  
+
 // event codes
+/*
 #define PTRACE_EVENT_FORK       1
 #define PTRACE_EVENT_VFORK      2
 #define PTRACE_EVENT_CLONE      3
 #define PTRACE_EVENT_EXEC       4
 #define PTRACE_EVENT_VFORKDONE  5
 #define PTRACE_EVENT_EXIT       6
-                                                                                                                                  
+*/                                                                                                                                  
 #endif
 
 
@@ -145,12 +146,12 @@ public:
     Address read (int pid, Address addr, int size=4) ;           // read a number of words
     Address readptr (int pid, Address addr)  ;
     void write (int pid, Address addr, Address data, int size) ;    // write a word
-    void get_regs (int pid, unsigned char *regs) ;               // get register set
-    void set_regs (int pid, unsigned char *regs) ;               // set register set
-    void get_fpregs (int pid, unsigned char *regs) ;               // get register set
-    void set_fpregs (int pid, unsigned char *regs) ;               // set register set
-    void get_fpxregs (int pid, unsigned char *regs) ;               // get register set
-    void set_fpxregs (int pid, unsigned char *regs) ;               // set register set
+    virtual void get_regs(int pid, RegisterSet *regs);               // get register set
+    virtual void set_regs(int pid, RegisterSet *regs);               // set register set
+    virtual void get_fpregs(int pid, RegisterSet *regs);               // get floating point register set
+    virtual void set_fpregs(int pid, RegisterSet *regs);               // set floating point register set
+    virtual void get_fpxregs(int pid, RegisterSet *regs);               // get floating point extended register set
+    virtual void set_fpxregs(int pid, RegisterSet *regs); // set floating point extended register set
     long get_debug_reg (int pid, int reg) ;
     void set_debug_reg (int pid, int reg, long value) ;
 
@@ -168,13 +169,16 @@ struct CoreThread {
     CoreThread() : id(++nextid) {}
 
     int id ;
+// FIXME: This should be factored out into a target class
+#ifdef __linux__
     elf_prstatus prstatus ;             // process status
 
-#if __WORDSIZE == 64
+#	if __WORDSIZE == 64
     struct user_fpregs_struct fpregset ;           // floating point register set and extended ones too
-#else
+#	else
     struct user_fpregs_struct fpregset ;           // floating point register set
     struct user_fpxregs_struct fpxregset ;        // extended floating point register set
+#	endif
 #endif
     static int nextid ;
 } ;
@@ -199,12 +203,12 @@ public:
     void write (int pid, Address addr, Address data, int size=4) ;   // write a number of bytes
     Address read (int pid, Address addr, int size=4) ;           // read a number of words
     Address readptr (int pid, Address addr)  ;
-    void get_regs (int pid, unsigned char *regs) ;               // get register set
-    void set_regs (int pid, unsigned char *regs) ;               // set register set
-    void get_fpregs (int pid, unsigned char *regs) ;               // get register set
-    void set_fpregs (int pid, unsigned char *regs) ;               // set register set
-    void get_fpxregs (int pid, unsigned char *regs) ;               // get register set
-    void set_fpxregs (int pid, unsigned char *regs) ;               // set register set
+    virtual void get_regs(int pid, RegisterSet *regs);               // get register set
+    virtual void set_regs(int pid, RegisterSet *regs);               // set register set
+    virtual void get_fpregs(int pid, RegisterSet *regs);               // get floating point register set
+    virtual void set_fpregs(int pid, RegisterSet *regs);               // set floating point register set
+    virtual void get_fpxregs(int pid, RegisterSet *regs);               // get floating point extended register set
+    virtual void set_fpxregs(int pid, RegisterSet *regs); // set floating point extended register set
 
     /* XXX: shouldn't be able to set regs either */
 
@@ -253,7 +257,10 @@ private:
     std::string corefile ;
     int fd ;
     ELF *core ;
+// FIXME: This should be factored out into a target class
+#ifdef __linux__
     elf_prpsinfo prpsinfo ;             // process info
+#endif
 
     void new_thread() ;
     CoreThread *find_thread (int pid) ;

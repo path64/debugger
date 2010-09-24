@@ -60,7 +60,10 @@ typedef std::map<Offset, CIE*> CIEMap ;
 typedef std::map<Address, FDE*> FDEMap ;
 typedef std::vector<FDE*> FDEVec ;              // sorted on start address
 
-
+//typedef int DwAttrId;
+//typedef int DwFormId;
+//typedef int DwTagId;
+//typedef int DwVirtId;
 
 // a DIE that has not been loaded yet
 // This is used when a pointer to another die that hasn't been loaded yet

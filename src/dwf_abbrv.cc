@@ -50,7 +50,7 @@ DwAbbrv::read(BStream& bs) {
    size = calc_size();
 
    /* sibling is optimized */
-   with_sib = has(DW_AT_sibling);
+   with_sib = has((DwAttrId)DW_AT_sibling);
 }
 
 /*  Do a readelf style dump of this attribute value
