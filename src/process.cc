@@ -50,6 +50,7 @@ author: David Allison <dallison@pathscale.com>
 #include "dbg_proc_service.h"
 #include <sys/stat.h>
 #include "trace.h"
+#include <ios>
 
 #if defined (__linux__)
 #define WAITPID_ALL_CHILD_TYPES __WALL

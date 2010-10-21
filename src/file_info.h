@@ -33,6 +33,7 @@ author: David Allison <dallison@pathscale.com>
 
 #include <vector>
 #include <string>
+#include <fstream>
 
 class File;
 

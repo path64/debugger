@@ -33,6 +33,7 @@ author: James Strother <jims@pathscale.com>
 
 #include "dwf_spec.h"
 #include <map>
+#include <stdlib.h>
 
 class DwNames {
 private:

@@ -32,6 +32,7 @@ author: David Allison <dallison@pathscale.com>
 #include "dwf_info.h"
 #include "err_nice.h"
 #include "dwf_cfa.h"
+#include <ios>
 
 CFAEntry::CFAEntry(DwInfo * dwarf)
  : instructions(), dwarf(dwarf)

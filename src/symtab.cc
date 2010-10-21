@@ -38,8 +38,7 @@ author: David Allison <dallison@pathscale.com>
 #include <set>
 #include <algorithm>
 
-// this is in libiberty.a but there appears to be no header for it
-extern "C" const char *cplus_demangle (const char *name, int options) ;
+extern "C" char *cpp_demangle_gnu3(const char *);
 
 AliasManager::AliasManager() {
 }
@@ -50,7 +49,7 @@ AliasManager::~AliasManager() {
 
 std::string demangle(const std::string &func)
 {
-    const char *demangled = cplus_demangle(func.c_str(), 0);
+    const char *demangled = cpp_demangle_gnu3(func.c_str());
     return demangled ? demangled : func;
 }
 
@@ -184,7 +183,7 @@ void SymbolTable::do_cxx_alias() {
       ELFSymbol *sym = i->val;
 
       const char *name = sym->get_c_name() ;
-      const char *demangled = cplus_demangle (name, 0) ;
+      const char *demangled = cpp_demangle_gnu3 (name) ;
       if (demangled != NULL) {
          aliases->add_alias (name, demangled) ;
          aliases->add_alias (demangled, name) ;

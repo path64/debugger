@@ -45,6 +45,8 @@ set(pathdb_sources
     dwf_abbrv.cc
     gen_loc.cc
     junk_stream.cc
+    libelftc_dem_gnu3.c
+    libelftc_vstr.c
     ${CMAKE_CURRENT_BINARY_DIR}/opcodes.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.cc
     ${CMAKE_CURRENT_BINARY_DIR}/dwf_spec.cc
@@ -126,7 +128,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ELSE()
     set(libdl "")
 ENDIF()
-target_link_libraries(pathdb-lib ncurses iberty ${libdl} -Wl,-E)
+target_link_libraries(pathdb-lib ncurses ${libdl} -Wl,-E)
 
 # Driver
 add_executable(pathdb driver.cc)

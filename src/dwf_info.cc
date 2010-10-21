@@ -43,6 +43,7 @@ author: David Allison <dallison@pathscale.com>
 #include "type_pointer.h"
 #include "type_qual.h"
 
+#include <ios>
 #include <algorithm>
 
 DwInfo::DwInfo(ELF * elffile, std::istream& _stream)

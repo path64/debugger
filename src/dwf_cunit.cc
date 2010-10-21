@@ -39,6 +39,8 @@ author: David Allison <dallison@pathscale.com>
 #include "type_struct.h"
 #include "type_qual.h"
 
+#include <ios>
+
 DwCUnit::DwCUnit (DwInfo *dwarf) : dwarf(dwarf), mainstream(BVector(),0), abbrev(NULL)
  {
 }
