@@ -197,19 +197,9 @@ void ProcessController::get_license() {
                 e-- ;
             } while (e != 0 && link[e] != '/');
             end = e-- ;
- 
-            // now look at the previous dir and remove it if it is /bin/
-            while (e != 0 && link[e] != '/') {
-                e-- ;
-            }
         }
-        if (strncmp (link+e, "/bin/", 5) == 0) {
-            link[e] = 0 ;
-            exename = std::string(link) + "/lib/" + psc_full_ver + "/subclient";
-        } else {
-            link[end] = 0 ;
-            exename = std::string(link) + "/subclient" ;
-        }
+        link[end] = 0 ;
+        exename = std::string(link) + "/subclient" ;
     } else {
         exename = client ;
     }
