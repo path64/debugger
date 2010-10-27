@@ -68,7 +68,7 @@ enum RegisterType
 	 * Not a valid register name.
 	 */
 	RT_INVALID
-} ;
+};
 
 class EvalContext;
 

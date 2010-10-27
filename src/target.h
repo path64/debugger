@@ -70,19 +70,11 @@ public:
     virtual void write (int pid, Address addr, Address data, int size=4) = 0 ;   // write a word
     virtual Address read (int pid, Address addr, int size=4) = 0 ;           // read a number of words
     virtual Address readptr (int pid, Address addr) = 0 ;
-	// FIXME: These six methods should only be two, with the register set to
-	// use as an argument
     virtual void get_regs(int pid, RegisterSet *regs) = 0 ;               // get register set
-    virtual void set_regs(int pid, RegisterSet *regs) = 0 ;               // set register set
     virtual void get_fpregs(int pid, RegisterSet *regs) = 0 ;               // get floating point register set
-    virtual void set_fpregs(int pid, RegisterSet *regs) = 0 ;               // set floating point register set
+	// FIXME: This should be providing a generic mechanism for setting extra
+	// register sets.
     virtual void get_fpxregs(int pid, RegisterSet *regs) = 0 ;               // get floating point extended register set
-    virtual void set_fpxregs(int pid, RegisterSet *regs) = 0 ;               // set floating point extended register set
-
-    virtual void cont (int pid, int signal) = 0 ;                                // continue execution
-    virtual void step(int pid) = 0 ;                                           // single step
-    virtual long get_debug_reg (int pid, int reg) = 0 ;
-    virtual void set_debug_reg (int pid, int reg, long value) = 0 ;
 
     virtual void init_events (int pid) = 0 ;
     virtual pid_t get_fork_pid (pid_t pid) = 0 ;
@@ -94,12 +86,44 @@ protected:
 } ;
 
 
-// a target talking to a live process
+/**
+ * A target talking to a live process.  Concrete subclasses of this exist for
+ * each supported platform.  For some platforms, there may be different live
+ * targets for different supported architectures.  For example, debugging x86
+ * and x86-64 programs typically requires slightly different calls to access
+ * the registers of the remote process, although both kinds of program can be
+ * run on an x86-64 host.
+ *
+ * Live targets will also provide the interface to the remote debugger, once
+ * this support is implemented.
+ */
 class LiveTarget : public Target {
-public:
+protected:
+	/**
+	 * Live target has a protected constructor.  Use CreateLiveTarget() to
+	 * construct an instance of the correct concrete subclass for the current
+	 * platform.
+	 */
     LiveTarget (Architecture *arch) : Target(arch) {}
+public:
+	/**
+	 * Returns a live target for this platform.
+	 */
+	static LiveTarget* Create(Architecture *arch);
     ~LiveTarget() {}
     void write_string (int pid, Address addr, std::string s) ;
+
+    virtual void set_fpregs(int pid, RegisterSet *regs) = 0 ;               // set floating point register set
+	virtual void set_regs(int pid, RegisterSet *regs) = 0 ;               // set register set
+    virtual void set_fpxregs(int pid, RegisterSet *regs) = 0 ;               // set floating point extended register set
+
+    virtual void cont (int pid, int signal) = 0 ;                                // continue execution
+    virtual void step(int pid) = 0 ;                                           // single step
+	// FIXME: I don't like exposing the debug registers here.  We should be
+	// exposing generic functionality, which can be implemented either via the
+	// debug registers, in software, or throw a not-supported exception.
+    virtual long get_debug_reg (int pid, int reg) = 0 ;
+    virtual void set_debug_reg (int pid, int reg, long value) = 0 ;
 } ;
 
 #if 0
@@ -131,58 +155,16 @@ public:
 #endif
 
 
-// a live target that uses ptrace to control the process
-class PtraceTarget : public LiveTarget {
-public:
-    PtraceTarget (Architecture *arch) ;
-    ~PtraceTarget() {}
 
-    int attach (const char* prog, const char* args, EnvMap&);      // attach to a file
-    int attach (std::string fn, int pid) ;                         // attach to a process
-    int attach (int pid) ;                                         // attach to a process id
-
-    void detach(int pid, bool kill = false) ;                                 // detach from target
-
-    void interrupt(int pid) ;
-    bool test_address (int pid, Address addr) ;                  // check if address is good
-    Address read (int pid, Address addr, int size=4) ;           // read a number of words
-    Address readptr (int pid, Address addr)  ;
-    void write (int pid, Address addr, Address data, int size) ;    // write a word
-    virtual void get_regs(int pid, RegisterSet *regs);               // get register set
-    virtual void set_regs(int pid, RegisterSet *regs);               // set register set
-    virtual void get_fpregs(int pid, RegisterSet *regs);               // get floating point register set
-    virtual void set_fpregs(int pid, RegisterSet *regs);               // set floating point register set
-    virtual void get_fpxregs(int pid, RegisterSet *regs);               // get floating point extended register set
-    virtual void set_fpxregs(int pid, RegisterSet *regs); // set floating point extended register set
-    long get_debug_reg (int pid, int reg) ;
-    void set_debug_reg (int pid, int reg, long value) ;
-
-    void step(int pid)  ;                                           // single step
-    void cont (int pid, int signal)  ;                              // continue execution
-    void init_events (int pid) ;
-    pid_t get_fork_pid (pid_t pid) ;
-private:
-
-    pid_t pid;
-    bool is_attached ;
-} ;
-
-struct CoreThread {
+struct CoreThread
+{
+	private static int nextid;
     CoreThread() : id(++nextid) {}
 
     int id ;
-// FIXME: This should be factored out into a target class
-#ifdef __linux__
+	// FIXME: Target specific.
     elf_prstatus prstatus ;             // process status
-
-#	if __WORDSIZE == 64
-    struct user_fpregs_struct fpregset ;           // floating point register set and extended ones too
-#	else
-    struct user_fpregs_struct fpregset ;           // floating point register set
-    struct user_fpxregs_struct fpxregset ;        // extended floating point register set
-#	endif
-#endif
-    static int nextid ;
+	RegisterSet *registers;
 } ;
 
 
@@ -206,30 +188,8 @@ public:
     Address read (int pid, Address addr, int size=4) ;           // read a number of words
     Address readptr (int pid, Address addr)  ;
     virtual void get_regs(int pid, RegisterSet *regs);               // get register set
-    virtual void set_regs(int pid, RegisterSet *regs);               // set register set
     virtual void get_fpregs(int pid, RegisterSet *regs);               // get floating point register set
-    virtual void set_fpregs(int pid, RegisterSet *regs);               // set floating point register set
     virtual void get_fpxregs(int pid, RegisterSet *regs);               // get floating point extended register set
-    virtual void set_fpxregs(int pid, RegisterSet *regs); // set floating point extended register set
-
-    /* XXX: shouldn't be able to set regs either */
-
-    /* core files have no registers or events */
-    void init_events (int pid) {
-        throw Exception ("No events in core file");
-    }
-    pid_t get_fork_pid (pid_t pid) {
-        throw Exception ("No events in core file");
-    }
-    void write_string (int pid, Address addr, std::string s) {
-        throw Exception ("Cannot write to core file");
-    }
-    long get_debug_reg (int pid, int reg) {
-        throw Exception ("Cannot get debug registers on a core file");
-    }
-    void set_debug_reg (int pid, int reg, long value) {
-        throw Exception ("Cannot set debug registers on a core file");
-    }
 
     // methods particular to this object, not general target
     int get_signal() ;
