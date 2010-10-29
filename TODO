@@ -1,0 +1,64 @@
+PathDB TODO
+===========
+
+The refactoring branch of pathdb contains ongoing work to tidy the code.  There are several overall aims for this refactoring:
+
+- Decouple the platform specific code to allow:
+	- Porting to other platforms more easily
+	- Reading core dumps from one platform on another
+- Decoupling the UI from the back end to allow:
+	- Remote debugging via a daemon process
+	- Multiple front ends (e.g. gdb-compatible, GUI integration)
+
+Portability Notes
+-----------------
+
+There are two orthogonal issues with portability: operating systems and architectures.  For something as low-level as a debugger, supporting an operating system does not guarantee supporting all architectures that the operating system supports.
+
+As a simple example, ptrace() on *NIX lets you get the register set as a per-architecture structure.  Making this structure accessible to the rest of the debugger is important.
+
+Often, per-architecture code can be shared between different operating systems.  It's important to avoid duplicating architecture-specific code in every single platform back end.
+
+Register Sets
+-------------
+
+The first part of the refactoring has been tidying up the register set accesses.  PathDB initially used the Linux register structures.  This is problematic, because these structures are not portable, and they tie the debugger's ability to read core files to the host architecture.
+
+The refactoring branch introduces the RegisterSetProperties and RegisterSet classes.  The first provides metadata about a register set; generally each architecture should create one instance of this per register set (e.g. main, FPU, vector).  This handles things like mapping between names to DWARF register numbers.
+
+The RegisterSet class, and its subclasses, each represent a single bank of registers.  The aim of this class is that it can be passed around the high-level parts of the debugger, without requiring knowledge of the structure of the register set.  All accesses to the set are via accessor methods which allow you to set values from various C types.
+
+The RegisterSet class is now used in pretty much all of the high-level bits of the debugger.  Connecting it to the platform-specific code is not yet finished.
+
+Note: There is a custom RegisterSet subclass for storing x87 registers, which handles conversion between 80-bit x87 floats and doubles in a portable way (using x87 instructions directly when they are available - i.e. when running on x86 - and falling back to a portable implementation on other platforms).  Any other register set that uses an unusual representation for registers may need a similar subclass.
+
+Binary Files
+------------
+
+Currently, all binary files are accessed via the ELF class.  There are two problems with this:
+
+1. Not every platform uses ELF.
+2. Not every platform uses the same format for core dumps and executables.
+
+The ELF class's interface is fairly good, so the main refactoring that needs to be done here is:
+
+- Make all of the methods virtual.
+- Add an abstract superclass (BinaryFile or similar).
+
+Additionally, there are a few things that look for the .ELF header and only create the ELF instance if they find it.  We should add a factory method on BinaryFile that takes a file, parses the magic number, and creates an instance of the correct subclass.
+
+Targets
+-------
+
+The old pathdb code includes two targets: cores and ptrace.  The target.h file contains a small class hierarchy of different targets.  Part of the refactoring has involved cleaning this hierarchy.  
+
+In a number of cases, the Target class included virtual methods that were only valid for LiveTargets - all other Target subclasses threw an exception when they were called.  This has (hopefully) been fixed so all of the methods that modify the process are only found in the LifeTarget class.  Any code in the front end that may modify the target now must either acquire a LiveTarget instance.
+
+The Target code still contains some x86-isms.  For example, there are methods for setting fpx registers.  This should be replaced by something architecture-agnostic.
+
+There are also methods in LiveTarget for accessing the debug registers.  We should ideally not be exposing them outside of the target at all.  Instead, we should expose their functionality (i.e. watchpoints) through a generic interface.  We can then implement equivalent (but slower) generic functionality for the architectures without hardware debug support and for cases where the debug registers are all in use.
+
+UI Abstraction
+--------------
+
+Several bits of the low-level code contain stuff for writing their contents to output streams.  This is fine, as long as they don't require specific streams (except for debugging), but it's worth making sure that none of them do.
