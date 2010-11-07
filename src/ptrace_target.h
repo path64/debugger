@@ -10,7 +10,7 @@
 class PtraceTarget : public LiveTarget
 {
 public:
-    PtraceTarget (Architecture *arch) ;
+    PtraceTarget (Architecture *arch);
     ~PtraceTarget() {}
 
     int attach (const char* prog, const char* args, EnvMap&);      // attach to a file

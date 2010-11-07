@@ -1,4 +1,14 @@
 #include <sys/ptrace.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include "ptrace_target.h"
+#include "arch.h"
+#include "target.h"
+
+#ifndef CHAR_BIT
+#define CHAR_BIT	8
+#endif
 
 PtraceTarget::PtraceTarget (Architecture *arch) : LiveTarget(arch), is_attached(false) {}
 
@@ -350,46 +360,52 @@ Address PtraceTarget::readptr (int pid, Address addr) {
     return read(pid, addr, arch->ptrsize());
 }
 
-void PtraceTarget::get_regs(int pid, unsigned char *regs) {
-    long e = ptrace (PTRACE_GETREGS, pid, (void*)0, regs) ;
-    if (e < 0) {
-        throw Exception ("Unable to read registers")  ;
-    }
+void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
+	//XXX
+//     long e = ptrace (PTRACE_GETREGS, pid, (void*)0, regs) ;
+//     if (e < 0) {
+//         throw Exception ("Unable to read registers")  ;
+//     }
 }
 
-void PtraceTarget::set_regs(int pid, unsigned char *regs) {
-    long e = ptrace (PTRACE_SETREGS, pid, (void*)0, regs) ;
-    if (e < 0) {
-        throw Exception ("Unable to write registers")  ;
-    }
+void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
+	//XXX
+//     long e = ptrace (PTRACE_SETREGS, pid, (void*)0, regs) ;
+//     if (e < 0) {
+//         throw Exception ("Unable to write registers")  ;
+//     }
 }
 
-void PtraceTarget::get_fpregs(int pid, unsigned char *regs) {
-    long e = ptrace (PTRACE_GETFPREGS, pid, (void*)0, regs) ;
-    if (e < 0) {
-        throw Exception ("Unable to read floating point registers")  ;
-    }
+void PtraceTarget::get_fpregs(int pid, RegisterSet *reg) {
+	//XXX
+//     long e = ptrace (PTRACE_GETFPREGS, pid, (void*)0, regs) ;
+//     if (e < 0) {
+//         throw Exception ("Unable to read floating point registers")  ;
+//     }
 }
 
-void PtraceTarget::set_fpregs(int pid, unsigned char *regs) {
-    long e = ptrace (PTRACE_SETFPREGS, pid, (void*)0, regs) ;
-    if (e < 0) {
-        throw Exception ("Unable to write floating point registers")  ;
-    }
+void PtraceTarget::set_fpregs(int pid, RegisterSet *reg) {
+	//XXX
+//     long e = ptrace (PTRACE_SETFPREGS, pid, (void*)0, regs) ;
+//     if (e < 0) {
+//         throw Exception ("Unable to write floating point registers")  ;
+//     }
 }
 
-void PtraceTarget::get_fpxregs(int pid, unsigned char *regs) {
-    long e = ptrace (PTRACE_GETFPXREGS, pid, (void*)0, regs) ;
-    if (e < 0) {
-        throw Exception ("Unable to read floating point registers")  ;
-    }
+void PtraceTarget::get_fpxregs(int pid, RegisterSet *reg) {
+	//XXX
+//     long e = ptrace (PTRACE_GETFPXREGS, pid, (void*)0, regs) ;
+//     if (e < 0) {
+//         throw Exception ("Unable to read floating point registers")  ;
+//     }
 }
 
-void PtraceTarget::set_fpxregs(int pid, unsigned char *regs) {
-    long e = ptrace (PTRACE_SETFPXREGS, pid, (void*)0, regs) ;
-    if (e < 0) {
-        throw Exception ("Unable to write floating point registers")  ;
-    }
+void PtraceTarget::set_fpxregs(int pid, RegisterSet *reg) {
+//XXX
+	//     long e = ptrace (PTRACE_SETFPXREGS, pid, (void*)0, regs) ;
+//     if (e < 0) {
+//         throw Exception ("Unable to write floating point registers")  ;
+//     }
 }
 
 long PtraceTarget::get_debug_reg (int pid, int reg) {

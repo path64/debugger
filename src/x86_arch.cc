@@ -625,32 +625,36 @@ int i386_sigcontext_regs[] = {
     -1
 } ;
 
-void i386Arch::get_sigcontext_frame (Process *proc, Address sp, unsigned char *regs) {
-    Address ctx = sp+ 40 ;
-    //proc->dump (ctx, sizeof (i386_sigcontext_regs) * 4) ;
-    for (int i = 0 ; i386_sigcontext_regs[i] != -1 ; i++) {
-        if (i386_sigcontext_regs[i] == -2) {
-            continue ;
-        }
-        int v = proc->read (ctx + i*4, 4) ;
-        memcpy (regs + i386_sigcontext_regs[i]*4, &v, 4) ;
-    }
+void i386Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *regs) {
+//XXX
+	
+//     Address ctx = sp+ 40 ;
+//     //proc->dump (ctx, sizeof (i386_sigcontext_regs) * 4) ;
+//     for (int i = 0 ; i386_sigcontext_regs[i] != -1 ; i++) {
+//         if (i386_sigcontext_regs[i] == -2) {
+//             continue ;
+//         }
+//         int v = proc->read (ctx + i*4, 4) ;
+//         memcpy (regs + i386_sigcontext_regs[i]*4, &v, 4) ;
+//     }
 }
 
-void i386Arch::get_fpregs (void *agent, void * tid, int pid, Target *target, unsigned char *regs) {
-    if (agent != NULL && tid != NULL) {
-        thread_db::read_thread_fpxregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
-    } else {
-        target->get_fpxregs (pid, regs) ;
-    }
+void i386Arch::get_fpregs (void *agent, void * tid, int pid, Target *target, RegisterSet *regs) {
+// // 	//XXX
+//     if (agent != NULL && tid != NULL) {
+//         thread_db::read_thread_fpxregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
+//     } else {
+//         target->get_fpxregs (pid, regs) ;
+//     }
 }
 
-void i386Arch::set_fpregs (void *agent, void * tid, int pid, Target *target, unsigned char *regs) {
-    if (agent != NULL && tid != NULL) {
-        thread_db::write_thread_fpxregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
-    } else {
-        target->set_fpxregs (pid, regs) ;
-    }
+void i386Arch::set_fpregs (void *agent, void * tid, int pid, Target *target, RegisterSet *regs) {
+// 	//XXX
+//     if (agent != NULL && tid != NULL) {
+//         thread_db::write_thread_fpxregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
+//     } else {
+//         target->set_fpxregs (pid, regs) ;
+//     }
 }
 
 int i386Arch::classify_struct (EvalContext &ctx, DIE *s) {
@@ -1320,30 +1324,33 @@ int x86_64_sigcontext_regs[] = {
     -1
 } ;
 
-void x86_64Arch::get_sigcontext_frame (Process *proc, Address sp, unsigned char *regs) {
-    Address ctx = sp+ 40 ;
-    //proc->dump (ctx, sizeof (x86_64_sigcontext_regs) * sizeof(long)) ;
-    for (int i = 0 ; x86_64_sigcontext_regs[i] != -1 ; i++) {
-        Address v = proc->read (ctx + i*sizeof(long), 8) ;
-        memcpy (regs + x86_64_sigcontext_regs[i]*sizeof(long), &v, 8) ;
-    }
+void x86_64Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *regs) {
+	//XXX
+//     Address ctx = sp+ 40 ;
+//     //proc->dump (ctx, sizeof (x86_64_sigcontext_regs) * sizeof(long)) ;
+//     for (int i = 0 ; x86_64_sigcontext_regs[i] != -1 ; i++) {
+//         Address v = proc->read (ctx + i*sizeof(long), 8) ;
+//         memcpy (regs + x86_64_sigcontext_regs[i]*sizeof(long), &v, 8) ;
+//     }
 }
 
-void x86_64Arch::get_fpregs (void *agent, void * tid, int pid, Target *target, unsigned char *regs) {
-    if (agent != NULL && tid != NULL) {
-        thread_db::read_thread_fpregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
-    } else {
-        target->get_fpregs (pid, regs) ;
-    }
+void x86_64Arch::get_fpregs (void *agent, void * tid, int pid, Target *target, RegisterSet *regs) {
+	//XXX
+//     if (agent != NULL && tid != NULL) {
+//         thread_db::read_thread_fpregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
+//     } else {
+//         target->get_fpregs (pid, regs) ;
+//     }
 }
 
 
-void x86_64Arch::set_fpregs (void *agent, void * tid, int pid, Target *target, unsigned char *regs) {
-    if (agent != NULL && tid != NULL) {
-        thread_db::write_thread_fpregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
-    } else {
-        target->set_fpregs (pid, regs) ;
-    }
+void x86_64Arch::set_fpregs (void *agent, void * tid, int pid, Target *target, RegisterSet *regs) {
+	//XXX
+//     if (agent != NULL && tid != NULL) {
+//         thread_db::write_thread_fpregisters (reinterpret_cast<td_thragent_t*>(agent), tid, regs) ;
+//     } else {
+//         target->set_fpregs (pid, regs) ;
+//     }
 }
 
 // classify the small struct according to the rules on the ABI (page 16)
@@ -1485,4 +1492,23 @@ int x86_64Arch::call_size(Process * proc, Address addr) {
     throw Exception ("Unable to determine size of call instruction") ;
 }
 
+//XXX
+RegisterSetInfoList& x86_64Arch::register_properties() const {
+	throw Exception ("register_properties not support!") ;
+}
+RegisterSetProperties *x86_64Arch::main_register_set_properties() {
+	throw Exception ("register_properties not support!") ;
+}
+RegisterSetProperties *x86_64Arch::fpu_register_set_properties(){
+	throw Exception ("register_properties not support!") ;
+}
 
+RegisterSetInfoList& i386Arch::register_properties() const {
+	throw Exception ("register_properties not support!") ;
+}
+RegisterSetProperties *i386Arch::main_register_set_properties() {
+	throw Exception ("register_properties not support!") ;
+}
+RegisterSetProperties *i386Arch::fpu_register_set_properties(){
+	throw Exception ("register_properties not support!") ;
+}

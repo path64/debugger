@@ -44,10 +44,7 @@ author: David Allison <dallison@pathscale.com>
 #include <signal.h>
 #include <climits> 
 #include <sys/ptrace.h>
-
-/* find the offset of X into struct user (from sys/user.h) */
-/* XXX: change long to Address, after Address is reset to long */
-#define STRUCT_USER_OFFSET(X) ((long)&(((struct user*)0)->X))
+#include "ptrace_target.h"
 
 
 // this is where other targets can be created when we have some
@@ -355,34 +352,40 @@ Address CoreTarget::readptr (int pid, Address addr) {
     return read (pid, addr, arch->ptrsize()) ;
 }
 
-void CoreTarget::get_regs(int pid, unsigned char *regs) {
-    memcpy (regs, &find_thread(pid)->prstatus.pr_reg, sizeof (struct user_regs_struct)) ;
-}
-                                                                                                                                           
-void CoreTarget::set_regs(int pid, unsigned char *regs) {
-    memcpy (&find_thread(pid)->prstatus.pr_reg, regs, sizeof (struct user_regs_struct)) ;
+void CoreTarget::get_regs(int pid, RegisterSet *regs) {
+    //XXX
+    //memcpy (regs, &find_thread(pid)->prstatus.pr_reg, sizeof (struct user_regs_struct)) ;
 }
 
-void CoreTarget::get_fpregs(int pid, unsigned char *regs) {
-    memcpy (regs, &find_thread(pid)->fpregset, sizeof (user_fpregs_struct)) ;
+void CoreTarget::set_regs(int pid, RegisterSet *regs) {
+    //XXX
+    //memcpy (&find_thread(pid)->prstatus.pr_reg, regs, sizeof (struct user_regs_struct)) ;
 }
 
-void CoreTarget::set_fpregs(int pid, unsigned char *regs) {
-    memcpy (&find_thread(pid)->fpregset, regs, sizeof (user_fpregs_struct)) ;
+void CoreTarget::get_fpregs(int pid, RegisterSet *regs) {
+    //XXX
+    //memcpy (regs, &find_thread(pid)->fpregset, sizeof (user_fpregs_struct)) ;
 }
 
-void CoreTarget::get_fpxregs(int pid, unsigned char *regs) {
-#if __WORDSIZE == 64
-#else
-    memcpy (regs, &find_thread(pid)->fpxregset, sizeof (struct user_fpxregs_struct)) ;
-#endif
+void CoreTarget::set_fpregs(int pid, RegisterSet *regs) {
+    //XXX
+    //memcpy (&find_thread(pid)->fpregset, regs, sizeof (user_fpregs_struct)) ;
 }
 
-void CoreTarget::set_fpxregs(int pid, unsigned char *regs) {
-#if __WORDSIZE == 64
-#else
-    memcpy (&find_thread(pid)->fpxregset, regs, sizeof (struct user_fpxregs_struct)) ;
-#endif
+void CoreTarget::get_fpxregs(int pid, RegisterSet *regs) {
+	//XXX
+// #if __WORDSIZE == 64
+// #else
+//     memcpy (regs, &find_thread(pid)->fpxregset, sizeof (struct user_fpxregs_struct)) ;
+// #endif
+}
+
+void CoreTarget::set_fpxregs(int pid, RegisterSet *regs) {
+	//XXX
+// #if __WORDSIZE == 64
+// #else
+//     memcpy (&find_thread(pid)->fpxregset, regs, sizeof (struct user_fpxregs_struct)) ;
+// #endif
 }
 
 int CoreTarget::get_signal() {
@@ -442,4 +445,23 @@ CoreThread *CoreTarget::find_thread (int pid) {
     }
     throw Exception ("No thread for process id %d", pid) ;
 }
-#endif
+
+void CoreTarget::write_string (int pid, Address addr, std::string s) {
+	throw Exception ("Can't write string to a core file") ;
+}
+
+void CoreTarget::init_events (int pid) {
+	throw Exception ("Can't init events of a core file") ;
+}
+
+pid_t CoreTarget::get_fork_pid (pid_t pid) {
+	throw Exception ("Can't get fork pid from a core file") ;
+}
+
+long CoreTarget::get_debug_reg (int pid, int reg) {
+	throw Exception ("Can't get debug reg from a core file") ;
+}
+
+void CoreTarget::set_debug_reg (int pid, int reg, long value) {
+	throw Exception ("Can't set debug reg to a core file") ;
+}

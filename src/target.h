@@ -41,6 +41,11 @@ author: David Allison <dallison@pathscale.com>
 #include <vector>
 #include <string>
 #include "map_range.h"
+#include <sys/procfs.h>
+
+/* find the offset of X into struct user (from sys/user.h) */
+/* XXX: change long to Address, after Address is reset to long */
+#define STRUCT_USER_OFFSET(X) ((long)&(((struct user*)0)->X))
 
 typedef std::map<std::string,std::string> EnvMap;
 
@@ -71,6 +76,7 @@ public:
     virtual Address read (int pid, Address addr, int size=4) = 0 ;           // read a number of words
     virtual Address readptr (int pid, Address addr) = 0 ;
     virtual void get_regs(int pid, RegisterSet *regs) = 0 ;               // get register set
+    virtual void set_regs(int pid, RegisterSet *regs) = 0 ;
     virtual void get_fpregs(int pid, RegisterSet *regs) = 0 ;               // get floating point register set
 	// FIXME: This should be providing a generic mechanism for setting extra
 	// register sets.
@@ -81,6 +87,10 @@ public:
 
     // factory method to make a new target
     static Target *new_live_target (Architecture *arch) ;
+    virtual void cont (int pid, int signal) = 0 ;
+    virtual void step(int pid) = 0 ;
+    virtual long get_debug_reg (int pid, int reg) = 0 ;
+    virtual void set_debug_reg (int pid, int reg, long value) = 0 ;
 protected:
     Architecture *arch ;
 } ;
@@ -156,17 +166,30 @@ public:
 
 
 
-struct CoreThread
-{
-	private static int nextid;
+// struct CoreThread
+// {
+//     CoreThread() : id(++nextid) {}
+//     int id ;
+// 	// FIXME: Target specific.
+//     elf_prstatus prstatus ;             // process status
+//     RegisterSet *registers;
+//
+// private:
+//     static int nextid;
+// } ;
+
+struct CoreThread {
     CoreThread() : id(++nextid) {}
-
     int id ;
-	// FIXME: Target specific.
     elf_prstatus prstatus ;             // process status
-	RegisterSet *registers;
+#if __WORDSIZE == 64
+    struct user_fpregs_struct fpregset ;        // floating point register set and extended ones too
+#else
+    struct user_fpregs_struct fpregset ;           // floating point register set
+    struct user_fpxregs_struct fpxregset ;        // extended floating point register set
+#endif
+    static int nextid ;
 } ;
-
 
 class CoreTarget : public Target {
 public:
@@ -189,7 +212,6 @@ public:
     Address readptr (int pid, Address addr)  ;
     virtual void get_regs(int pid, RegisterSet *regs);               // get register set
     virtual void get_fpregs(int pid, RegisterSet *regs);               // get floating point register set
-    virtual void get_fpxregs(int pid, RegisterSet *regs);               // get floating point extended register set
 
     // methods particular to this object, not general target
     int get_signal() ;
@@ -205,6 +227,15 @@ public:
     int get_num_threads() ;
     int get_thread_pid (int n) ;
     void *get_thread_tid (int n) ;
+    void write_string (int pid, Address addr, std::string s);
+    void init_events (int pid);
+    pid_t get_fork_pid (pid_t pid);
+    void set_regs(int pid, RegisterSet *regs);
+    void set_fpregs(int pid, RegisterSet *regs);
+    long get_debug_reg (int pid, int reg);
+    void set_debug_reg (int pid, int reg, long value);
+    void get_fpxregs(int pid, RegisterSet *regs);
+    void set_fpxregs(int pid, RegisterSet *regs);
 
 private:
     void read_note (ProgramSegment *note, std::istream &s) ;            // read a set of notes

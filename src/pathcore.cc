@@ -34,20 +34,20 @@ author: David Allison <dallison@pathscale.com>
 #include "bstream.h"
 #include <signal.h>
 
-struct CoreThread {
-    CoreThread() : id(++nextid) {}
-                                                                                                                                
-    int id ;
-    elf_prstatus prstatus ;             // process status
-                                                                                                                                
-#if __WORDSIZE == 64
-    struct user_fpregs_struct fpregset ;           // floating point register set and extended ones too
-#else
-    struct user_fpregs_struct fpregset ;           // floating point register set
-    struct user_fpxregs_struct fpxregset ;        // extended floating point register set
-#endif
-    static int nextid ;
-} ;
+// struct CoreThread {
+//     CoreThread() : id(++nextid) {}
+//
+//     int id ;
+//     elf_prstatus prstatus ;             // process status
+//
+// #if __WORDSIZE == 64
+//     struct user_fpregs_struct fpregset ;           // floating point register set and extended ones too
+// #else
+//     struct user_fpregs_struct fpregset ;           // floating point register set
+//     struct user_fpxregs_struct fpxregset ;        // extended floating point register set
+// #endif
+//     static int nextid ;
+// } ;
 
 int CoreThread::nextid = 0 ;
 

@@ -238,8 +238,8 @@ public:
     virtual int get_available_debug_regs() = 0 ;                // number of debug registers available
     virtual bool is_64bit() = 0 ;
     virtual bool is_small_struct(int size) = 0 ;
-    virtual void get_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs);
-    virtual void set_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs);
+    virtual void get_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs) = 0;
+    virtual void set_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs) = 0;
     virtual int classify_struct (EvalContext &ctx, DIE *s) = 0 ;
 
 protected:
@@ -314,12 +314,14 @@ public:
     void write_call_arg (Process *proc, int argnum, const void *value, int size) ;
     Address write_call (Process *proc, Address addr, std::string &buffer) ;
     bool in_sigtramp (Process *proc, std::string name) ;
-    virtual void get_sigcontext_frame(Process *proc, Address sp, RegisterSet *regs);
+    void get_sigcontext_frame(Process *proc, Address sp, RegisterSet *regs);
     bool is_64bit() { return false ; }
     bool is_small_struct(int size) { return false ; }
-    virtual RegisterSet *get_fpregs(void *agent, void* tid, int pid, Target *target);
-    virtual void set_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs);
-    int classify_struct (EvalContext &ctx, DIE *s) ;        
+    void get_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs);
+    void set_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs);
+    int classify_struct (EvalContext &ctx, DIE *s) ;
+    int translate_regnum (int dwarfnum) ;
+    RegisterType get_register_type (std::string reg) ;
 protected:
 private:
     RegMap regnames ; 
@@ -364,10 +366,13 @@ public:
     bool in_sigtramp (Process *proc, std::string name) ;
     virtual void get_sigcontext_frame(Process *proc, Address sp, RegisterSet *regs);
     bool is_64bit() { return mode == 64 ; }
-    virtual RegisterSet *get_fpregs(void *agent, void* tid, int pid, Target *target);
-    virtual void set_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs);
+    void get_fpregs (void *agent, void * tid, int pid, Target *target, RegisterSet *regs);
+    void set_fpregs (void *agent, void * tid, int pid, Target *target, RegisterSet *regs);
     bool is_small_struct(int size) { return size <= 16 ; }
-    int classify_struct (EvalContext &ctx, DIE *s) ;        
+    int classify_struct (EvalContext &ctx, DIE *s) ;
+    RegnameVec &get_regnames (bool all) ;
+    RegisterType get_register_type (std::string reg) ;
+    bool isfpreg (int dwarfnum) ;
 
 protected:
 private:

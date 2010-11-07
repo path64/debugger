@@ -29,6 +29,7 @@ author: David Allison <dallison@pathscale.com>
 */
 
 #include "dbg_except.h"
+#include <stdio.h>
 
 Exception::Exception (const char *format,...) throw() {
     va_list arg ;

@@ -180,3 +180,12 @@ void Thread::reset() {
     nextid = 0 ;
 }
 
+void Thread::soft_set_regs(RegisterSet *r, bool force) {
+	//XXX
+	throw Exception ("Not done.") ;
+}
+
+void Thread::soft_set_fp_regs(RegisterSet *r, bool force) {
+	//XXX
+	throw Exception ("Not done.") ;
+}
