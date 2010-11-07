@@ -143,35 +143,6 @@ public:
     virtual void set_debug_reg (int pid, int reg, long value) = 0 ;
 } ;
 
-#if 0
-// these might be defined in a system header someday
-#ifndef PTRACE_EVENT_FORK
-                                                                                                                                  
-#define PTRACE_SETOPTIONS       (__ptrace_request)0x4200
-#define PTRACE_GETEVENTMSG      (__ptrace_request)0x4201
-                                                                                                                                  
-// option bits
-#define PTRACE_O_TRACESYSGOOD   0x01
-#define PTRACE_O_TRACEFORK      0x02
-#define PTRACE_O_TRACEVFORK     0x04
-#define PTRACE_O_TRACECLONE     0x08
-#define PTRACE_O_TRACEEXEC      0x10
-#define PTRACE_O_TRACEVFORKDONE 0x20
-#define PTRACE_O_TRACEEXIT      0x40
-
-// event codes
-/*
-#define PTRACE_EVENT_FORK       1
-#define PTRACE_EVENT_VFORK      2
-#define PTRACE_EVENT_CLONE      3
-#define PTRACE_EVENT_EXEC       4
-#define PTRACE_EVENT_VFORKDONE  5
-#define PTRACE_EVENT_EXIT       6
-*/                                                                                                                                  
-#endif
-#endif
-
-
 
 // struct CoreThread
 // {

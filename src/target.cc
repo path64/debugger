@@ -31,7 +31,7 @@ author: David Allison <dallison@pathscale.com>
 #include "target.h"
 #include "pstream.h"
 #include <errno.h>
-#include <sys/ptrace.h>
+#include "ptrace.h"
 #include "dbg_thread_db.h"
 #include <thread_db.h>
 #include <unistd.h>

@@ -32,7 +32,7 @@ author: Jay Cornwall <jay@jcornwall.me.uk>
 #define trace_h_included
 
 #include <sys/types.h>
-#include <sys/ptrace.h>
+#include "ptrace.h"
 
 class Trace {
 public:

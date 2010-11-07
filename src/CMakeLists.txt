@@ -60,6 +60,19 @@ set(pathdb_sources
     trace-freebsd.cc
 )
 
+
+# making config
+
+include(CheckCSourceCompiles)
+
+CHECK_C_SOURCE_COMPILES("\#include <sys/ptrace.h> \n int main() { int x = PTRACE_O_TRACEFORK; return 0; }"
+                        HAVE_PTRACE_O_CONSTANTS)
+CHECK_C_SOURCE_COMPILES("\#include <sys/ptrace.h> \n int main() { int x = PTRACE_EVENT_FORK; return 0; }"
+                        HAVE_PTRACE_EVENT_CONSTANTS)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in
+               ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
+
 # Getting current date/time
 execute_process(COMMAND date +%F/%T
                 OUTPUT_VARIABLE curr_date

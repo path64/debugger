@@ -1,0 +1,4 @@
+
+#cmakedefine HAVE_PTRACE_O_CONSTANTS
+#cmakedefine HAVE_PTRACE_EVENT_CONSTANTS
+
