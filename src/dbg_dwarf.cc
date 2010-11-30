@@ -1556,7 +1556,7 @@ Address Subprogram::get_frame_base(Process *process) {
        return process->get_reg(process->arch->frame_base_reg());
     }
     DwLocExpr loc = cu->evaluate_location (cu, -1, fb, process) ;
-    return loc.getValue(process, cu->getAddrSize()) ;
+    return loc.getAddress() ;
 }
 
 int Subprogram::get_language (){
