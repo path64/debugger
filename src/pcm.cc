@@ -358,14 +358,20 @@ void ProcessController::attach (int pid, bool replace) {
 
 // attach a new process to a core file
 void ProcessController::attach_core (std::string corefile, bool replace) {
-    arch = new_arch (program) ;
-    target = new CoreTarget (arch, corefile) ;
+    ELF * elf = new ELF (program) ;
+    std::istream *s = elf->open() ;
+    arch = elf->new_arch () ;
+    osc = elf->new_os (s) ;
+    delete elf;
+    delete s;
+
+    target = new CoreTarget (arch, osc, corefile) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
         remove_process (oldp) ;
         delete oldp ;
-    } 
+    }
     Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
     current_process = add_process (proc) ;
 
@@ -389,8 +395,15 @@ void ProcessController::attach_core (std::string filename, std::string corefile,
             }
         }
     }
-    arch = new_arch (program) ;
-    target = new CoreTarget (arch, corefile) ;
+
+    ELF * elf = new ELF (program) ;
+    std::istream *s = elf->open() ;
+    arch = elf->new_arch () ;
+    osc = elf->new_os (s) ;
+    delete elf;
+    delete s;
+
+    target = new CoreTarget (arch, osc, corefile) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;

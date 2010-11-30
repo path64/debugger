@@ -207,6 +207,12 @@ std::string Section::read_string(std::istream & stream, int stroffset) {
         return str  ;
 }
 
+int32_t Section::read_word4(std::istream & stream, int stroffset) {
+    stream.seekg (elf->mainoffset + offset + stroffset, std::ios_base::beg) ;
+
+    return elf->read_word4(stream);
+}
+
 BVector Section::get_contents(std::istream& stream) {
     stream.seekg (elf->mainoffset + offset, std::ios_base::beg);
 
@@ -687,3 +693,90 @@ ProgramSegment *ELF::find_segment (Address addr) {
     return NULL ;
 }
 
+Architecture *ELF::new_arch() {
+	Architecture	*arch = NULL;
+
+	//Following part is for X86
+	if (machine == 3) {
+		if (is_elf64()) {
+			if (sizeof(void *) == 4)
+				throw Exception ("Cannot debug a 64-bit executable using a 32-bit debugger") ;
+			 arch = new x86_64Arch(64) ;
+		}
+		else {
+			if (sizeof(char*) == 8)
+				arch = new x86_64Arch(32);
+			else
+				arch = new i386Arch();
+		}
+	}
+
+	if (arch == NULL) {
+		throw Exception ("This architecture is not support.") ;
+	}
+
+	return arch;
+}
+
+static bool
+check_section_header(std::istream *s, Section *sec, std::string name,
+		     int size, int tag)
+{
+	size_t	header_size;
+
+	header_size = name.size() + 1;
+	header_size = ((header_size + 3) & ~3);
+	header_size += size;
+	header_size = ((header_size + 3) & ~3);
+
+	if (header_size > sec->get_size())
+		return false;
+
+	if (sec->read_word4 (*s, 0) != name.size() + 1)
+		return false;
+
+	if (sec->read_word4 (*s, 4) != size)
+		return false;
+
+	if (sec->read_word4 (*s, 8) != tag)
+		return false;
+
+	if (sec->read_string (*s, 12) != name)
+		return false;
+
+	return true;
+}
+
+OS *ELF::new_os(std::istream *s) {
+	OS	*os = NULL;
+
+	if (abi == 0) {
+		//need get abi from section
+		Section *sec = find_section(".note.ABI-tag");
+		if (sec) {
+			if (check_section_header(s, sec, "GNU", 16, 1)) {
+				if (sec->read_word4 (*s, 16) == 0)
+					abi = 3;
+			}
+		}
+	}
+
+	if (abi == 3) {
+		/* Linux */
+		if (machine == 3) {
+			//X86
+			if (is_elf64()) {
+ 				os = new x86_linux_os (64);
+			}
+			else {
+				os = new x86_linux_os (32);
+			}
+		}
+	}
+
+	if (os == NULL) {
+		throw Exception ("This OS is not support.") ;
+	}
+
+	return os;
+}

@@ -193,7 +193,7 @@ struct CoreThread {
 
 class CoreTarget : public Target {
 public:
-    CoreTarget (Architecture *arch, std::string corefile) ;
+    CoreTarget (Architecture *arch, OS *os, std::string corefile) ;
     ~CoreTarget() ;
 
     int attach (const char* prog, const char* args, EnvMap&);    // attach to a file
@@ -259,6 +259,7 @@ private:
     CoreThread *find_thread (int pid) ;
     std::vector<CoreThread*> threads ;
     int current_thread ;
+    OS *os;
 } ;
 
 #endif

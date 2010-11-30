@@ -52,6 +52,7 @@ set(pathdb_sources
     ptrace_target.cc
     x86_arch.cc
     x86registers.cc
+    os.cc
 )
 
 # Getting current date/time

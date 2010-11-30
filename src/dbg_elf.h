@@ -37,6 +37,8 @@ author: David Allison <dallison@pathscale.com>
 #include "bstream.h"
 #include "pstream.h"
 #include "map_range.h"
+#include "arch.h"
+#include "os.h"
 
 // classes
 class ELF ;
@@ -84,6 +86,7 @@ public:
     int get_size () ;
     void set_name (std::istream & stream, Section * nametable) ;
     std::string read_string (std::istream & stream, int stroffset) ;
+    int32_t read_word4(std::istream & stream, int stroffset);
     BVector get_contents (std::istream & stream) ;
 protected:
 private:
@@ -164,6 +167,8 @@ public:
 
     ProgramSegment *find_segment (Address addr) ;
     std::string get_name() { return name ; }
+    Architecture *new_arch();
+    OS *new_os(std::istream *s);
 protected:
 private:
     void read_symtab (std::istream &stream, Section *symtab, Address baseaddr, Section *strtab) ;
