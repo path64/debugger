@@ -181,11 +181,17 @@ void Thread::reset() {
 }
 
 void Thread::soft_set_regs(RegisterSet *r, bool force) {
-	//XXX
-	throw Exception ("Not done.") ;
+	if (force || r->is_dirty())
+	{
+		proc->get_regs(r, tid) ;
+		r->clear_dirty_flag();
+	}
 }
 
 void Thread::soft_set_fp_regs(RegisterSet *r, bool force) {
-	//XXX
-	throw Exception ("Not done.") ;
+	if (force || r->is_dirty())
+	{
+		proc->get_fpregs(r, tid) ;
+		r->clear_dirty_flag();
+	}
 }
