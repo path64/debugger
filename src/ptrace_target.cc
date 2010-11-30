@@ -1,6 +1,7 @@
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/user.h>
 #include <errno.h>
 #include "ptrace_target.h"
 #include "arch.h"
@@ -361,35 +362,190 @@ Address PtraceTarget::readptr (int pid, Address addr) {
 }
 
 void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
-	//XXX
-//     long e = ptrace (PTRACE_GETREGS, pid, (void*)0, regs) ;
-//     if (e < 0) {
-//         throw Exception ("Unable to read registers")  ;
-//     }
+	struct user_regs_struct	regs_buf;
+
+	if (ptrace (PTRACE_GETREGS, pid, (void*)0, &regs_buf) < 0) {
+		throw Exception ("Unable to read registers")  ;
+	}
+#if __WORDSIZE == 64
+	reg->set_register("r15", (int64_t)regs_buf.r15);
+	reg->set_register("r14", (int64_t)regs_buf.r14);
+	reg->set_register("r13", (int64_t)regs_buf.r13);
+	reg->set_register("r12", (int64_t)regs_buf.r12);
+	reg->set_register("fp", (int64_t)regs_buf.rbp);
+	reg->set_register("rbx", (int64_t)regs_buf.rbx);
+	reg->set_register("r11", (int64_t)regs_buf.r11);
+	reg->set_register("r10", (int64_t)regs_buf.r10);
+	reg->set_register("r9", (int64_t)regs_buf.r9);
+	reg->set_register("r8", (int64_t)regs_buf.r8);
+	reg->set_register("rax", (int64_t)regs_buf.rax);
+	reg->set_register("rcx", (int64_t)regs_buf.rcx);
+	reg->set_register("rdx", (int64_t)regs_buf.rdx);
+	reg->set_register("rsi", (int64_t)regs_buf.rsi);
+	reg->set_register("rdi", (int64_t)regs_buf.rdi);
+	reg->set_register("pc", (int64_t)regs_buf.rip);
+	reg->set_register("cs", (int64_t)regs_buf.cs);
+	reg->set_register("eflags", (int64_t)regs_buf.eflags);
+	reg->set_register("sp", (int64_t)regs_buf.rsp);
+	reg->set_register("ss", (int64_t)regs_buf.ss);
+	reg->set_register("ds", (int64_t)regs_buf.ds);
+	reg->set_register("es", (int64_t)regs_buf.es);
+	reg->set_register("fs", (int64_t)regs_buf.fs);
+	reg->set_register("gs", (int64_t)regs_buf.gs);
+#else
+	reg->set_register("ebx", (int64_t)regs_buf.ebx);
+	reg->set_register("ecx", (int64_t)regs_buf.ecx);
+	reg->set_register("edx", (int64_t)regs_buf.edx);
+	reg->set_register("esi", (int64_t)regs_buf.esi);
+	reg->set_register("edi", (int64_t)regs_buf.edi);
+	reg->set_register("fp", (int64_t)regs_buf.ebp);
+	reg->set_register("eax", (int64_t)regs_buf.eax);
+	reg->set_register("ds", (int64_t)regs_buf.xds);
+	reg->set_register("es", (int64_t)regs_buf.xes);
+	reg->set_register("fs", (int64_t)regs_buf.xfs);
+	reg->set_register("gs", (int64_t)regs_buf.xgs);
+	//reg->set_register("orig_eax", (int64_t)regs_buf.orig_eax);
+	reg->set_register("pc", (int64_t)regs_buf.eip);
+	reg->set_register("cs", (int64_t)regs_buf.xcs);
+	reg->set_register("eflags", (int64_t)regs_buf.eflags);
+	reg->set_register("sp", (int64_t)regs_buf.esp);
+#endif
 }
 
 void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
-	//XXX
-//     long e = ptrace (PTRACE_SETREGS, pid, (void*)0, regs) ;
-//     if (e < 0) {
-//         throw Exception ("Unable to write registers")  ;
-//     }
+	struct user_regs_struct	regs_buf;
+
+	if (ptrace (PTRACE_GETREGS, pid, (void*)0, &regs_buf) < 0) {
+		throw Exception ("Unable to read registers")  ;
+	}
+
+#if __WORDSIZE == 64
+	regs_buf.r15 = reg->get_register_as_integer("r15");
+	regs_buf.r14 = reg->get_register_as_integer("r14");
+	regs_buf.r13 = reg->get_register_as_integer("r13");
+	regs_buf.r12 = reg->get_register_as_integer("r12");
+	regs_buf.rbp = reg->get_register_as_integer("fp");
+	regs_buf.rbx = reg->get_register_as_integer("rbx");
+	regs_buf.r11 = reg->get_register_as_integer("r11");
+	regs_buf.r10 = reg->get_register_as_integer("r10");
+	regs_buf.r9 = reg->get_register_as_integer("r9");
+	regs_buf.r8 = reg->get_register_as_integer("r8");
+	regs_buf.rax = reg->get_register_as_integer("rax");
+	regs_buf.rcx = reg->get_register_as_integer("rcx");
+	regs_buf.rdx = reg->get_register_as_integer("rdx");
+	regs_buf.rsi = reg->get_register_as_integer("rsi");
+	regs_buf.rdi = reg->get_register_as_integer("rdi");
+	regs_buf.rip = reg->get_register_as_integer("pc");
+	regs_buf.cs = reg->get_register_as_integer("cs");
+	regs_buf.eflags = reg->get_register_as_integer("eflags");
+	regs_buf.rsp = reg->get_register_as_integer("sp");
+	regs_buf.ss = reg->get_register_as_integer("ss");
+	regs_buf.ds = reg->get_register_as_integer("ds");
+	regs_buf.es = reg->get_register_as_integer("es");
+	regs_buf.fs = reg->get_register_as_integer("fs");
+	regs_buf.gs = reg->get_register_as_integer("gs");
+#else
+	regs_buf.ebx = reg->get_register_as_integer("ebx");
+	regs_buf.ebx = reg->get_register_as_integer("ebx");
+	regs_buf.ecx = reg->get_register_as_integer("ecx");
+	regs_buf.edx = reg->get_register_as_integer("edx");
+	regs_buf.esi = reg->get_register_as_integer("esi");
+	regs_buf.edi = reg->get_register_as_integer("edi");
+	regs_buf.ebp = reg->get_register_as_integer("fp");
+	regs_buf.eax = reg->get_register_as_integer("eax");
+	regs_buf.xds = reg->get_register_as_integer("ds");
+	regs_buf.xes = reg->get_register_as_integer("es");
+	regs_buf.xfs = reg->get_register_as_integer("fs");
+	regs_buf.xgs = reg->get_register_as_integer("gs");
+	//reg->get_register_as_integer("orig_eax", regs_buf.orig_eax);
+	regs_buf.eip = reg->get_register_as_integer("pc");
+	regs_buf.xcs = reg->get_register_as_integer("cs");
+	regs_buf.eflags = reg->get_register_as_integer("eflags");
+	regs_buf.esp = reg->get_register_as_integer("sp");
+#endif
+
+	if (ptrace (PTRACE_SETREGS, pid, (void*)0, &regs_buf) < 0) {
+		throw Exception ("Unable to write registers %d", errno)  ;
+	}
 }
 
 void PtraceTarget::get_fpregs(int pid, RegisterSet *reg) {
-	//XXX
-//     long e = ptrace (PTRACE_GETFPREGS, pid, (void*)0, regs) ;
-//     if (e < 0) {
-//         throw Exception ("Unable to read floating point registers")  ;
-//     }
+	struct user_fpregs_struct	freg_buf;
+	unsigned char			*p;
+	std::vector<unsigned char>	val;
+
+	if (ptrace (PTRACE_GETFPREGS, pid, (void*)0, &freg_buf) < 0)
+		throw Exception ("Unable to read registers")  ;
+	p = (unsigned char *)freg_buf.st_space;
+
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st0", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st1", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st2", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st3", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st4", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st5", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st6", val);
+	p += 10;
+	val.insert(val.begin(), p, p + 10);
+	reg->set_register("st7", val);
 }
 
 void PtraceTarget::set_fpregs(int pid, RegisterSet *reg) {
-	//XXX
-//     long e = ptrace (PTRACE_SETFPREGS, pid, (void*)0, regs) ;
-//     if (e < 0) {
-//         throw Exception ("Unable to write floating point registers")  ;
-//     }
+	struct user_fpregs_struct	freg_buf;
+	unsigned char			*p;
+	std::vector<unsigned char>	val;
+
+	memset (&freg_buf, 0, sizeof(struct user_fpregs_struct));
+	p = (unsigned char *)freg_buf.st_space;
+
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st0"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st1"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st2"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st3"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st4"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st5"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st6"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+	val = reg->get_register_as_bytes(reg->get_properties()->register_number_for_name("st7"));
+	assert(val.size() == 10);
+	std::copy(val.begin(), val.end(), p);
+	p += 10;
+
+	if (ptrace (PTRACE_SETFPREGS, pid, (void*)0, &freg_buf))
+		throw Exception ("Unable to write floating point registers")  ;
 }
 
 void PtraceTarget::get_fpxregs(int pid, RegisterSet *reg) {

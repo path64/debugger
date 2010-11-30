@@ -627,7 +627,7 @@ int i386_sigcontext_regs[] = {
 
 void i386Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *regs) {
 //XXX
-	
+
 //     Address ctx = sp+ 40 ;
 //     //proc->dump (ctx, sizeof (i386_sigcontext_regs) * 4) ;
 //     for (int i = 0 ; i386_sigcontext_regs[i] != -1 ; i++) {
@@ -1497,18 +1497,18 @@ RegisterSetInfoList& x86_64Arch::register_properties() const {
 	throw Exception ("register_properties not support!") ;
 }
 RegisterSetProperties *x86_64Arch::main_register_set_properties() {
-	throw Exception ("register_properties not support!") ;
+	return X86_64RegisterProperties;
 }
 RegisterSetProperties *x86_64Arch::fpu_register_set_properties(){
-	throw Exception ("register_properties not support!") ;
+	return X87RegisterProperties;
 }
 
 RegisterSetInfoList& i386Arch::register_properties() const {
 	throw Exception ("register_properties not support!") ;
 }
 RegisterSetProperties *i386Arch::main_register_set_properties() {
-	throw Exception ("register_properties not support!") ;
+	return X86RegisterProperties;
 }
 RegisterSetProperties *i386Arch::fpu_register_set_properties(){
-	throw Exception ("register_properties not support!") ;
+	return X87RegisterProperties;
 }

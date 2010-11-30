@@ -155,6 +155,8 @@ void Frame::init (Process* _proc, Architecture* _arch, int _n) {
     valid = false;
     return_addr = 0;
 
+    regs = arch->main_register_set_properties()->new_empty_register_set();
+    fp_regs = arch->fpu_register_set_properties()->new_empty_register_set();
 }
 
 Frame::~Frame() {

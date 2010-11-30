@@ -1,34 +1,38 @@
+#include "register_set.h"
+#include "pstream.h"
+#include <string.h>
+#include <stdlib.h>
+
+using namespace std;
+
 RegisterSetProperties::RegisterSetProperties()
 {
-	int count = number_of_registers();
-	const char **names = register_names();
-	for (int i=0 ; i<count ; i++)
-	{
-		registerNumbers[names[i]] = i;
-	}
+// 	int count = number_of_registers();
+// 	const char **names = register_names();
+// 	for (int i=0 ; i<count ; i++)
+// 	{
+// 		registerNumbers[names[i]] = i;
+// 	}
 }
 RegisterSet* RegisterSetProperties::new_empty_register_set(void)
 {
-	if (is_integer())
+	if (is_integer(0))
 	{
 		return new IntegerRegisterSet(this);
 	}
 	return new FloatRegisterSet(this);
 }
 
-
-
-RegisterSet::RegisterSet(RegisterSetProperties *p) :
-	properties(p) {}
+RegisterSet::RegisterSet(RegisterSetProperties *p) : properties(p) {}
 RegisterSet::~RegisterSet() {}
 
-void RegisterSet::print(PStream &os);
+void RegisterSet::print(PStream &os)
 {
 	int count = properties->number_of_registers();
 	for (int i=0 ; i<count ; i++)
 	{
 		os.print("%%%s\t", properties->name_for_register_number(i));
-		if (properties->is_integer())
+		if (properties->is_integer(i))
 		{
 			int64_t v = get_register_as_integer(i);
 			os.print("0x%016llx %12lld ", v, v);
@@ -38,13 +42,13 @@ void RegisterSet::print(PStream &os);
 			}
 			for (int i = 63 ; i >= 0 ; i--)
 			{
-				int64_t bit = (value & (1LL << i)) ; 
+				int64_t bit = (v & (1LL << i)) ;
 				os.print ("%c", bit ? '1' : '0') ;
 			}
 		}
 		else
 		{
-			os.print("%f", get_register_as_double());
+			os.print("%f", get_register_as_double(i));
 		}
 		os.print ("\n") ;
 	}
@@ -52,7 +56,7 @@ void RegisterSet::print(PStream &os);
 
 
 
-int64_t IntegerRegisterSet::get_register_as_integer(const int num);
+int64_t IntegerRegisterSet::get_register_as_integer(const int num)
 {
 	assert(num < properties->number_of_registers());
 	return values[num];
@@ -76,7 +80,7 @@ void IntegerRegisterSet::set_register(const int num, int64_t v)
 	values[num] = v;
 	isDirty = true;
 }
-void IntegerRegisterSet::set_register(const int num, double v) = 0;
+void IntegerRegisterSet::set_register(const int num, double v)
 {
 	assert(num < properties->number_of_registers());
 	values[num] = (int64_t)v;
@@ -87,13 +91,13 @@ void IntegerRegisterSet::set_register(const int num,
 {
 	assert(num < properties->number_of_registers());
 	assert(v.size() == properties->size_of_register());
-	std::copy(v.begin(), v.end(), (int64_t)&values[num]);
+	std::copy(v.begin(), v.end(), (unsigned char *)&values[num]);
 	isDirty = true;
 }
-IntegerRegisterSet::IntegerRegisterSet(const RegisterSetProperties *r)
+IntegerRegisterSet::IntegerRegisterSet( RegisterSetProperties *r)
 	: RegisterSet(r)
 {
-	values = calloc(sizeof(int64_t), r->number_of_registers());
+	values = (int64_t *)calloc(sizeof(int64_t), r->number_of_registers());
 }
 IntegerRegisterSet::~IntegerRegisterSet()
 {
@@ -102,13 +106,13 @@ IntegerRegisterSet::~IntegerRegisterSet()
 void IntegerRegisterSet::take_values_from(RegisterSet* set)
 {
 	assert(properties == set->get_properties());
-	memcpy(values, (IntegerRegisterSet*)set->values, 
-	       properties->number_of_registers * sizeof(int64_t));
+	memcpy(values, ((IntegerRegisterSet*)set)->values,
+	       properties->number_of_registers() * sizeof(int64_t));
 	isDirty = true;
 }
 
 
-int64_t FloatRegisterSet::get_register_as_integer(const int num);
+int64_t FloatRegisterSet::get_register_as_integer(const int num)
 {
 	assert(num < properties->number_of_registers());
 	return (int64_t)values[num];
@@ -132,7 +136,7 @@ void FloatRegisterSet::set_register(const int num, int64_t v)
 	values[num] = (double)v;
 	isDirty = true;
 }
-void FloatRegisterSet::set_register(const int num, double v) = 0;
+void FloatRegisterSet::set_register(const int num, double v)
 {
 	assert(num < properties->number_of_registers());
 	values[num] = v;
@@ -143,13 +147,13 @@ void FloatRegisterSet::set_register(const int num,
 {
 	assert(num < properties->number_of_registers());
 	assert(v.size() == properties->size_of_register());
-	std::copy(v.begin(), v.end(), (double)&values[num]);
+	std::copy(v.begin(), v.end(), (unsigned char *)&values[num]);
 	isDirty = true;
 }
-FloatRegisterSet::FloatRegisterSet(const RegisterSetProperties *r)
+FloatRegisterSet::FloatRegisterSet(RegisterSetProperties *r)
 	: RegisterSet(r)
 {
-	values = calloc(sizeof(double), r->number_of_registers());
+	values = (double *)calloc(sizeof(double), r->number_of_registers());
 }
 FloatRegisterSet::~FloatRegisterSet()
 {
@@ -158,7 +162,7 @@ FloatRegisterSet::~FloatRegisterSet()
 void FloatRegisterSet::take_values_from(RegisterSet* set)
 {
 	assert(properties == set->get_properties());
-	memcpy(values, (FloatRegisterSet*)set->values, 
-	       properties->number_of_registers * sizeof(double));
+	memcpy(values, ((FloatRegisterSet*)set)->values,
+	       properties->number_of_registers() * sizeof(double));
 	isDirty = true;
 }

@@ -2,7 +2,10 @@
 #define __PATHDB_REG_SET_INCLUDED__
 
 #include <map>
+#include <list>
 #include <string>
+#include <vector>
+#include <stdint.h>
 #include <assert.h>
 
 class RegisterSet;
@@ -15,15 +18,16 @@ class PStream;
 class RegisterSetProperties
 {
 	private:
-		std::map<std::string, int> registerNumbers;
 		/**
 		 * Returns the names of all of the registers in this set, in an array
 		 * of C strings.
 		 */
 		virtual const char** register_names() const=0;
 	public:
+		std::map<std::string, int> registerNumbers;
+
 		static const int invalid_register = -1;
-		RegisterSetProperties();
+ 		RegisterSetProperties();
 		/**
 		 * Returns the name of the register set.
 		 */
@@ -95,12 +99,12 @@ class RegisterSet
 		 */
 		bool isDirty;
 	public:
-		RegisterSet(const RegisterSetProperties *p);
+		RegisterSet(RegisterSetProperties *p);
 		virtual ~RegisterSet();
 		/**
 		 * Returns the properties of this register set.
 		 */
-		RegisterSetProperties *get_properties() const { return properties; };
+		RegisterSetProperties *get_properties(){ return properties; };
 
 		/**
 		 * Returns the value of the register, interpreted as a 64-bit integer.
@@ -134,7 +138,7 @@ class RegisterSet
 		 * Takes the values from another register set.  Both sets must have
 		 * been created with the same set of properties.
 		 */
-		virtual void take_values_from(RegisterSet* set);
+		virtual void take_values_from(RegisterSet* set) = 0;
 		/**
 		 * Returns the value of the register, interpreted as a 64-bit integer.
 		 */
@@ -219,12 +223,12 @@ class RegisterSet
  * individual architectures are free to provide their own register set classes
  * that use different internal representations.
  */
-class FloatRegisterSet : RegisterSet
+class FloatRegisterSet : public RegisterSet
 {
 	protected:
 		double *values;
 	public:
-		FloatRegisterSet(const RegisterSetProperties *r);
+		FloatRegisterSet(RegisterSetProperties *r);
 		virtual ~FloatRegisterSet();
 		/**
 		 * Returns the value of the register, interpreted as a 64-bit integer.
@@ -268,13 +272,13 @@ class FloatRegisterSet : RegisterSet
  * individual architectures are free to provide their own register set classes
  * that use different internal representations.
  */
-class IntegerRegisterSet : RegisterSet
+class IntegerRegisterSet : public RegisterSet
 {
 	protected:
 
 		int64_t *values;
 	public:
-		IntegerRegisterSet(const RegisterSetProperties *r);
+		IntegerRegisterSet(RegisterSetProperties *r);
 		virtual ~IntegerRegisterSet();
 		/**
 		 * Returns the value of the register, interpreted as a 64-bit integer.

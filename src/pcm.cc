@@ -29,6 +29,9 @@ author: David Allison <dallison@pathscale.com>
 */
 
 //FIXME: Build system bug work-around - remove when the build system is fixed.
+
+#define NO_LICENSE
+
 #ifndef PSC_BUILD_DATE
 #define PSC_BUILD_DATE ""
 #endif

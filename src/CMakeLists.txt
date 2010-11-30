@@ -48,8 +48,10 @@ set(pathdb_sources
     ${CMAKE_CURRENT_BINARY_DIR}/opcodes.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.cc
     ${CMAKE_CURRENT_BINARY_DIR}/dwf_spec.cc
+    register_set.cc
     ptrace_target.cc
     x86_arch.cc
+    x86registers.cc
 )
 
 # Getting current date/time
