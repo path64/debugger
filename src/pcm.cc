@@ -47,6 +47,7 @@ author: David Allison <dallison@pathscale.com>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/sysctl.h>
 
 // peek inside the exe file to see if it's an elf64 file
 static bool is_elf64 (const char *filename) {
@@ -122,27 +123,27 @@ static std::string find_program (std::string program) {
 }
 
 
-static Architecture *new_arch (std::string filename) {
-	// FIXME: This is wrong - you should be able to debug a 64-bit core on a
-	// 32-bit machine, and you should be able to do remote debugging of a
-	// 64-bit process from a 32-bit one.  We should also check the e_machine
-	// flag in the header and see if it corresponds to the current architecture.
-    Architecture *arch ;
-    if (is_elf64 (filename.c_str())) {
-         if (sizeof(char*) == 4) {
-             throw Exception ("Cannot debug a 64-bit executable using a 32-bit debugger") ;
-         }
-         arch = new x86_64Arch(64) ;
-    } else {
-         if (sizeof(char*) == 8) {              // 64 bit debugger
-             arch = new x86_64Arch(32) ;                // 32 bit x86_64
-         } else {
-             arch = new i386Arch() ;
-         }
-    }
-    return arch ;
-
-}
+// static Architecture *new_arch (std::string filename) {
+// 	// FIXME: This is wrong - you should be able to debug a 64-bit core on a
+// 	// 32-bit machine, and you should be able to do remote debugging of a
+// 	// 64-bit process from a 32-bit one.  We should also check the e_machine
+// 	// flag in the header and see if it corresponds to the current architecture.
+//     Architecture *arch ;
+//     if (is_elf64 (filename.c_str())) {
+//          if (sizeof(char*) == 4) {
+//              throw Exception ("Cannot debug a 64-bit executable using a 32-bit debugger") ;
+//          }
+//          arch = new x86_64Arch(64) ;
+//     } else {
+//          if (sizeof(char*) == 8) {              // 64 bit debugger
+//              arch = new x86_64Arch(32) ;                // 32 bit x86_64
+//          } else {
+//              arch = new i386Arch() ;
+//          }
+//     }
+//     return arch ;
+//
+// }
 
 ProcessController::ProcessController (PStream &os, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose)
     : arch(NULL),
@@ -154,7 +155,7 @@ ProcessController::ProcessController (PStream &os, AliasManager *aliases, Direct
       dirlist(dirlist), subverbose(subverbose) {
 
     // create dummy process
-    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
+    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
     current_process = add_process (proc) ;
 }
 
@@ -175,7 +176,16 @@ void ProcessController::get_license() {
     if (client == NULL) {
         char link[256] ;
         int e, end=0 ;
+#if defined (__linux__)
         e = readlink ("/proc/self/exe", link, sizeof(link)-1) ;
+#elif defined (__FreeBSD__)
+        int exe_path_mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, getpid() } ;
+        size_t exe_path_size = sizeof (link) ;
+        e = sysctl (exe_path_mib, 4, link, &exe_path_size, NULL, 0) ;
+
+        if (e != -1)
+            e = strlen (link) ;
+#endif
         if (e == -1) {
             fprintf (stderr, "Unable to determine directory for licensing, terminating\n") ;
             exit(1) ;
@@ -282,7 +292,7 @@ void ProcessController::attach (std::string filename, bool replace) {
          bool ok = cli->confirm ("No executable file now.", "Discard symbol table") ;
          if (ok) {
             // create dummy process   XXX: 'replace' parameter?
-            Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
+            Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
             delete processes[current_process] ;
             current_process = add_process (proc) ;
             program = "" ;
@@ -292,8 +302,13 @@ void ProcessController::attach (std::string filename, bool replace) {
     }
 
     program = find_program (filename) ;
-    arch = new_arch (program) ;
-    target = Target::new_live_target (arch) ;
+    ELF * elf = new ELF (program) ;
+    std::istream *s = elf->open() ;
+    arch = elf->new_arch () ;
+    osc = elf->new_os (s) ;
+    delete elf;
+    delete s;
+    target = Target::new_live_target (arch, osc) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
@@ -302,7 +317,7 @@ void ProcessController::attach (std::string filename, bool replace) {
     }
     
 
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_NONE) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_NONE, osc) ;
     current_process = add_process (proc) ;
     file_present = true ;
     get_license() ;
@@ -339,16 +354,21 @@ void ProcessController::attach (int pid, bool replace) {
     }
 
     char pidbuf[100] ;
-    sprintf (pidbuf, "%d", pid) ;  
-    arch = new_arch (program) ;
-    target = Target::new_live_target (arch) ;
+    sprintf (pidbuf, "%d", pid) ;
+    ELF * elf = new ELF (program) ;
+    std::istream *s = elf->open() ;
+    arch = elf->new_arch () ;
+    osc = elf->new_os (s) ;
+    delete elf;
+    delete s;
+    target = Target::new_live_target (arch, osc) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
         remove_process (oldp) ;
         delete oldp ;
     }
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_PROCESS) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_PROCESS, osc) ;
     current_process = add_process (proc) ;
 
     proc->attach_process (pid) ;
@@ -372,7 +392,7 @@ void ProcessController::attach_core (std::string corefile, bool replace) {
         remove_process (oldp) ;
         delete oldp ;
     }
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE, osc) ;
     current_process = add_process (proc) ;
 
     proc->attach_core() ;
@@ -410,7 +430,7 @@ void ProcessController::attach_core (std::string filename, std::string corefile,
         remove_process (oldp) ;
         delete oldp ;
     } 
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE, osc) ;
     current_process = add_process (proc) ;
 
     proc->attach_core() ;
@@ -422,7 +442,7 @@ void ProcessController::detach() {
     if (program != "") {
         printf ("Detaching from program: %s\n", program.c_str()) ;
         // create dummy process
-        Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
+        Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
         delete processes[current_process] ;
         current_process = add_process (proc) ;
     }
@@ -438,7 +458,7 @@ void ProcessController::detach_all() {
     }
 
     // setup nil process as current
-    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
+    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
     current_process = add_process(proc); 
 }
 
@@ -520,7 +540,7 @@ bool ProcessController::run(const std::string& args, EnvMap& env) {
         // going to run from a core state.  We need to create a new LiveTarget and delete the
         // old CoreTarget
         //delete target ;                       // XXX: seems to cause a problem
-        target = Target::new_live_target (arch) ;
+        target = Target::new_live_target (arch, osc) ;
         Process *newproc = new Process (*proc) ;   // copy the process data
         newproc->set_target (target) ;
         processes[current_process] = newproc ;           // overwrite the old process
@@ -565,7 +585,7 @@ void ProcessController::kill() {
         // going to run from a core state.  We need to create a new LiveTarget and delete the
         // old CoreTarget
         //delete target ;                       // XXX: seems to cause a problem
-        target = Target::new_live_target (arch) ;
+        target = Target::new_live_target (arch, osc) ;
         Process *newproc = new Process (*proc) ;   // copy the process data
         newproc->set_target (target) ;
         processes[current_process] = newproc ;           // overwrite the old process

@@ -51,6 +51,13 @@ author: David Allison <dallison@pathscale.com>
 #include <sys/syscall.h>
 #include <sys/stat.h>
 #include <sys/ptrace.h>
+#include "trace.h"
+
+#if defined (__linux__)
+#define WAITPID_ALL_CHILD_TYPES __WALL
+#elif defined (__FreeBSD__)
+#define WAITPID_ALL_CHILD_TYPES 0
+#endif
 
 // Linux doesn't distinguish between threads and processes, but other kernels
 // do so we don't need special handling.
@@ -477,7 +484,7 @@ void CFATable::apply(Frame *from, Frame * to) {
 }
 
 
-Process::Process (ProcessController * pcm, std::string program, Architecture * arch, Target *target, PStream &os, AttachType at)
+Process::Process (ProcessController * pcm, std::string program, Architecture * arch, Target *target, PStream &os, AttachType at, OS *osc)
     : pcm(pcm),
     program(program),
     arch(arch),
@@ -510,7 +517,8 @@ Process::Process (ProcessController * pcm, std::string program, Architecture * a
     lastregion(NULL),
     thread_db_initialized(false),
     init_phase(false),
-    programtime(0)
+    programtime(0),
+    osc(osc)
 {
     if (program != "") {
         struct stat st ;
@@ -894,7 +902,7 @@ void Process::attach_child (int childpid, State parent_state) {
     current_thread = threads.begin() ;
     pid = childpid ;
 
-    target = Target::new_live_target (arch) ;                // new target
+    target = Target::new_live_target (arch, osc) ;                // new target
 
     // load the dynamic info stuff
     load_dynamic_info(false) ;
@@ -929,22 +937,35 @@ void Process::new_thread(void * id) {
     }
     td_thrinfo_t info ;
     thread_db::get_thread_info (thread_agent, id, info) ;
-    Thread * t = new Thread (arch, this, info.ti_lid, id) ;
+    //Thread * t = new Thread (arch, this, info.ti_lid, id) ;
+
+#if defined (__linux__)
+    int thr_pid = info.ti_lid ;
+#elif defined (__FreeBSD__)
+    int thr_pid = pid ;
+#endif
+    Thread * t = new Thread (arch, this, thr_pid, id) ;
 
     os.print ("[New ") ; t->print (os) ; os.print ("]\n") ;
 
-    target->attach (info.ti_lid) ;
+//     target->attach (info.ti_lid) ;
     threads.push_front (t)  ;
+
+#if defined (__linux__)
+	target->attach (info.ti_lid) ;
+
     int status ;
     //printf ("waiting for thread\n") ;
     int ret ;
     do {
         //printf ("waitpid %d\n", info.ti_lid) ;
-        ret = waitpid (info.ti_lid, &status, __WALL) ;
+//         ret = waitpid (info.ti_lid, &status, __WALL) ;
+	ret = waitpid (info.ti_lid, &status, WAITPID_ALL_CHILD_TYPES) ;
         if (ret < 0) {
             perror ("waitpid") ;
         }
     } while ((ret == -1 && errno == EINTR)) ;
+#endif
 
 #if 0
     // if there is no child available, try cloned children
@@ -999,7 +1020,12 @@ void Process::kill_threads() {
     // first send them all SIGKILL signal
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
+#if defined (__linux__)
         int e = syscall (SYS_tkill, thr->get_pid(), SIGKILL) ;
+#elif defined (__FreeBSD__)
+        printf("syscall(SYS_thr_kill2, %d, %p, SIGKILL)\n", thr->get_pid(), thr->get_tid());
+        int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGKILL) ;
+#endif
         if (e != 0) {
             printf ("failed to tkill thread %d\n", thr->get_num()) ;
         }
@@ -1017,7 +1043,8 @@ void Process::kill_threads() {
     while (nkilled < threads.size()) {
         for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
             Thread *thr = *t ;
-            int p = waitpid (thr->get_pid(), &status, __WALL|WNOHANG) ;
+//             int p = waitpid (thr->get_pid(), &status, __WALL|WNOHANG) ;
+	     int p = waitpid (thr->get_pid(), &status, WAITPID_ALL_CHILD_TYPES|WNOHANG) ;
             if (p > 0) {
                 nkilled++ ;
             }
@@ -1070,19 +1097,25 @@ void Process::stop_threads() {
         Thread *thr = *t ;
         if (thr->is_running()) {
             //thread_db::suspend_thread (thread_agent, thr->get_tid()) ;
+#if defined (__linux__)
             int e = syscall (SYS_tkill, thr->get_pid(), SIGSTOP) ;
+#elif defined (__FreeBSD__)
+	    int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
+#endif
             if (e != 0) {
                 printf ("failed to tkill thread %d\n", thr->get_num()) ;
             }
             int status ;
-            waitpid (thr->get_pid(), &status, __WALL) ;                 // wait for it to stop
+//             waitpid (thr->get_pid(), &status, __WALL) ;                 // wait for it to stop
+	    waitpid (thr->get_pid(), &status, WAITPID_ALL_CHILD_TYPES) ;                 // wait for it to stop
             thr->set_stop_status (status) ;
             thr->stop() ;
         } else {
             // it is possible that a thread has stopped between the call to mt_wait and the call to
             // grope threads.  In that case we need to retrieve its status
             int status ;
-            if (waitpid (thr->get_pid(), &status, __WALL|WNOHANG) > 0) {
+            //if (waitpid (thr->get_pid(), &status, __WALL|WNOHANG) > 0) {
+	if (waitpid (thr->get_pid(), &status, WAITPID_ALL_CHILD_TYPES|WNOHANG) > 0) {
                 printf ("thread %d, status %x\n", thr->get_num(), status); 
                 thr->set_stop_status (status) ;
             }
@@ -1093,6 +1126,16 @@ void Process::stop_threads() {
         Thread *thr = *t ;      
         thr->syncin() ;
     }
+
+#if defined (__FreeBSD__)
+    // to facilitate per-thread resume (see resume_threads()), now place all
+    // threads into a suspended state.
+    for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
+        Thread *thr = *t ;
+        Trace::suspend (thr->get_tid ()) ;
+    }
+#endif
+
 #endif
 }
 
@@ -1156,7 +1199,8 @@ void Process::reap_threads() {
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
         int status ;
-        int e = waitpid (thr->get_pid(), &status, WNOHANG | __WALL) ;
+        //int e = waitpid (thr->get_pid(), &status, WNOHANG | __WALL) ;
+	int e = waitpid (thr->get_pid(), &status, WNOHANG | WAITPID_ALL_CHILD_TYPES) ;
         if (e > 0) {
             thr->set_stop_status (status) ;
             if (WIFEXITED (status)) {
@@ -3284,7 +3328,13 @@ bool Process::run(const std::string& args, EnvMap& env) {
             td_thrinfo_t info ;
             thread_db::get_thread_info (thread_agent, thrds[i], info) ;
             //printf ("init thread: %lld (LWP %d)\n", info.ti_tid, info.ti_lid) ;
-            Thread *thr = new Thread (arch, this, info.ti_lid, (void*)info.ti_tid) ;
+//             Thread *thr = new Thread (arch, this, info.ti_lid, (void*)info.ti_tid) ;
+#if defined (__linux__)
+            int thr_pid = info.ti_lid ;
+#elif defined (__FreeBSD__)
+            int thr_pid = pid ;
+#endif
+            Thread *thr = new Thread (arch, this, thr_pid, (void*)info.ti_tid) ;
             threads.push_front (thr) ;
             thr->syncin() ;
         }
@@ -3294,6 +3344,7 @@ bool Process::run(const std::string& args, EnvMap& env) {
         printf ("Detected a multi-threaded program\n") ;
     } catch (...) {
             // ignore exceptions as they just mean that we are not multithreaded
+		printf("threaddb failed\n");
     }
 
     resolve_pending_breakpoints() ;                     // resolve any pending breakpoints found so far
@@ -3475,6 +3526,9 @@ bool Process::step_one_instruction() {
     sync() ;
 
     (*current_thread)->go() ;                           // mark current thread as running
+
+	tempremove_breakpoints (hitbp->get_address()) ;
+
     if (multithreaded) {
         resume_threads() ;                              // restart all threads (except current)
     }
@@ -3521,7 +3575,7 @@ bool Process::docont() {
         }
 
         ///printf ("continuing from breakpoint\n") ;
-        tempremove_breakpoints (hitbp->get_address()) ;
+        //tempremove_breakpoints (hitbp->get_address()) ;
         step_from_breakpoint (hitbp) ;
 
     } else {
@@ -3886,6 +3940,11 @@ void Process::follow_fork (pid_t childpid, bool is_vfork) {
                 std::cerr << "didn't get VFORKDONE event\n" ;
             }
 #endif
+#if defined (__linux__)
+            if ((status >> 16) != PTRACE_EVENT_VFORK_DONE) {             // XXX: ptrace stuff
+                 std::cerr << "didn't get VFORKDONE event\n" ;
+             }
+#endif
             attach_breakpoints (pid) ;           // reattach the breakpoints
         }
     } else if (followmode == FORK_BOTH) {  
@@ -3915,7 +3974,8 @@ int Process::dowait(int &status) {
     if (multithreaded) {
         for (ThreadList::iterator i = threads.begin() ; i != threads.end() ; i++) {
             Thread *t = *i ;
-            int v = waitpid (t->get_pid(), &status, WNOHANG|__WALL) ;
+            //int v = waitpid (t->get_pid(), &status, WNOHANG|__WALL) ;
+		int v = waitpid (t->get_pid(), &status, WNOHANG|WAITPID_ALL_CHILD_TYPES) ;
             if (v > 0) {
                 //printf ("dowait returning pid %d, status %x\n", v, status) ;
                 
@@ -3935,7 +3995,8 @@ int Process::mt_wait() {
         for (ThreadList::iterator i = threads.begin() ; i != threads.end() ; i++) {
             Thread *t = *i ;
             if (!t->is_disabled()) {
-                int v = waitpid (t->get_pid(), &status, WNOHANG|__WALL) ;
+                //int v = waitpid (t->get_pid(), &status, WNOHANG|__WALL) ;
+		int v = waitpid (t->get_pid(), &status, WNOHANG|WAITPID_ALL_CHILD_TYPES) ;
                 if (v > 0) {
                     t->stop() ;                     // mark thread as having stopped
                     t->set_stop_status (status) ;
@@ -4044,6 +4105,7 @@ bool Process::wait(int status) {
                 if (status >> 16 != 0) {                         // extended wait status
 					// FIXME: factor out
 #if 0
+#if defined (__linux__)
                     int event = status >> 16 ;
                     //printf ("extended wait event: %d\n", event) ;
                     switch (event) {
@@ -4061,6 +4123,7 @@ bool Process::wait(int status) {
                     case PTRACE_EVENT_EXEC:             // XXX: do this
                         break ;
                     }
+#endif
 #endif
                 }
 
@@ -5364,7 +5427,9 @@ static Signal sigs[] = {
     {SIGALRM, "SIGALRM", "Alarm clock", SIGACT_PASS},
     {SIGTERM, "SIGTERM", "Termination", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
 #ifdef SIGSTKFLT
+#if ! defined (__FreeBSD__)
     {SIGSTKFLT, "SIGSTKFLT", "Stack fault", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
+#endif
 #endif
     {SIGCHLD, "SIGCHLD", "Child status has changed", SIGACT_PASS},
     {SIGCONT, "SIGCONT", "Continue", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
@@ -5380,7 +5445,9 @@ static Signal sigs[] = {
     {SIGWINCH, "SIGWINCH", "Window size change", SIGACT_PASS},
     {SIGIO, "SIGIO", "I/O now possible", SIGACT_PASS},
 #ifdef SIGPWR
+#if ! defined (__FreeBSD__)
     {SIGPWR, "SIGPWR", "Power failure restart", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
+#endif
 #endif
     {SIGRTMIN, "SIGRTMIN", "Real-time signal", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
     {SIGRTMAX, "SIGRTMAX", "Real-time signal", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},

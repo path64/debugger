@@ -45,6 +45,8 @@ author: David Allison <dallison@pathscale.com>
 #include <dirent.h>
 #include "arch.h"
 #include <algorithm>
+#include <string.h>
+#include <sys/sysctl.h>
 
 extern char **environ ;
 
@@ -3134,7 +3136,16 @@ DebuggerVar *CommandInterpreter::add_debugger_variable (std::string n, Value &va
 
 void CommandInterpreter::open_help_file() {
     char link[256] ;
+#if defined (__linux__)
     int e = readlink ("/proc/self/exe", link, sizeof(link)-1) ;
+#elif defined (__FreeBSD__)
+    int exe_path_mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, getpid() } ;
+    size_t exe_path_size = sizeof (link) ;
+    int e = sysctl (exe_path_mib, 4, link, &exe_path_size, NULL, 0) ;
+
+    if (e != -1)
+        e = strlen (link) ;
+#endif
     if (e == -1) {
        throw Exception ("Unable to open help system file - unable to determine directory"); 
     }

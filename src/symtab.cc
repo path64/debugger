@@ -34,6 +34,7 @@ author: David Allison <dallison@pathscale.com>
 #include "arch.h"
 #include "map_range.h"
 
+#include <algorithm>
 #include <set>
 #include <algorithm>
 

@@ -697,7 +697,7 @@ Architecture *ELF::new_arch() {
 	Architecture	*arch = NULL;
 
 	//Following part is for X86
-	if (machine == 3) {
+	if (machine == 3 || machine == 62) {
 		if (is_elf64()) {
 			if (sizeof(void *) == 4)
 				throw Exception ("Cannot debug a 64-bit executable using a 32-bit debugger") ;
@@ -755,15 +755,26 @@ OS *ELF::new_os(std::istream *s) {
 		Section *sec = find_section(".note.ABI-tag");
 		if (sec) {
 			if (check_section_header(s, sec, "GNU", 16, 1)) {
-				if (sec->read_word4 (*s, 16) == 0)
+				switch (sec->read_word4 (*s, 16)) {
+				case 0:
 					abi = 3;
+					break;
+				case 3:
+					abi = 9;
+					break;
+				}
+			}
+
+			if (check_section_header(s, sec, "FreeBSD", 4, 1)) {
+				abi = 9;
 			}
 		}
 	}
 
-	if (abi == 3) {
+	switch (abi) {
+	case 3:
 		/* Linux */
-		if (machine == 3) {
+		if (machine == 3 || machine == 62) {
 			//X86
 			if (is_elf64()) {
  				os = new x86_linux_os (64);
@@ -772,6 +783,19 @@ OS *ELF::new_os(std::istream *s) {
 				os = new x86_linux_os (32);
 			}
 		}
+		break;
+	case 9:
+		/* FreeBSD */
+		if (machine == 3 || machine == 62) {
+			//X86
+			if (is_elf64()) {
+ 				os = new x86_freebsd_os (64);
+			}
+			else {
+				os = new x86_freebsd_os (32);
+			}
+		}
+		break;
 	}
 
 	if (os == NULL) {

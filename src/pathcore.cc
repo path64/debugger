@@ -33,6 +33,7 @@ author: David Allison <dallison@pathscale.com>
 #include <stdlib.h>
 #include "bstream.h"
 #include <signal.h>
+#include <limits.h>
 
 // struct CoreThread {
 //     CoreThread() : id(++nextid) {}
@@ -40,7 +41,7 @@ author: David Allison <dallison@pathscale.com>
 //     int id ;
 //     elf_prstatus prstatus ;             // process status
 //
-// #if __WORDSIZE == 64
+// #if LONG_BIT == 64
 //     struct user_fpregs_struct fpregset ;           // floating point register set and extended ones too
 // #else
 //     struct user_fpregs_struct fpregset ;           // floating point register set
@@ -98,7 +99,7 @@ void read_note (ELF *core, ProgramSegment *note, std::istream &s) {
             break ;
             break ;
         case NT_PRFPXREG:
-#if __WORDSIZE == 64
+#if LONG_BIT == 64
             dest = (char*)&threads[current_thread]->fpregset ;
 #else
             dest = (char*)&threads[current_thread]->fpxregset ;

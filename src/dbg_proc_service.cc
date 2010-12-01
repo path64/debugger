@@ -35,7 +35,7 @@ author: David Allison <dallison@pathscale.com>
 #ifdef __linux__
 
 #include "dbg_proc_service.h"
-#include <sys/ptrace.h>
+#include "trace.h"
 #include <dlfcn.h>
 #include <iostream>
 #include <string>
@@ -63,7 +63,7 @@ int ps_getpid (ps_prochandle *handle) {
 }
 
 ps_err_e ps_lgetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregset) {
-    int e = ptrace (PTRACE_GETREGS, lid, 0, gregset) ;
+    int e = Trace::get_regs (lid, gregset) ;
     if (e < 0) {
         //std::cout << "ps_lgetregs " << lid << "\n" ;
         throw Exception ("Failed to read registers");
@@ -72,7 +72,7 @@ ps_err_e ps_lgetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregse
 }
 
 ps_err_e ps_lgetfpregs (struct ps_prochandle *handle, int lid, prfpregset_t *fpregset) {
-    int e = ptrace (PTRACE_GETFPREGS, lid, 0, fpregset) ;
+    int e = Trace::get_fpregs (lid, fpregset) ;
     if (e < 0) {
         throw Exception ("Failed to read fp registers") ;
     }
@@ -81,7 +81,7 @@ ps_err_e ps_lgetfpregs (struct ps_prochandle *handle, int lid, prfpregset_t *fpr
 
 ps_err_e ps_lsetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregset) {
     //std::cout << "ps_lsetregs " << lid << "\n" ;
-    int e = ptrace (PTRACE_SETREGS, lid, 0, gregset) ;
+    int e = Trace::set_regs (lid, gregset) ;
     if (e < 0) {
         throw Exception ("Failed to write registers for thread %d", lid) ;
     }
@@ -89,7 +89,7 @@ ps_err_e ps_lsetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregse
 }
 
 ps_err_e ps_lsetfpregs (struct ps_prochandle *handle, int lid, prfpregset_t *fpregset) {
-    int e = ptrace (PTRACE_SETFPREGS, lid, 0, fpregset) ;
+    int e = Trace::set_fpregs (lid, fpregset) ;
     if (e < 0) {
         throw Exception ("Failed to write fp registers") ;
     }
@@ -103,14 +103,14 @@ ps_err_e ps_pdread(struct ps_prochandle *ph, psaddr_t  addr, void *buf, size_t s
     int *ibuf = (int*)buf ;
     char *iaddr = reinterpret_cast<char*>(addr) ;
     while (nwords > 0) {
-       int v = ptrace (PTRACE_PEEKDATA, ph->pid, iaddr, 0) ;
+       int v = Trace::read_data (ph->pid, iaddr) ;
        *ibuf++ = v ;
        iaddr += 4 ;
        nwords-- ;
     }
     // any left to read?
     if (remainder != 0) {               
-        Address v = ptrace (PTRACE_PEEKDATA, ph->pid, iaddr, 0) ;
+        Address v = Trace::read_data (ph->pid, iaddr) ;
         memcpy (ibuf, &v, remainder) ;                  // XXX: won't work big endian
     }
     return PS_OK ;
@@ -126,38 +126,84 @@ ps_err_e ps_pdwrite(struct ps_prochandle *ph, psaddr_t addr, const void *buf, si
     int *ibuf = (int*)buf ;
     char *iaddr = reinterpret_cast<char*>(addr) ;
     while (nwords > 0) {
-        Address v = ptrace (PTRACE_PEEKDATA, ph->pid, iaddr, 0) ;
+        Address v = Trace::read_data (ph->pid, iaddr) ;
         v = (v & 0xffffffff00000000LL) | ((Address)*ibuf++ & 0xffffffffLL) ;
-        ptrace (PTRACE_POKEDATA, ph->pid, iaddr, v) ;
+        Trace::write_data (ph->pid, iaddr, v) ;
         iaddr += 4 ;
         nwords-- ;
     }
     // any left to write?
     // if so, we need to read-modify-write the last word
     if (remainder != 0) {               
-        Address v = ptrace (PTRACE_PEEKDATA, ph->pid, iaddr, 0) ;
+        Address v = Trace::read_data (ph->pid, iaddr) ;
         memcpy (&v, ibuf, remainder) ;                  // XXX: won't work big endian
-        ptrace (PTRACE_POKEDATA, ph->pid, iaddr, v) ;
+        Trace::write_data (ph->pid, iaddr, v) ;
     }
     return PS_OK ;
 }
 
 ps_err_e ps_pglobal_lookup(struct ps_prochandle  *ph,  const char    *object_name,   const   char   *sym_name,   psaddr_t *sym_addr) {
-    *sym_addr = reinterpret_cast<psaddr_t>(pcm->lookup_symbol (sym_name)) ;
+    *sym_addr = (psaddr_t)pcm->lookup_symbol (sym_name) ;
     return *sym_addr != 0 ? PS_OK : PS_NOSYM ;
 }
 
 ps_err_e ps_get_thread_area(const struct ps_prochandle *ph, lwpid_t lwpid, int idx, void **base) {
     unsigned int desc[4];
-#define PTRACE_GET_THREAD_AREA (__ptrace_request)25
 
-    if  (ptrace (PTRACE_GET_THREAD_AREA, lwpid, reinterpret_cast<void *>(idx), (void*)&desc) < 0) {
+    if (Trace::get_thread_area (lwpid, idx, &desc) < 0) {
         return PS_ERR;
     }
 
     *(int *)base = desc[1];
     return PS_OK;
 }
+
+#if defined (__FreeBSD__)
+
+ps_err_e ps_lstop(struct ps_prochandle *ph, lwpid_t lwpid) {
+    int e = ptrace (PT_SUSPEND, lwpid, 0, 0) ;
+    return (e == 0 ? PS_OK : PS_ERR) ;
+}
+
+ps_err_e ps_lcontinue(struct ps_prochandle *ph, lwpid_t lwpid) {
+    int e = ptrace (PT_RESUME, lwpid, 0, 0) ;
+    return (e == 0 ? PS_OK : PS_ERR) ;
+}
+
+ps_err_e ps_linfo(struct ps_prochandle *ph, lwpid_t lwpid, void *lwpinfo) {
+    int e = ptrace (PT_LWPINFO, lwpid, (caddr_t)lwpinfo, sizeof (struct ptrace_lwpinfo)) ;
+    return (e == 0 ? PS_OK : PS_ERR) ;
+}
+
+ps_err_e ps_pread(struct ps_prochandle *ph, psaddr_t addr, void *buf, size_t size) {
+    struct ptrace_io_desc io_desc ;
+    io_desc.piod_op = PIOD_READ_D ;
+    io_desc.piod_offs = (void *)addr ;
+    io_desc.piod_addr = buf ;
+    io_desc.piod_len = size ;
+
+    int e = ptrace (PT_IO, ph->pid, (caddr_t)&io_desc, 0) ;
+    return (e == 0 ? PS_OK : PS_ERR) ;
+ }
+
+ps_err_e ps_pwrite(struct ps_prochandle *ph, psaddr_t addr, const void *buf, size_t size) {
+    struct ptrace_io_desc io_desc ;
+    io_desc.piod_op = PIOD_WRITE_D ;
+    io_desc.piod_offs = (void *)addr ;
+    io_desc.piod_addr = (void *)buf ;
+    io_desc.piod_len = size ;
+
+    int e = ptrace (PT_IO, ph->pid, (caddr_t)&io_desc, 0) ;
+    return (e == 0 ? PS_OK : PS_ERR) ;
+}
+
+void ps_plog(const char *fmt, ... ) {
+    va_list args ;
+    va_start (args, fmt) ;
+    vfprintf (stderr, fmt, args) ;
+}
+
+#endif
 
 }
 

@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
@@ -63,7 +64,11 @@ PStream::PStream(const char* fname)
    ch = buf_data = (char*)malloc(DEFAULT_BUFSIZE);
    if (!buf_data) throw Exception("out of memory");
 
+#if defined (__linux__)
+   fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
+#else
    fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC);
+#endif
    if (fd == -1) {
       throw Exception("Unable to open file for output");
    }

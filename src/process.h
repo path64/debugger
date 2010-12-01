@@ -283,7 +283,7 @@ class Process {
 public :
     /* XXX: this constructor has ridiculous number of arguments */
     Process(ProcessController * pcm, std::string program,
-      Architecture * arch, Target *target, PStream &os, AttachType at) ;
+      Architecture * arch, Target *target, PStream &os, AttachType at, OS *osc) ;
 
     Process (const Process &old) ;                    // copy the details from another process
     ~Process() ; 
@@ -521,6 +521,7 @@ private:
     std::string program ; 
 public:
     Architecture * arch ;               // needed for bug 2671
+    OS * osc;
     td_thragent_t *thread_agent ; 
 
     int is_64bit() { return objectfiles[0]->elf->is_elf64(); }
@@ -604,6 +605,7 @@ private:
 
 // threads
     void show_thread_states() ;
+    void suspend_threads() ;
     void resume_threads() ;
     void kill_threads() ;
     void detach_threads() ;

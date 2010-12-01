@@ -45,13 +45,14 @@ author: David Allison <dallison@pathscale.com>
 #include <climits> 
 #include <sys/ptrace.h>
 #include "ptrace_target.h"
+#include <limits.h>
 
 
 // this is where other targets can be created when we have some
-Target *Target::new_live_target(Architecture *arch) {
+Target *Target::new_live_target(Architecture *arch, OS *os) {
 	// FIXME: This should be implemented in the file with the host platform's
 	// target implementation.
-    return new PtraceTarget (arch);
+    return new PtraceTarget (arch, os);
 }
 
 Target::Target (Architecture *arch) : arch(arch) {}
@@ -268,11 +269,13 @@ void CoreTarget::read_note (ProgramSegment *note, std::istream &s) {
         case NT_FPREGSET:
             dest = (char*)&threads[current_thread]->fpregset ;
             break ;
+#if defined (__linux__)
         case NT_PRFPXREG:
-#if __WORDSIZE == 64
+#if LONG_BIT == 64
             dest = (char*)&threads[current_thread]->fpregset ;
 #else
             dest = (char*)&threads[current_thread]->fpxregset ;
+#endif
 #endif
             break ;
         default:

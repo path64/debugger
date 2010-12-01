@@ -3086,7 +3086,7 @@ Token CExpressionHandler::getNextToken() {
                 fpnumber = strtod (num_buffer, NULL) ;
                 return FPNUMBER ;
             } else {
-                number = strtoll (num_buffer, NULL, 0) ;
+                number = strtol (num_buffer, NULL, 0) ;
             }
         }
         return NUMBER ;
@@ -4448,7 +4448,7 @@ Token FortranExpressionHandler::getNextToken() {
                 fpnumber = strtod (num_buffer, NULL) ;
                 return FPNUMBER ;
             } else {
-                number = strtoll (num_buffer, NULL, 10) ;
+                number = strtol (num_buffer, NULL, 10) ;
             }
         }
         return NUMBER ;

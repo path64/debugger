@@ -28,6 +28,7 @@ author: James Strother <jims@pathscale.com>
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <string.h>
 
 #include "utils.h"
 #include "cli_history.h"

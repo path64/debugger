@@ -419,7 +419,7 @@ private:
     ProcessController *pcm ;
     PStream &os ;
     std::vector<Command*> commands ;
-    void (*oldint)(int);
+    //void (*oldint)(int);
     bool program_running ;
     std::istream *instream ;            // current input stream (NULL means keyboard)
 

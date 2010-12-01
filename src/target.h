@@ -42,6 +42,7 @@ author: David Allison <dallison@pathscale.com>
 #include <string>
 #include "map_range.h"
 #include <sys/procfs.h>
+#include <limits.h>
 
 /* find the offset of X into struct user (from sys/user.h) */
 /* XXX: change long to Address, after Address is reset to long */
@@ -86,7 +87,7 @@ public:
     virtual pid_t get_fork_pid (pid_t pid) = 0 ;
 
     // factory method to make a new target
-    static Target *new_live_target (Architecture *arch) ;
+    static Target *new_live_target (Architecture *arch, OS *os) ;
     virtual void cont (int pid, int signal) = 0 ;
     virtual void step(int pid) = 0 ;
     virtual long get_debug_reg (int pid, int reg) = 0 ;
@@ -181,12 +182,18 @@ public:
 struct CoreThread {
     CoreThread() : id(++nextid) {}
     int id ;
+#if defined (__linux__)
     elf_prstatus prstatus ;             // process status
-#if __WORDSIZE == 64
+//#if __WORDSIZE == 64
+#if LONG_BIT == 64
     struct user_fpregs_struct fpregset ;        // floating point register set and extended ones too
 #else
     struct user_fpregs_struct fpregset ;           // floating point register set
     struct user_fpxregs_struct fpxregset ;        // extended floating point register set
+#endif
+#elif defined (__FreeBSD__)
+    prstatus_t prstatus ;
+    fpregset_t fpregset ;
 #endif
     static int nextid ;
 } ;
@@ -252,7 +259,8 @@ private:
     ELF *core ;
 // FIXME: This should be factored out into a target class
 #ifdef __linux__
-    elf_prpsinfo prpsinfo ;             // process info
+    //elf_prpsinfo prpsinfo ;             // process info
+    prpsinfo_t prpsinfo ;             // process info
 #endif
 
     void new_thread() ;

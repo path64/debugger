@@ -36,6 +36,7 @@ author: David Allison <dallison@pathscale.com>
 #include <climits>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 
 void JunkStream::disassemble (EvalContext &ctx, Address a) {
    Process *proc = ctx.process;

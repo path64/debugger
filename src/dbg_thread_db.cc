@@ -103,6 +103,10 @@ struct Thread_db_interface {
     td_err_e (*td_ta_event_getmsg) (const td_thragent_t *__ta,
                                     td_event_msg_t *__msg);
                                                                                                                      
+   td_err_e (*td_ta_map_id2thr) (const td_thragent_t *__ta,
+                                 thread_t tid,
+                                 td_thrhandle_t *__th);
+
     // suspend and resume
     td_err_e (*td_thr_dbsuspend) (const td_thrhandle_t *__th) ;
     td_err_e (*td_thr_dbresume) (const td_thrhandle_t *__th) ;
@@ -113,6 +117,24 @@ struct Thread_db_interface {
 
 Thread_db_interface thread_db ;
 
+// the type elf_greg_t is the native register set type (the same as ptrace uses)
+#if defined (__linux__)
+
+// XXX: hack: td_thrinfo_t is supposed to be opaque
+#define TD_THRINFO_T_SET(thr_info, agent, handle) \
+  thr_info.th_ta_p = agent ;                      \
+  thr_info.th_unique = handle ;
+
+typedef elf_greg_t *GRegPtr;
+
+#elif defined (__FreeBSD__)
+
+#define TD_THRINFO_T_SET(thr_info, agent, handle) \
+  thread_db.td_ta_map_id2thr (agent, (thread_t)handle, &thr_info) ;
+
+typedef reg *GRegPtr;
+
+#endif
 
 static void *needsym (void *handle, const char *name) {
     void *sym = dlsym (handle, name) ;
@@ -125,7 +147,7 @@ static void *needsym (void *handle, const char *name) {
 // load the thread database
 void load_thread_db (ProcessController *p) {
     pcm = p ;
-    thread_db.handle = dlopen ("libthread_db.so.1", RTLD_NOW) ;
+    thread_db.handle = dlopen ("libthread_db.so", RTLD_NOW) ;
     if (thread_db.handle == NULL) {
         //std::cerr << dlerror() << "\n" ;
         throw Exception ("Unable to open thread debug library") ;
@@ -138,15 +160,18 @@ void load_thread_db (ProcessController *p) {
     thread_db.td_thr_get_info = (td_err_e (*)(const td_thrhandle_t *, td_thrinfo_t *))needsym (handle, "td_thr_get_info") ;
     thread_db.td_thr_getfpregs = (td_err_e (*)(const td_thrhandle_t *, prfpregset_t *))needsym (handle, "td_thr_getfpregs") ;
     thread_db.td_thr_getgregs = (td_err_e (*)(const td_thrhandle_t *, prgregset_t))needsym (handle, "td_thr_getgregs") ;
+#if defined (__linux__)
     thread_db.td_thr_getxregs = (td_err_e (*)(const td_thrhandle_t *, void *))needsym (handle, "td_thr_getxregs") ;
     thread_db.td_thr_setxregs = (td_err_e (*)(const td_thrhandle_t *, const void *))needsym (handle, "td_thr_setxregs") ;
     thread_db.td_thr_getxregsize = (td_err_e (*)(const td_thrhandle_t *, int *))needsym (handle, "td_thr_getxregsize") ;
+#endif
     thread_db.td_thr_setfpregs = (td_err_e (*)(const td_thrhandle_t *, const prfpregset_t *))needsym (handle, "td_thr_setfpregs") ;
     thread_db.td_thr_setgregs = (td_err_e (*)(const td_thrhandle_t *, prgregset_t ))needsym (handle, "td_thr_setgregs") ;
     thread_db.td_ta_event_addr = (td_err_e (*)(const td_thragent_t *, td_event_e, td_notify_t *))needsym (handle, "td_ta_event_addr") ;
     thread_db.td_ta_set_event = (td_err_e (*)(const td_thragent_t *, td_thr_events_t *))needsym (handle, "td_ta_set_event") ;
     thread_db.td_ta_clear_event = (td_err_e (*)(const td_thragent_t *, td_thr_events_t *))needsym (handle, "td_ta_clear_event") ;
     thread_db.td_ta_event_getmsg = (td_err_e (*)(const td_thragent_t *, td_event_msg_t *))needsym (handle, "td_ta_event_getmsg") ;
+    thread_db.td_ta_map_id2thr = (td_err_e (*)(const td_thragent_t *, thread_t, td_thrhandle_t *))needsym (handle, "td_ta_map_id2thr") ;
 
     thread_db.td_thr_event_enable = (td_err_e (*)(const td_thrhandle_t *, int ))needsym (handle, "td_thr_event_enable") ;
     thread_db.td_thr_set_event = (td_err_e (*)(const td_thrhandle_t *, td_thr_events_t *))needsym (handle, "td_thr_set_event") ;
@@ -209,14 +234,14 @@ void get_event_addresses (td_thragent_t *agent, Address &creation, Address &deat
     if (e != TD_OK) {
         throw Exception ("Failed to enable thread death event") ;
     }
-    creation = reinterpret_cast<Address>(bpaddr.u.bptaddr) ;
+    creation = (Address)bpaddr.u.bptaddr ;
 
     // get the death event address
     e = thread_db.td_ta_event_addr (agent, TD_DEATH, &bpaddr) ;
     if (e != TD_OK) {
         throw Exception ("Failed to enable thread creation event") ;
     }
-    death = reinterpret_cast<Address>(bpaddr.u.bptaddr) ;
+    death = (Address)bpaddr.u.bptaddr ;
 }
 
 
@@ -231,7 +256,15 @@ static int thread_iterator_callback (const td_thrhandle_t *th_p, void *data) {
     if (info.ti_state == TD_THR_ZOMBIE) {
         return 0 ;
     }
-    vec->push_back ((void*)th_p->th_unique) ;                   // XXX: hack: it's supposed to be opaque
+
+    void *tid;
+#if defined (__linux__)
+    tid = th_p->th_unique ;
+#elif defined (__FreeBSD__)
+    tid = (void *)th_p->th_tid ;
+#endif
+
+    vec->push_back (tid) ;
     return 0 ;
 }
 
@@ -256,15 +289,19 @@ void get_event_message (const td_thragent_t *agent, int &event_number, void *&th
        throw Exception ("Unable to get event message") ;
     }
     event_number = msg.event ;
+#if defined (__linux__)
     thread_handle = (void *)msg.th_p->th_unique ;
-    //std::cout << "thread handle = " << (void*)msg.th_p->th_unique << "\n" ;
     data = (void*)msg.msg.data ;
+#elif defined (__FreeBSD__)
+    thread_handle = (void *)((td_thrhandle_t *)msg.th_p)->th_tid ;
+    data = (void*)msg.data ;
+#endif
+    //std::cout << "thread handle = " << (void*)msg.th_p->th_unique << "\n" ;
 }
 
 void get_thread_info (td_thragent_t *agent, void *threadhandle, td_thrinfo_t &info) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_get_info (&handle, &info) ;
     if (e != TD_OK) {
        throw Exception ("Unable to read thread info") ;
@@ -273,8 +310,7 @@ void get_thread_info (td_thragent_t *agent, void *threadhandle, td_thrinfo_t &in
 
 void enable_thread_events (td_thragent_t *agent, void *threadhandle, int v) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_event_enable (&handle, v) ;
     if (e != TD_OK) {
         throw Exception ("Unable to enable events for thread") ;
@@ -283,8 +319,7 @@ void enable_thread_events (td_thragent_t *agent, void *threadhandle, int v) {
 
 void suspend_thread (td_thragent_t *agent, void *threadhandle) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_dbsuspend (&handle) ;
     if (e != TD_OK) {
         printf ("suspend failed %d\n", e) ;
@@ -295,8 +330,7 @@ void suspend_thread (td_thragent_t *agent, void *threadhandle) {
 
 void resume_thread (td_thragent_t *agent, void *threadhandle) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_dbresume (&handle) ;
     if (e != TD_OK) {
         printf ("resume failed %d\n", e) ;
@@ -308,31 +342,36 @@ void resume_thread (td_thragent_t *agent, void *threadhandle) {
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
 void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs) {
 	//XXX
-//     td_thrhandle_t handle ;
+     td_thrhandle_t handle ;
 //     handle.th_ta_p = agent ;
 //     handle.th_unique = threadhandle ;
 //     //td_err_e e = thread_db.td_thr_getgregs (&handle, (elf_greg_t*)regs) ;
-//     if (e != TD_OK) {
-//         throw Exception ("Unable to read thread registers") ;
-//     }
+
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
+    td_err_e e = thread_db.td_thr_getgregs (&handle, (GRegPtr)regs) ;
+
+     if (e != TD_OK) {
+         throw Exception ("Unable to read thread registers") ;
+     }
 }
 
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
 void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs) {
     //XXX
-//     td_thrhandle_t handle ;
+     td_thrhandle_t handle ;
 //     handle.th_ta_p = agent ;
 //     handle.th_unique = threadhandle ;
 //     //td_err_e e = thread_db.td_thr_setgregs (&handle, (elf_greg_t*)regs) ;
-//     if (e != TD_OK) {
-//         throw Exception ("Unable to write thread registers") ;
-//     }
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
+    td_err_e e = thread_db.td_thr_setgregs (&handle, (GRegPtr)regs) ;
+     if (e != TD_OK) {
+         throw Exception ("Unable to write thread registers") ;
+     }
 }
 
 void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_getfpregs (&handle, (prfpregset_t*)regs) ;
     if (e != TD_OK) {
         throw Exception ("Unable to read thread floating point registers") ;
@@ -341,8 +380,7 @@ void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned
 
 void write_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_setfpregs (&handle, (prfpregset_t*)regs) ;
     if (e != TD_OK) {
         throw Exception ("Unable to write thread floating point registers") ;
@@ -352,16 +390,14 @@ void write_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigne
 
 void read_thread_fpxregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     // td_err_e e = thread_db.td_thr_getxregs (&handle, (void*)regs) ;
     // ignore errors
 }
 
 void write_thread_fpxregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
     td_thrhandle_t handle ;
-    handle.th_ta_p = agent ;
-    handle.th_unique = threadhandle ;
+    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     // td_err_e e = thread_db.td_thr_setxregs (&handle, (void*)regs) ;
     // ignore errors
 }
