@@ -3527,7 +3527,8 @@ bool Process::step_one_instruction() {
 
     (*current_thread)->go() ;                           // mark current thread as running
 
-	tempremove_breakpoints (hitbp->get_address()) ;
+	if (hitbp)
+		tempremove_breakpoints (hitbp->get_address()) ;
 
     if (multithreaded) {
         resume_threads() ;                              // restart all threads (except current)
