@@ -488,23 +488,23 @@ void ELF::read_header(std::istream & stream, Address baseaddr) {
         //Section *section = sections[i] ;
         //section->print () ;
     //}
-	if (abi == 0) {
+	if (abi == ELFOSABI_NONE) {
 		//need get abi from section
 		Section *sec = find_section(".note.ABI-tag");
 		if (sec) {
 			if (check_section_header(&stream, sec, "GNU", 16, 1)) {
 				switch (sec->read_word4 (stream, 16)) {
 				case 0:
-					abi = 3;
+					abi = ELFOSABI_LINUX;
 					break;
 				case 3:
-					abi = 9;
+					abi = ELFOSABI_FREEBSD;
 					break;
 				}
 			}
 
 			if (check_section_header(&stream, sec, "FreeBSD", 4, 1)) {
-				abi = 9;
+				abi = ELFOSABI_FREEBSD;
 			}
 		}
 	}
@@ -746,7 +746,7 @@ Architecture *ELF::new_arch() {
 	Architecture	*arch = NULL;
 
 	//Following part is for X86
-	if (machine == 3 || machine == 62) {
+	if (machine == EM_386 || machine == EM_X86_64) {
 		if (is_elf64()) {
 			arch = new x86_64Arch(64) ;
 		}
@@ -769,9 +769,9 @@ OS *ELF::new_os(std::istream *s) {
 	OS	*os = NULL;
 
 	switch (abi) {
-	case 3:
+	case ELFOSABI_LINUX:
 		/* Linux */
-		if (machine == 3 || machine == 62) {
+		if (machine == EM_386 || machine == EM_X86_64) {
 			//X86
 			if (is_elf64()) {
  				os = new x86_linux_os (64);
@@ -781,9 +781,9 @@ OS *ELF::new_os(std::istream *s) {
 			}
 		}
 		break;
-	case 9:
+	case ELFOSABI_FREEBSD:
 		/* FreeBSD */
-		if (machine == 3 || machine == 62) {
+		if (machine == EM_386 || machine == EM_X86_64) {
 			//X86
 			if (is_elf64()) {
  				os = new x86_freebsd_os (64);
@@ -806,7 +806,7 @@ void
 ELF::prstatus_to_thread(BStream *stream, int size, struct CoreThread *thread)
 {
 	switch (machine) {
-	case 3:		//X86
+	case EM_386:		//X86
 		if (size != 144)
 			throw Exception ("The format of core is not right.") ;
 		//Get sig.
@@ -824,7 +824,7 @@ ELF::prstatus_to_thread(BStream *stream, int size, struct CoreThread *thread)
 		//Seek pass all this content.
 		stream->seek(4, BSTREAM_CUR);
 		break;
-	case 62:	//X86_64
+	case EM_X86_64:	//X86_64
 		if (size != 336)
 			throw Exception ("The format of core is not right.") ;
 		//Get sig.
@@ -854,7 +854,7 @@ ELF::prstatus_to_pname(BStream *stream, int size, std::string &pname)
 	char	buf[17];
 
 	switch (machine) {
-	case 3:		//X86
+	case EM_386:		//X86
 		if (size != 124)
 			throw Exception ("The format of core is not right.") ;
 		//Get pname
@@ -864,7 +864,7 @@ ELF::prstatus_to_pname(BStream *stream, int size, std::string &pname)
 		//Seek pass all this content.
 		stream->seek(79, BSTREAM_CUR);
 		break;
-	case 62:	//X86_64
+	case EM_X86_64:	//X86_64
 		if (size != 136)
 			throw Exception ("The format of core is not right.") ;
 		//Get pname
