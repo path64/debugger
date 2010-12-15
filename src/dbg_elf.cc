@@ -35,6 +35,7 @@ author: David Allison <dallison@pathscale.com>
 #include <unistd.h>
 #include <sys/types.h>
 #include "utils.h"
+#include "target.h"
 
 ProgramSegment::ProgramSegment (ELF *elf, Address baseaddr)
    : elf(elf), type(0), flags(0), offset(0), 
@@ -397,6 +398,35 @@ bool ELF::is_little_endian() {
     return dataencoding == ELFDATA2LSB ;
 }
 
+static bool
+check_section_header(std::istream *s, Section *sec, std::string name,
+		     int size, int tag)
+{
+	size_t	header_size;
+
+	header_size = name.size() + 1;
+	header_size = ((header_size + 3) & ~3);
+	header_size += size;
+	header_size = ((header_size + 3) & ~3);
+
+	if (header_size > sec->get_size())
+		return false;
+
+	if (sec->read_word4 (*s, 0) != name.size() + 1)
+		return false;
+
+	if (sec->read_word4 (*s, 4) != size)
+		return false;
+
+	if (sec->read_word4 (*s, 8) != tag)
+		return false;
+
+	if (sec->read_string (*s, 12) != name)
+		return false;
+
+	return true;
+}
+
 void ELF::read_header(std::istream & stream, Address baseaddr) {
     base = baseaddr ;
     stream.seekg (mainoffset + 0, std::ios_base::beg) ;
@@ -458,7 +488,26 @@ void ELF::read_header(std::istream & stream, Address baseaddr) {
         //Section *section = sections[i] ;
         //section->print () ;
     //}
+	if (abi == 0) {
+		//need get abi from section
+		Section *sec = find_section(".note.ABI-tag");
+		if (sec) {
+			if (check_section_header(&stream, sec, "GNU", 16, 1)) {
+				switch (sec->read_word4 (stream, 16)) {
+				case 0:
+					abi = 3;
+					break;
+				case 3:
+					abi = 9;
+					break;
+				}
+			}
 
+			if (check_section_header(&stream, sec, "FreeBSD", 4, 1)) {
+				abi = 9;
+			}
+		}
+	}
 }
 
 void ELF::print_header() {
@@ -699,9 +748,7 @@ Architecture *ELF::new_arch() {
 	//Following part is for X86
 	if (machine == 3 || machine == 62) {
 		if (is_elf64()) {
-			if (sizeof(void *) == 4)
-				throw Exception ("Cannot debug a 64-bit executable using a 32-bit debugger") ;
-			 arch = new x86_64Arch(64) ;
+			arch = new x86_64Arch(64) ;
 		}
 		else {
 			if (sizeof(char*) == 8)
@@ -718,58 +765,8 @@ Architecture *ELF::new_arch() {
 	return arch;
 }
 
-static bool
-check_section_header(std::istream *s, Section *sec, std::string name,
-		     int size, int tag)
-{
-	size_t	header_size;
-
-	header_size = name.size() + 1;
-	header_size = ((header_size + 3) & ~3);
-	header_size += size;
-	header_size = ((header_size + 3) & ~3);
-
-	if (header_size > sec->get_size())
-		return false;
-
-	if (sec->read_word4 (*s, 0) != name.size() + 1)
-		return false;
-
-	if (sec->read_word4 (*s, 4) != size)
-		return false;
-
-	if (sec->read_word4 (*s, 8) != tag)
-		return false;
-
-	if (sec->read_string (*s, 12) != name)
-		return false;
-
-	return true;
-}
-
 OS *ELF::new_os(std::istream *s) {
 	OS	*os = NULL;
-
-	if (abi == 0) {
-		//need get abi from section
-		Section *sec = find_section(".note.ABI-tag");
-		if (sec) {
-			if (check_section_header(s, sec, "GNU", 16, 1)) {
-				switch (sec->read_word4 (*s, 16)) {
-				case 0:
-					abi = 3;
-					break;
-				case 3:
-					abi = 9;
-					break;
-				}
-			}
-
-			if (check_section_header(s, sec, "FreeBSD", 4, 1)) {
-				abi = 9;
-			}
-		}
-	}
 
 	switch (abi) {
 	case 3:
@@ -803,4 +800,82 @@ OS *ELF::new_os(std::istream *s) {
 	}
 
 	return os;
+}
+
+void
+ELF::prstatus_to_thread(BStream *stream, int size, struct CoreThread *thread)
+{
+	switch (machine) {
+	case 3:		//X86
+		if (size != 144)
+			throw Exception ("The format of core is not right.") ;
+		//Get sig.
+		stream->seek(12, BSTREAM_CUR);
+		thread->sig = (int)stream->read2s();
+		//Get pid.
+		stream->seek(10, BSTREAM_CUR);
+		thread->pid = (int)stream->read4s();
+		//Get reg.
+		stream->seek(44, BSTREAM_CUR);
+		thread->reg = (char *)malloc(68);
+		if (!thread->reg)
+			throw Exception ("Malloc failed.") ;
+		stream->read(thread->reg, 68);
+		//Seek pass all this content.
+		stream->seek(4, BSTREAM_CUR);
+		break;
+	case 62:	//X86_64
+		if (size != 336)
+			throw Exception ("The format of core is not right.") ;
+		//Get sig.
+		stream->seek(12, BSTREAM_CUR);
+		thread->sig = (int)stream->read2s();
+		//Get pid.
+		stream->seek(18, BSTREAM_CUR);
+		thread->pid = (int)stream->read4s();
+		//Get reg.
+		stream->seek(76, BSTREAM_CUR);
+		thread->reg = (char *)malloc(216);
+		if (!thread->reg)
+			throw Exception ("Malloc failed.") ;
+		stream->read(thread->reg, 216);
+		//Seek pass all this content.
+		stream->seek(8, BSTREAM_CUR);
+		break;
+	default:
+		throw Exception ("The format of core is not support.") ;
+		break;
+	}
+}
+
+void
+ELF::prstatus_to_pname(BStream *stream, int size, std::string &pname)
+{
+	char	buf[17];
+
+	switch (machine) {
+	case 3:		//X86
+		if (size != 124)
+			throw Exception ("The format of core is not right.") ;
+		//Get pname
+		stream->seek(28, BSTREAM_CUR);
+		stream->read(buf, 17);
+		pname += buf;
+		//Seek pass all this content.
+		stream->seek(79, BSTREAM_CUR);
+		break;
+	case 62:	//X86_64
+		if (size != 136)
+			throw Exception ("The format of core is not right.") ;
+		//Get pname
+		stream->seek(40, BSTREAM_CUR);
+		stream->read(buf, 17);
+		pname += buf;
+		//Seek pass all this content.
+		stream->seek(79, BSTREAM_CUR);
+		break;
+	default:
+		throw Exception ("The format of core is not support.") ;
+		break;
+	}
 }

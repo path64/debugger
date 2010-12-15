@@ -169,6 +169,8 @@ public:
     std::string get_name() { return name ; }
     Architecture *new_arch();
     OS *new_os(std::istream *s);
+    void prstatus_to_thread(BStream *stream, int size, struct CoreThread *thread);
+    void prstatus_to_pname(BStream *stream, int size, std::string &pname);
 protected:
 private:
     void read_symtab (std::istream &stream, Section *symtab, Address baseaddr, Section *strtab) ;

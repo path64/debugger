@@ -254,42 +254,20 @@ void CoreTarget::read_note (ProgramSegment *note, std::istream &s) {
         while (diff-- > 0) {
             stream.read1u() ;
         }
-        char *dest = NULL ;
-        // lets assume that the pstatus starts a new thread and that the floating point
-        // register set belongs to that thread.  This is not documented anywhere that
-        // I can find.
         switch (type) {         // note type
         case NT_PRSTATUS: 
             new_thread() ;
-            dest = (char*)&threads[current_thread]->prstatus ;
+            core->prstatus_to_thread(&stream, descsize, threads[current_thread]);
             break ;
         case NT_PRPSINFO: 
-            dest = (char*)&prpsinfo ;
+            core->prstatus_to_pname(&stream, descsize, pname);
             break ;
         case NT_FPREGSET:
-            dest = (char*)&threads[current_thread]->fpregset ;
-            break ;
-#if defined (__linux__)
         case NT_PRFPXREG:
-#if LONG_BIT == 64
-            dest = (char*)&threads[current_thread]->fpregset ;
-#else
-            dest = (char*)&threads[current_thread]->fpxregset ;
-#endif
-#endif
-            break ;
         default:
-            //std::cerr << "Unrecognized note type: " << type << "\n" ; 
+            //XXX: not support or not need.
+            stream.seek(descsize, BSTREAM_CUR);
             break ;
-        }
-        if (dest != NULL) {             // copy descriptor to appropriate structure
-           for (int i = 0 ; i < descsize ; i++) {
-               *dest++ = stream.read1u() ;
-           }
-        } else {                        // just skip the descriptor since we don't recognize it
-           for (int i = 0 ; i < descsize ; i++) {
-               stream.read1u() ;
-           }
         }
     }
 }
@@ -326,6 +304,11 @@ void CoreTarget::detach(int pid, bool kill) {
     }
     delete core ;
     close (fd) ;
+
+	for (unsigned int i = 0 ; i < threads.size() ; i++) {
+		if (threads[i]->reg)
+			free (threads[i]->reg);
+	}
 }
 
 void CoreTarget::interrupt(int pid) {
@@ -356,7 +339,8 @@ Address CoreTarget::readptr (int pid, Address addr) {
 }
 
 void CoreTarget::get_regs(int pid, RegisterSet *reg) {
-	os->char2regset((char *)&find_thread(pid)->prstatus.pr_reg, reg);
+	if (find_thread(pid)->reg)
+		os->char2regset(find_thread(pid)->reg, reg);
 }
 
 void CoreTarget::set_regs(int pid, RegisterSet *regs) {
@@ -364,7 +348,7 @@ void CoreTarget::set_regs(int pid, RegisterSet *regs) {
 }
 
 void CoreTarget::get_fpregs(int pid, RegisterSet *reg) {
-	os->char2regset((char *)&find_thread(pid)->fpregset, reg);
+	//os->char2regset((char *)&find_thread(pid)->reg, reg);
 }
 
 void CoreTarget::set_fpregs(int pid, RegisterSet *regs) {
@@ -389,8 +373,8 @@ void CoreTarget::set_fpxregs(int pid, RegisterSet *regs) {
 
 int CoreTarget::get_signal() {
     for (unsigned int i = 0 ; i < threads.size() ; i++) {
-        if (threads[i]->prstatus.pr_cursig != 0) {
-            return threads[i]->prstatus.pr_cursig ;
+        if (threads[i]->sig != 0) {
+            return threads[i]->sig ;
         }
     }
     return 0 ;
@@ -399,15 +383,15 @@ int CoreTarget::get_signal() {
 // return the pid of the terminating thread
 int CoreTarget::get_terminating_thread() {
     for (unsigned int i = 0 ; i < threads.size() ; i++) {
-        if (threads[i]->prstatus.pr_cursig != 0) {
-            return threads[i]->prstatus.pr_pid ;
+        if (threads[i]->sig != 0) {
+            return threads[i]->pid ;
         }
     }
     return 0 ;
 }
 
 std::string CoreTarget::get_program() {
-    return prpsinfo.pr_fname ;
+    return pname ;
 }
 
 void CoreTarget::cont (int pid, int signal) {
@@ -426,10 +410,11 @@ int CoreTarget::get_num_threads() {
 void CoreTarget::new_thread() {
     threads.push_back (new CoreThread()) ;
     current_thread = get_num_threads() - 1 ;
+    threads[current_thread]->reg = NULL;
 }
 
 int CoreTarget::get_thread_pid(int n) {
-    return threads[n]->prstatus.pr_pid ;
+    return threads[n]->pid ;
 }
 
 void *CoreTarget::get_thread_tid(int n) {
@@ -438,7 +423,7 @@ void *CoreTarget::get_thread_tid(int n) {
 
 CoreThread *CoreTarget::find_thread (int pid) {
     for (unsigned int i = 0 ; i < threads.size() ; i++) {
-        if (threads[i]->prstatus.pr_pid == pid) {
+        if (threads[i]->pid == pid) {
             return threads[i] ;
         }
     }

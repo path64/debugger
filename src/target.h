@@ -180,22 +180,12 @@ public:
 // } ;
 
 struct CoreThread {
-    CoreThread() : id(++nextid) {}
-    int id ;
-#if defined (__linux__)
-    elf_prstatus prstatus ;             // process status
-//#if __WORDSIZE == 64
-#if LONG_BIT == 64
-    struct user_fpregs_struct fpregset ;        // floating point register set and extended ones too
-#else
-    struct user_fpregs_struct fpregset ;           // floating point register set
-    struct user_fpxregs_struct fpxregset ;        // extended floating point register set
-#endif
-#elif defined (__FreeBSD__)
-    prstatus_t prstatus ;
-    fpregset_t fpregset ;
-#endif
-    static int nextid ;
+	CoreThread() : id(++nextid) {}
+	int	id;
+	int	sig;
+	int	pid;
+	char	*reg;
+	static int nextid ;
 } ;
 
 class CoreTarget : public Target {
@@ -257,11 +247,7 @@ private:
     std::string corefile ;
     int fd ;
     ELF *core ;
-// FIXME: This should be factored out into a target class
-#ifdef __linux__
-    //elf_prpsinfo prpsinfo ;             // process info
-    prpsinfo_t prpsinfo ;             // process info
-#endif
+    std::string pname;
 
     void new_thread() ;
     CoreThread *find_thread (int pid) ;
