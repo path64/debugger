@@ -167,7 +167,6 @@ protected:
 private:
     std::string program ;
     Architecture * arch ;
-    OS *osc;
     Target *target ;
     PStream &os ;
     std::vector<Process *> processes ;          // all processes

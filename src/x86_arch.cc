@@ -869,7 +869,7 @@ static const char *x86_64_64_regnames[] = {
     "gs"
 } ;
 
-x86_64Arch::x86_64Arch (int mode) : IntelArch (4), mode(mode)
+x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
  {
     // in 32 bit mode, the reg names are the 32 bit ones
     const char **r = mode == 32 ? x86_64_32_regnames : x86_64_64_regnames ;

@@ -13,7 +13,7 @@
 #define CHAR_BIT	8
 #endif
 
-PtraceTarget::PtraceTarget (Architecture *arch, OS *os) : LiveTarget(arch),os(os), is_attached(false)
+PtraceTarget::PtraceTarget (Architecture *arch) : LiveTarget(arch), is_attached(false)
 {
 #if LONG_BIT == 64
 #if defined (__linux__)
@@ -401,7 +401,7 @@ void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
 	if (Trace::get_regs (pid, regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
-	os->char2regset(regs_buf, regset_size, reg);
+	arch->register_set_from_native(regs_buf, regset_size, reg);
 }
 
 void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
@@ -410,7 +410,7 @@ void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
 	if (Trace::get_regs (pid, &regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
-	os->regset2char(regs_buf, regset_size, reg);
+	arch->register_set_to_native(regs_buf, regset_size, reg);
 	if (Trace::set_regs (pid, &regs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}
@@ -421,7 +421,7 @@ void PtraceTarget::get_fpregs(int pid, RegisterSet *reg) {
 
 	if (Trace::get_fpregs (pid, &fregs_buf) < 0)
 		throw Exception ("Unable to read registers");
-	os->char2fpregset(fregs_buf, fpregset_size, reg);
+	arch->fpregister_set_from_native(fregs_buf, fpregset_size, reg);
 }
 
 void PtraceTarget::set_fpregs(int pid, RegisterSet *reg) {
@@ -430,7 +430,7 @@ void PtraceTarget::set_fpregs(int pid, RegisterSet *reg) {
 	if (Trace::get_fpregs (pid, &fregs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
-	os->fpregset2char(fregs_buf, fpregset_size, reg);
+	arch->fpregister_set_to_native(fregs_buf, fpregset_size, reg);
 	if (Trace::set_fpregs (pid, &fregs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}

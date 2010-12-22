@@ -745,14 +745,21 @@ ProgramSegment *ELF::find_segment (Address addr) {
 Architecture *ELF::new_arch() {
 	Architecture	*arch = NULL;
 
-	//Following part is for X86
-	if (machine == EM_386 || machine == EM_X86_64) {
-		if (is_elf64()) {
-			arch = new x86_64Arch(64) ;
-		}
-		else {
-			arch = new i386Arch();
-		}
+	switch (abi) {
+	case ELFOSABI_LINUX:
+		/* Linux */
+		if (machine == EM_386)
+			arch = new i386_linux_arch ();
+		else if (machine == EM_X86_64)
+			arch = new x86_64_linux_arch ();
+		break;
+	case ELFOSABI_FREEBSD:
+		/* FreeBSD */
+		if (machine == EM_386)
+			arch = new i386_freebsd_arch ();
+		else if (machine == EM_X86_64)
+			arch = new x86_64_freebsd_arch ();
+		break;
 	}
 
 	if (arch == NULL) {
@@ -760,43 +767,6 @@ Architecture *ELF::new_arch() {
 	}
 
 	return arch;
-}
-
-OS *ELF::new_os(std::istream *s) {
-	OS	*os = NULL;
-
-	switch (abi) {
-	case ELFOSABI_LINUX:
-		/* Linux */
-		if (machine == EM_386 || machine == EM_X86_64) {
-			//X86
-			if (is_elf64()) {
- 				os = new x86_linux_os (64);
-			}
-			else {
-				os = new x86_linux_os (32);
-			}
-		}
-		break;
-	case ELFOSABI_FREEBSD:
-		/* FreeBSD */
-		if (machine == EM_386 || machine == EM_X86_64) {
-			//X86
-			if (is_elf64()) {
- 				os = new x86_freebsd_os (64);
-			}
-			else {
-				os = new x86_freebsd_os (32);
-			}
-		}
-		break;
-	}
-
-	if (os == NULL) {
-		throw Exception ("This OS is not support.") ;
-	}
-
-	return os;
 }
 
 void

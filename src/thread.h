@@ -42,7 +42,7 @@ class Architecture ;
 
 class Thread {
 public:
-    Thread(Architecture * arch, OS *osc, Process * proc, int pid, void* tid) ;
+    Thread(Architecture * arch, Process * proc, int pid, void* tid) ;
     ~Thread() ;
 
     // integer registers
@@ -90,7 +90,6 @@ public:
 protected:
 private:
 	Architecture * arch;
-	OS *osc;
 	Process * proc;
 	int pid;
 	void * tid;

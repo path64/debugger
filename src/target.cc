@@ -49,10 +49,10 @@ author: David Allison <dallison@pathscale.com>
 
 
 // this is where other targets can be created when we have some
-Target *Target::new_live_target(Architecture *arch, OS *os) {
+Target *Target::new_live_target(Architecture *arch) {
 	// FIXME: This should be implemented in the file with the host platform's
 	// target implementation.
-    return new PtraceTarget (arch, os);
+    return new PtraceTarget (arch);
 }
 
 Target::Target (Architecture *arch) : arch(arch) {}
@@ -133,7 +133,7 @@ void LiveTarget::write_string (int pid, Address addr, std::string s) {
 
 int CoreThread::nextid = 1 ;
 
-CoreTarget::CoreTarget (Architecture *arch, OS *os, std::string corefile) : Target(arch), os(os), corefile(corefile) {
+CoreTarget::CoreTarget (Architecture *arch, std::string corefile) : Target(arch), corefile(corefile) {
     fd = open (corefile.c_str(), O_RDONLY) ;
     if (fd == -1) {
        throw Exception ("Unable to open core file") ;
@@ -340,7 +340,7 @@ Address CoreTarget::readptr (int pid, Address addr) {
 
 void CoreTarget::get_regs(int pid, RegisterSet *reg) {
 	if (find_thread(pid)->reg)
-		os->char2regset(find_thread(pid)->reg, os->regset_size, reg);
+		arch->register_set_from_native(find_thread(pid)->reg, arch->regset_size, reg);
 }
 
 void CoreTarget::set_regs(int pid, RegisterSet *regs) {

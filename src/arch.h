@@ -86,6 +86,10 @@ class EvalContext;
 class Architecture
 {
 public:
+	Architecture() {
+		int regset_size = 0;
+		int fpregset_size = 0;
+	}
 	virtual ~Architecture() {}
 	/**
 	 * Returns whether the architecture is little endian.
@@ -242,6 +246,13 @@ public:
     virtual void set_fpregs(void *agent, void* tid, int pid, Target *target, RegisterSet *regs) = 0;
     virtual int classify_struct (EvalContext &ctx, DIE *s) = 0 ;
 
+	int regset_size;
+	int fpregset_size;
+	virtual void register_set_from_native(char *, int, RegisterSet *) = 0;
+	virtual void register_set_to_native(char *, int, RegisterSet *) = 0;
+	virtual void fpregister_set_from_native(char *, int, RegisterSet *) = 0;
+	virtual void fpregister_set_to_native(char *, int, RegisterSet *) = 0;
+
 protected:
     Disassembler *disassembler ;
 } ;
@@ -338,7 +349,7 @@ enum x86_64ArgClass {
 
 class x86_64Arch: public IntelArch {            // AMD will be upset it's called Intel!
 public:
-    x86_64Arch(int mode) ;
+    x86_64Arch() ;
     ~x86_64Arch() ; 
 	virtual RegisterSetInfoList& register_properties() const;
 	virtual RegisterSetProperties *main_register_set_properties();

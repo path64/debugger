@@ -87,7 +87,7 @@ public:
     virtual pid_t get_fork_pid (pid_t pid) = 0 ;
 
     // factory method to make a new target
-    static Target *new_live_target (Architecture *arch, OS *os) ;
+    static Target *new_live_target (Architecture *arch) ;
     virtual void cont (int pid, int signal) = 0 ;
     virtual void step(int pid) = 0 ;
     virtual long get_debug_reg (int pid, int reg) = 0 ;
@@ -190,7 +190,7 @@ struct CoreThread {
 
 class CoreTarget : public Target {
 public:
-    CoreTarget (Architecture *arch, OS *os, std::string corefile) ;
+    CoreTarget (Architecture *arch, std::string corefile) ;
     ~CoreTarget() ;
 
     int attach (const char* prog, const char* args, EnvMap&);    // attach to a file
@@ -253,7 +253,6 @@ private:
     CoreThread *find_thread (int pid) ;
     std::vector<CoreThread*> threads ;
     int current_thread ;
-    OS *os;
 } ;
 
 #endif

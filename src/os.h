@@ -3,6 +3,7 @@
 
 #include "dbg_except.h"
 #include "register_set.h"
+#include "arch.h"
 
 struct i386_linux_regs
 {
@@ -148,36 +149,40 @@ struct x86_64_freebsd_fpregs {
 	uint64_t	fpr_spare[12];
 };
 
-class OS {
+class i386_linux_arch: public i386Arch {
 public:
-	int regset_size;
-	int fpregset_size;
-	virtual void char2regset(char *, int, RegisterSet *) {throw Exception ("Not support")  ;};
-	virtual void regset2char(char *, int, RegisterSet *) {throw Exception ("Not support")  ;};
-	virtual void char2fpregset(char *, int, RegisterSet *) {throw Exception ("Not support")  ;};
-	virtual void fpregset2char(char *, int, RegisterSet *) {throw Exception ("Not support")  ;};
+	i386_linux_arch();
+	void register_set_from_native(char *, int, RegisterSet *);
+	void register_set_to_native(char *, int, RegisterSet *);
+	void fpregister_set_from_native(char *, int, RegisterSet *);
+	void fpregister_set_to_native(char *, int, RegisterSet *);
 };
 
-class x86_linux_os : public OS
-{
-private:
-	int	bit;
+class x86_64_linux_arch: public x86_64Arch {
 public:
-	x86_linux_os(int bit);
-	void char2regset(char *, int, RegisterSet *);
-	void regset2char(char *, int, RegisterSet *);
-	void char2fpregset(char *, int, RegisterSet *);
-	void fpregset2char(char *, int, RegisterSet *);
+	x86_64_linux_arch();
+	void register_set_from_native(char *, int, RegisterSet *);
+	void register_set_to_native(char *, int, RegisterSet *);
+	void fpregister_set_from_native(char *, int, RegisterSet *);
+	void fpregister_set_to_native(char *, int, RegisterSet *);
 };
 
-class x86_freebsd_os : public OS
-{
-private:
-	int	bit;
+class i386_freebsd_arch: public i386Arch {
 public:
-	x86_freebsd_os(int bit);
-	void char2regset(char *, int, RegisterSet *);
-	void regset2char(char *, int, RegisterSet *);
+	i386_freebsd_arch();
+	void register_set_from_native(char *, int, RegisterSet *);
+	void register_set_to_native(char *, int, RegisterSet *);
+	void fpregister_set_from_native(char *, int, RegisterSet *);
+	void fpregister_set_to_native(char *, int, RegisterSet *);
+};
+
+class x86_64_freebsd_arch: public x86_64Arch {
+public:
+	x86_64_freebsd_arch();
+	void register_set_from_native(char *, int, RegisterSet *);
+	void register_set_to_native(char *, int, RegisterSet *);
+	void fpregister_set_from_native(char *, int, RegisterSet *);
+	void fpregister_set_to_native(char *, int, RegisterSet *);
 };
 
 #endif

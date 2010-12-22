@@ -484,7 +484,7 @@ void CFATable::apply(Frame *from, Frame * to) {
 }
 
 
-Process::Process (ProcessController * pcm, std::string program, Architecture * arch, Target *target, PStream &os, AttachType at, OS *osc)
+Process::Process (ProcessController * pcm, std::string program, Architecture * arch, Target *target, PStream &os, AttachType at)
     : pcm(pcm),
     program(program),
     arch(arch),
@@ -517,8 +517,7 @@ Process::Process (ProcessController * pcm, std::string program, Architecture * a
     lastregion(NULL),
     thread_db_initialized(false),
     init_phase(false),
-    programtime(0),
-    osc(osc)
+    programtime(0)
 {
     if (program != "") {
         struct stat st ;
@@ -832,7 +831,7 @@ void Process::attach_core() {
 
     // load the threads from the core file
     for (int i = 0 ; i < nthreads ; i++) {
-        Thread *thr = new Thread (arch, osc, this, core->get_thread_pid(i), core->get_thread_tid(i)) ;
+        Thread *thr = new Thread (arch, this, core->get_thread_pid(i), core->get_thread_tid(i)) ;
         threads.push_front (thr) ;                // main thread
         current_thread = threads.begin() ;
         thr->syncin() ;                         // read the thread registers
@@ -874,7 +873,7 @@ void Process::attach_core() {
 }
 
 void Process::attach_process(int pid) {
-    threads.push_front (new Thread (arch, osc, this, pid, 0)) ;                // main thread
+    threads.push_front (new Thread (arch, this, pid, 0)) ;                // main thread
     current_thread = threads.begin() ;
 
     this->pid = target->attach (program, pid) ;                     // attach to target process
@@ -898,11 +897,11 @@ void Process::attach_process(int pid) {
 
 // attach to a child process
 void Process::attach_child (int childpid, State parent_state) {
-    threads.push_front (new Thread (arch, osc, this, childpid, 0)) ;                // main thread
+    threads.push_front (new Thread (arch, this, childpid, 0)) ;                // main thread
     current_thread = threads.begin() ;
     pid = childpid ;
 
-    target = Target::new_live_target (arch, osc) ;                // new target
+    target = Target::new_live_target (arch) ;                // new target
 
     // load the dynamic info stuff
     load_dynamic_info(false) ;
@@ -944,7 +943,7 @@ void Process::new_thread(void * id) {
 #elif defined (__FreeBSD__)
     int thr_pid = pid ;
 #endif
-    Thread * t = new Thread (arch, osc, this, thr_pid, id) ;
+    Thread * t = new Thread (arch, this, thr_pid, id) ;
 
     os.print ("[New ") ; t->print (os) ; os.print ("]\n") ;
 
@@ -3268,7 +3267,7 @@ bool Process::run(const std::string& args, EnvMap& env) {
 
     //std::cout << "waiting for process " << pid << "\n" ;
     //println ("waiting for " + pid)
-    threads.push_front (new Thread (arch, osc, this, pid, 0)) ;                // main thread
+    threads.push_front (new Thread (arch, this, pid, 0)) ;                // main thread
     current_thread = threads.begin() ;
     invalidate_frame_cache() ;                       // frame cache is not valid until we stop
     init_phase = true ;
@@ -3334,7 +3333,7 @@ bool Process::run(const std::string& args, EnvMap& env) {
 #elif defined (__FreeBSD__)
             int thr_pid = pid ;
 #endif
-            Thread *thr = new Thread (arch, osc, this, thr_pid, (void*)info.ti_tid) ;
+            Thread *thr = new Thread (arch, this, thr_pid, (void*)info.ti_tid) ;
             threads.push_front (thr) ;
             thr->syncin() ;
         }
@@ -4400,7 +4399,7 @@ void Process::get_regs(RegisterSet *regs, void *tid)
 {
 	if (thread_agent != NULL && tid != NULL)
 	{
-		thread_db::read_thread_registers(thread_agent, tid, regs, osc) ;
+		thread_db::read_thread_registers(thread_agent, tid, regs, arch) ;
 	}
 	else
 	{
@@ -4411,7 +4410,7 @@ void Process::get_regs(RegisterSet *regs, void *tid)
 void Process::set_regs(RegisterSet *regs, void *tid)
 {
 	if (thread_agent != NULL && tid != NULL) {
-		thread_db::write_thread_registers(thread_agent, tid, regs, osc) ;
+		thread_db::write_thread_registers(thread_agent, tid, regs, arch) ;
 	}
 	else
 	{

@@ -340,17 +340,17 @@ void resume_thread (td_thragent_t *agent, void *threadhandle) {
 
 
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
-void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, OS *os) {
+void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, Architecture *arch) {
 	//XXX
      td_thrhandle_t handle ;
 //     handle.th_ta_p = agent ;
 //     handle.th_unique = threadhandle ;
 //     //td_err_e e = thread_db.td_thr_getgregs (&handle, (elf_greg_t*)regs) ;
-	char	regs_buf[os->regset_size];
+	char	regs_buf[arch->regset_size];
 
     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_getgregs (&handle, (GRegPtr)regs_buf) ;
-	os->char2regset(regs_buf, os->regset_size, regs);
+	arch->register_set_from_native(regs_buf, arch->regset_size, regs);
 
      if (e != TD_OK) {
          throw Exception ("Unable to read thread registers") ;
@@ -358,16 +358,16 @@ void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSe
 }
 
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
-void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, OS *os) {
+void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, Architecture *arch) {
     //XXX
      td_thrhandle_t handle ;
 //     handle.th_ta_p = agent ;
 //     handle.th_unique = threadhandle ;
 //     //td_err_e e = thread_db.td_thr_setgregs (&handle, (elf_greg_t*)regs) ;
 
-	char	regs_buf[os->regset_size];
+	char	regs_buf[arch->regset_size];
 
-	os->regset2char(regs_buf, os->regset_size, regs);
+	arch->register_set_to_native(regs_buf, arch->regset_size, regs);
     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_setgregs (&handle, (GRegPtr)regs) ;
      if (e != TD_OK) {

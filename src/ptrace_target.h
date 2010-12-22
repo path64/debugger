@@ -10,7 +10,7 @@
 class PtraceTarget : public LiveTarget
 {
 public:
-    PtraceTarget (Architecture *arch, OS *os);
+    PtraceTarget (Architecture *arch);
     ~PtraceTarget() {}
 
     int attach (const char* prog, const char* args, EnvMap&);      // attach to a file
@@ -42,7 +42,6 @@ protected:
 
     pid_t pid;
     bool is_attached ;
-    OS *os;
     int regset_size;
     int fpregset_size;
 };

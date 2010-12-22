@@ -155,7 +155,7 @@ ProcessController::ProcessController (PStream &os, AliasManager *aliases, Direct
       dirlist(dirlist), subverbose(subverbose) {
 
     // create dummy process
-    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
+    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
     current_process = add_process (proc) ;
 }
 
@@ -292,7 +292,7 @@ void ProcessController::attach (std::string filename, bool replace) {
          bool ok = cli->confirm ("No executable file now.", "Discard symbol table") ;
          if (ok) {
             // create dummy process   XXX: 'replace' parameter?
-            Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
+            Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
             delete processes[current_process] ;
             current_process = add_process (proc) ;
             program = "" ;
@@ -305,10 +305,9 @@ void ProcessController::attach (std::string filename, bool replace) {
     ELF * elf = new ELF (program) ;
     std::istream *s = elf->open() ;
     arch = elf->new_arch () ;
-    osc = elf->new_os (s) ;
     delete elf;
     delete s;
-    target = Target::new_live_target (arch, osc) ;
+    target = Target::new_live_target (arch) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
@@ -317,7 +316,7 @@ void ProcessController::attach (std::string filename, bool replace) {
     }
     
 
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_NONE, osc) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_NONE) ;
     current_process = add_process (proc) ;
     file_present = true ;
     get_license() ;
@@ -358,17 +357,16 @@ void ProcessController::attach (int pid, bool replace) {
     ELF * elf = new ELF (program) ;
     std::istream *s = elf->open() ;
     arch = elf->new_arch () ;
-    osc = elf->new_os (s) ;
     delete elf;
     delete s;
-    target = Target::new_live_target (arch, osc) ;
+    target = Target::new_live_target (arch) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
         remove_process (oldp) ;
         delete oldp ;
     }
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_PROCESS, osc) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_PROCESS) ;
     current_process = add_process (proc) ;
 
     proc->attach_process (pid) ;
@@ -381,18 +379,17 @@ void ProcessController::attach_core (std::string corefile, bool replace) {
     ELF * elf = new ELF (program) ;
     std::istream *s = elf->open() ;
     arch = elf->new_arch () ;
-    osc = elf->new_os (s) ;
     delete elf;
     delete s;
 
-    target = new CoreTarget (arch, osc, corefile) ;
+    target = new CoreTarget (arch, corefile) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
         remove_process (oldp) ;
         delete oldp ;
     }
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE, osc) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
     current_process = add_process (proc) ;
 
     proc->attach_core() ;
@@ -419,18 +416,17 @@ void ProcessController::attach_core (std::string filename, std::string corefile,
     ELF * elf = new ELF (program) ;
     std::istream *s = elf->open() ;
     arch = elf->new_arch () ;
-    osc = elf->new_os (s) ;
     delete elf;
     delete s;
 
-    target = new CoreTarget (arch, osc, corefile) ;
+    target = new CoreTarget (arch, corefile) ;
 
     if (replace) {
         Process *oldp = processes[current_process] ;
         remove_process (oldp) ;
         delete oldp ;
     } 
-    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE, osc) ;
+    Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
     current_process = add_process (proc) ;
 
     proc->attach_core() ;
@@ -442,7 +438,7 @@ void ProcessController::detach() {
     if (program != "") {
         printf ("Detaching from program: %s\n", program.c_str()) ;
         // create dummy process
-        Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
+        Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
         delete processes[current_process] ;
         current_process = add_process (proc) ;
     }
@@ -458,7 +454,7 @@ void ProcessController::detach_all() {
     }
 
     // setup nil process as current
-    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE, osc) ;
+    Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
     current_process = add_process(proc); 
 }
 
@@ -540,7 +536,7 @@ bool ProcessController::run(const std::string& args, EnvMap& env) {
         // going to run from a core state.  We need to create a new LiveTarget and delete the
         // old CoreTarget
         //delete target ;                       // XXX: seems to cause a problem
-        target = Target::new_live_target (arch, osc) ;
+        target = Target::new_live_target (arch) ;
         Process *newproc = new Process (*proc) ;   // copy the process data
         newproc->set_target (target) ;
         processes[current_process] = newproc ;           // overwrite the old process
@@ -585,7 +581,7 @@ void ProcessController::kill() {
         // going to run from a core state.  We need to create a new LiveTarget and delete the
         // old CoreTarget
         //delete target ;                       // XXX: seems to cause a problem
-        target = Target::new_live_target (arch, osc) ;
+        target = Target::new_live_target (arch) ;
         Process *newproc = new Process (*proc) ;   // copy the process data
         newproc->set_target (target) ;
         processes[current_process] = newproc ;           // overwrite the old process
