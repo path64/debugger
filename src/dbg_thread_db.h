@@ -34,6 +34,7 @@ author: David Allison <dallison@pathscale.com>
 #include "dbg_types.h"
 #include "dbg_types.h"
 #include "register_set.h"
+#include "os.h"
 
 #include <stdint.h>
 #include <thread_db.h>
@@ -53,8 +54,8 @@ void list_threads (const td_thragent_t *agent, std::vector<void*> &vec) ;
 void get_event_message (const td_thragent_t *agent, int &event_number, void *&thread_handle, void *&data) ;
 void enable_thread_events (td_thragent_t *agent, void *threadhandle, int v) ;
 
-void read_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
-void write_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
+void read_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs, OS *os);
+void write_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs, OS *os);
 void read_thread_fpregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
 void read_thread_fpxregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
 void write_thread_fpregisters(td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;

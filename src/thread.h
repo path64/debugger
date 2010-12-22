@@ -35,13 +35,14 @@ author: David Allison <dallison@pathscale.com>
 #include "register_set.h"
 
 #include "pstream.h"
+#include "os.h"
 
 class Process ;
 class Architecture ;
 
 class Thread {
 public:
-    Thread(Architecture * arch, Process * proc, int pid, void* tid) ;
+    Thread(Architecture * arch, OS *osc, Process * proc, int pid, void* tid) ;
     ~Thread() ;
 
     // integer registers
@@ -89,6 +90,7 @@ public:
 protected:
 private:
 	Architecture * arch;
+	OS *osc;
 	Process * proc;
 	int pid;
 	void * tid;

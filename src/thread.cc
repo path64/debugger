@@ -35,8 +35,8 @@ author: David Allison <dallison@pathscale.com>
 
 int Thread::nextid = 0 ;
 
-Thread::Thread (Architecture * arch, Process * proc, int pid, void*tid)
-    : arch(arch),
+Thread::Thread (Architecture * arch, OS *osc, Process * proc, int pid, void*tid)
+    : arch(arch), osc(osc),
     proc(proc),
     pid(pid),
     tid(tid),
