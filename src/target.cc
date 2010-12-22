@@ -340,7 +340,7 @@ Address CoreTarget::readptr (int pid, Address addr) {
 
 void CoreTarget::get_regs(int pid, RegisterSet *reg) {
 	if (find_thread(pid)->reg)
-		os->char2regset(find_thread(pid)->reg, reg);
+		os->char2regset(find_thread(pid)->reg, os->regset_size, reg);
 }
 
 void CoreTarget::set_regs(int pid, RegisterSet *regs) {

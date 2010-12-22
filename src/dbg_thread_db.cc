@@ -350,7 +350,7 @@ void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSe
 
     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_getgregs (&handle, (GRegPtr)regs_buf) ;
-	os->char2regset(regs_buf, regs);
+	os->char2regset(regs_buf, os->regset_size, regs);
 
      if (e != TD_OK) {
          throw Exception ("Unable to read thread registers") ;
@@ -367,7 +367,7 @@ void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterS
 
 	char	regs_buf[os->regset_size];
 
-	os->regset2char(regs_buf, regs);
+	os->regset2char(regs_buf, os->regset_size, regs);
     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
     td_err_e e = thread_db.td_thr_setgregs (&handle, (GRegPtr)regs) ;
      if (e != TD_OK) {

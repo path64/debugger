@@ -43,4 +43,6 @@ protected:
     pid_t pid;
     bool is_attached ;
     OS *os;
+    int regset_size;
+    int fpregset_size;
 };

@@ -751,10 +751,7 @@ Architecture *ELF::new_arch() {
 			arch = new x86_64Arch(64) ;
 		}
 		else {
-			if (sizeof(char*) == 8)
-				arch = new x86_64Arch(32);
-			else
-				arch = new i386Arch();
+			arch = new i386Arch();
 		}
 	}
 

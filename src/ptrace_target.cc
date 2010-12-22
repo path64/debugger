@@ -7,12 +7,32 @@
 #include "arch.h"
 #include "target.h"
 #include "trace.h"
+#include "os.h"
 
 #ifndef CHAR_BIT
 #define CHAR_BIT	8
 #endif
 
-PtraceTarget::PtraceTarget (Architecture *arch, OS *os) : LiveTarget(arch),os(os), is_attached(false) {}
+PtraceTarget::PtraceTarget (Architecture *arch, OS *os) : LiveTarget(arch),os(os), is_attached(false)
+{
+#if LONG_BIT == 64
+#if defined (__linux__)
+	regset_size = sizeof (struct x86_64_linux_regs);
+	fpregset_size = sizeof (struct x86_64_linux_fpregs);
+#else
+	regset_size = sizeof (struct x86_64_freebsd_regs);
+	fpregset_size = sizeof (struct x86_64_freebsd_fpregs);
+#endif
+#else
+#if defined (__linux__)
+	regset_size = sizeof (struct i386_linux_regs);
+	fpregset_size = sizeof (struct i386_linux_fpregs);
+#else
+	regset_size = sizeof (struct i386_freebsd_regs);
+	fpregset_size = sizeof (struct i386_freebsd_fpregs);
+#endif
+#endif
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Fork a process and attach for debugging
@@ -376,41 +396,41 @@ Address PtraceTarget::readptr (int pid, Address addr) {
 }
 
 void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
-	char	regs_buf[os->regset_size];
+	char	regs_buf[regset_size];
 
 	if (Trace::get_regs (pid, regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
-	os->char2regset(regs_buf, reg);
+	os->char2regset(regs_buf, regset_size, reg);
 }
 
 void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
-	char	regs_buf[os->regset_size];
+	char	regs_buf[regset_size];
 
 	if (Trace::get_regs (pid, &regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
-	os->regset2char(regs_buf, reg);
+	os->regset2char(regs_buf, regset_size, reg);
 	if (Trace::set_regs (pid, &regs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}
 }
 
 void PtraceTarget::get_fpregs(int pid, RegisterSet *reg) {
-	char	fregs_buf[os->fpregset_size];
+	char	fregs_buf[fpregset_size];
 
 	if (Trace::get_fpregs (pid, &fregs_buf) < 0)
 		throw Exception ("Unable to read registers");
-	os->char2fpregset(fregs_buf, reg);
+	os->char2fpregset(fregs_buf, fpregset_size, reg);
 }
 
 void PtraceTarget::set_fpregs(int pid, RegisterSet *reg) {
-	char	fregs_buf[os->fpregset_size];
+	char	fregs_buf[fpregset_size];
 
 	if (Trace::get_fpregs (pid, &fregs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
-	os->fpregset2char(fregs_buf, reg);
+	os->fpregset2char(fregs_buf, fpregset_size, reg);
 	if (Trace::set_fpregs (pid, &fregs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}
