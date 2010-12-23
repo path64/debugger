@@ -20,7 +20,7 @@ tab = "   "
 
 # Die verbose death
 def die (x):
-  print prog_name + " error: " + x
+  print (prog_name + " error: " + x)
   sys.exit(1)
 
 # Write to output file

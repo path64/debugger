@@ -147,7 +147,7 @@ def parse_operands(operands):
 def parse_optable(name, lines, i):
     print >> outfile
     print >> outfile
-    print >> outfile, "Instruction " + name + "[] = {"
+    print >> outfile, ("Instruction " + name + "[] = {")
     row = 0
     while i < len(lines):
         line = lines[i].strip()
@@ -163,14 +163,14 @@ def parse_optable(name, lines, i):
         op = fields[0]
 
         if (row % 8) == 0:
-            print >> outfile, "// row " + str(row / 8)
+            print >> outfile, ("// row " + str(row / 8))
 
         row += 1
 
         if op == "xxx":                             # undefined
-            print >> outfile, "{\"(bad)\", NULL, NULL, NULL}, "
+            print >> outfile, ("{\"(bad)\", NULL, NULL, NULL}, ")
         elif op[0] == '~':                          # group
-            print >> outfile, "{ \"" + op + "\", NULL, NULL, NULL}, "
+            print >> outfile, ("{ \"" + op + "\", NULL, NULL, NULL}, ")
         else:
             outstr = "{ \"" + op + "\""
             if len(fields) > 1:
@@ -184,15 +184,15 @@ def parse_optable(name, lines, i):
                         n -= 1
             else:
                 outstr = outstr + ", NULL, NULL, NULL"
-            print >> outfile, outstr + "},"
-    print >> outfile, "{NULL, NULL, NULL}} ;"
+            print >> outfile, (outstr + "},")
+    print >> outfile, ("{NULL, NULL, NULL}} ;")
     return i
 
 
 def parse_groups(lines, i):
     print >> outfile
     print >> outfile
-    print >> outfile, "Group groups[] = {"
+    print >> outfile, ("Group groups[] = {")
     groupno = -1
     opcode = 0
     comma = False
@@ -208,10 +208,10 @@ def parse_groups(lines, i):
 
         if line[0] == '~':
             if groupno != -1:                     # close previous?
-                print >> outfile, "}},"
+                print >> outfile, ("}},")
             f = line[1:].split()
             groupno = int(f[0])
-            print >> outfile, "{" + str(groupno) + ", 0x" + f[1] + ", {"
+            print >> outfile, ("{" + str(groupno) + ", 0x" + f[1] + ", {")
             comma = False
         else:
             if comma:
@@ -221,7 +221,7 @@ def parse_groups(lines, i):
             fields = line.split()
             op = fields[0]
             if op == "xxx":                      # undefined
-                print >> outfile, outstr + "{\"(bad)\",NULL,NULL,NULL}"
+                print >> outfile, (outstr + "{\"(bad)\",NULL,NULL,NULL}")
             else:
                 outstr = outstr + "{\"" + op + "\""
                 if len(fields) > 1:
@@ -233,23 +233,23 @@ def parse_groups(lines, i):
                         while n > 0:
                             outstr = outstr + ", NULL"
                             n -= 1
-                    print >> outfile, outstr + "}"
+                    print >> outfile, (outstr + "}")
                 else:
-                    print >> outfile, outstr + ", NULL,NULL,NULL}"
+                    print >> outfile, (outstr + ", NULL,NULL,NULL}")
             comma = True 
-    print >> outfile, "}}, { -1, 0, { "
+    print >> outfile, ("}}, { -1, 0, { ")
     comma = False
     for j in xrange(0, 8):
         outstr = ""
         if comma: outstr = outstr + ","
-        print >> outfile, outstr + "{NULL, NULL, NULL, NULL}"
+        print >> outfile, (outstr + "{NULL, NULL, NULL, NULL}")
         comma = True
-    print >> outfile, "}}} ;"
+    print >> outfile, ("}}} ;")
     return i
 
 
-print >> outfile, "#include \"opcodes.h\""
-print >> outfile, "#include <stdio.h>"
+print >> outfile, ("#include \"opcodes.h\"")
+print >> outfile, ("#include <stdio.h>")
 print >> outfile
 
 i = 0
