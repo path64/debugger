@@ -67,7 +67,7 @@ for L in reallines:
          if make_obj == 1 and cur != "":
             print (str+",")
          else:
-            print str
+            print (str)
          str = None
       if make_obj == 1:
          if cur != "":
