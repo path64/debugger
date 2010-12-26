@@ -13,17 +13,17 @@ outfile = sys.stdout;
 # append the x87 opcodes
 
 def column(mnemonic):
-    for i in xrange(0, 8):
+    for i in range(0, 8):
         lines.append(mnemonic + " " + "*st(0),*st(" + str(i) + ')')
 
 
 def column_r(mnemonic):
-    for i in xrange(0, 8):
+    for i in range(0, 8):
         lines.append(mnemonic + " " + "*st(" + str(i) + "),*st(0)")
 
 
 def column_1(mnemonic):
-    for i in xrange(0, 8):
+    for i in range(0, 8):
         lines.append(mnemonic + " " + "*st(" + str(i) + ')')
 
 
@@ -38,7 +38,7 @@ def table_a_10_D9():
         column(col)
 
     lines.append("fnop")
-    for i in xrange(0, 7):
+    for i in range(0, 7):
         lines.append("xxx")
 
     column("xxx")
@@ -65,7 +65,7 @@ def table_a_10_DA():
 
     lines.append("xxx")
     lines.append("fucompp")
-    for i in xrange(0, 6):
+    for i in range(0, 6):
         lines.append("xxx")
 
     for col in ["xxx","xxx"]:
@@ -80,7 +80,7 @@ def table_a_10_DB():
     lines.append("xxx")
     lines.append("fclex")
     lines.append("finit")
-    for i in xrange(0, 4):
+    for i in range(0, 4):
         lines.append("xxx")
 
     for col in ["fucomi", "fcomi", "xxx"]:
@@ -108,7 +108,7 @@ def table_a_10_DE():
 
     lines.append("xxx")
     lines.append("fcompp")
-    for i in xrange(0, 6):
+    for i in range(0, 6):
         lines.append("xxx")
 
     for col in ["fsubrp", "fsubp", "fdivrp", "fdivp"]:
@@ -120,7 +120,7 @@ def table_a_10_DF():
         column(col)
 
     lines.append("fstsw %ax")
-    for i in xrange(0, 7):
+    for i in range(0, 7):
         lines.append("xxx")
 
     for col in ["fucomip", "fcomip", "xxx"]:
@@ -128,7 +128,7 @@ def table_a_10_DF():
     
 
 lines.append("^x87")
-for i in xrange(0xD8, 0xE0):
+for i in range(0xD8, 0xE0):
     exec("table_a_10_%02X()" % i)
 
 lines.append("^---")
@@ -239,7 +239,7 @@ def parse_groups(lines, i):
             comma = True 
     print >> outfile, ("}}, { -1, 0, { ")
     comma = False
-    for j in xrange(0, 8):
+    for j in range(0, 8):
         outstr = ""
         if comma: outstr = outstr + ","
         print >> outfile, (outstr + "{NULL, NULL, NULL, NULL}")
