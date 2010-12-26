@@ -145,9 +145,9 @@ def parse_operands(operands):
 
 
 def parse_optable(name, lines, i):
-    print >> outfile
-    print >> outfile
-    print >> outfile, ("Instruction " + name + "[] = {")
+    outfile.write("\n")
+    outfile.write("\n")
+    outfile.write("Instruction " + name + "[] = {\n")
     row = 0
     while i < len(lines):
         line = lines[i].strip()
@@ -163,14 +163,14 @@ def parse_optable(name, lines, i):
         op = fields[0]
 
         if (row % 8) == 0:
-            print >> outfile, ("// row " + str(row / 8))
+            outfile.write("// row " + str(row / 8) + "\n")
 
         row += 1
 
         if op == "xxx":                             # undefined
-            print >> outfile, ("{\"(bad)\", NULL, NULL, NULL}, ")
+            outfile.write("{\"(bad)\", NULL, NULL, NULL}, \n")
         elif op[0] == '~':                          # group
-            print >> outfile, ("{ \"" + op + "\", NULL, NULL, NULL}, ")
+            outfile.write("{ \"" + op + "\", NULL, NULL, NULL}, \n")
         else:
             outstr = "{ \"" + op + "\""
             if len(fields) > 1:
@@ -184,15 +184,15 @@ def parse_optable(name, lines, i):
                         n -= 1
             else:
                 outstr = outstr + ", NULL, NULL, NULL"
-            print >> outfile, (outstr + "},")
-    print >> outfile, ("{NULL, NULL, NULL}} ;")
+            outfile.write(outstr + "},\n")
+    outfile.write("{NULL, NULL, NULL}} ;\n")
     return i
 
 
 def parse_groups(lines, i):
-    print >> outfile
-    print >> outfile
-    print >> outfile, ("Group groups[] = {")
+    outfile.write("\n")
+    outfile.write("\n")
+    outfile.write("Group groups[] = {\n")
     groupno = -1
     opcode = 0
     comma = False
@@ -208,10 +208,10 @@ def parse_groups(lines, i):
 
         if line[0] == '~':
             if groupno != -1:                     # close previous?
-                print >> outfile, ("}},")
+                outfile.write("}},\n")
             f = line[1:].split()
             groupno = int(f[0])
-            print >> outfile, ("{" + str(groupno) + ", 0x" + f[1] + ", {")
+            outfile.write("{" + str(groupno) + ", 0x" + f[1] + ", {\n")
             comma = False
         else:
             if comma:
@@ -221,7 +221,7 @@ def parse_groups(lines, i):
             fields = line.split()
             op = fields[0]
             if op == "xxx":                      # undefined
-                print >> outfile, (outstr + "{\"(bad)\",NULL,NULL,NULL}")
+                outfile.write(outstr + "{\"(bad)\",NULL,NULL,NULL}\n")
             else:
                 outstr = outstr + "{\"" + op + "\""
                 if len(fields) > 1:
@@ -233,24 +233,24 @@ def parse_groups(lines, i):
                         while n > 0:
                             outstr = outstr + ", NULL"
                             n -= 1
-                    print >> outfile, (outstr + "}")
+                    outfile.write(outstr + "}\n")
                 else:
-                    print >> outfile, (outstr + ", NULL,NULL,NULL}")
+                    outfile.write(outstr + ", NULL,NULL,NULL}\n")
             comma = True 
-    print >> outfile, ("}}, { -1, 0, { ")
+    outfile.write("}}, { -1, 0, { \n")
     comma = False
     for j in range(0, 8):
         outstr = ""
         if comma: outstr = outstr + ","
-        print >> outfile, (outstr + "{NULL, NULL, NULL, NULL}")
+        outfile.write(outstr + "{NULL, NULL, NULL, NULL}\n")
         comma = True
-    print >> outfile, ("}}} ;")
+    outfile.write("}}} ;\n")
     return i
 
 
-print >> outfile, ("#include \"opcodes.h\"")
-print >> outfile, ("#include <stdio.h>")
-print >> outfile
+outfile.write("#include \"opcodes.h\"\n")
+outfile.write("#include <stdio.h>\n")
+outfile.write("\n")
 
 i = 0
 while i < len(lines):
