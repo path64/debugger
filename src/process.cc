@@ -966,6 +966,8 @@ void Process::new_thread(void * id) {
     } while ((ret == -1 && errno == EINTR)) ;
 #endif
 
+	t->syncin();
+
 #if 0
     // if there is no child available, try cloned children
     if (ret == -1 && errno == ECHILD) {
@@ -1015,7 +1017,6 @@ void Process::enable_threads() {
 // kill all the threads
 void Process::kill_threads() {
 	//FIXME: Factor out
-#if 0
     // first send them all SIGKILL signal
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
@@ -1049,7 +1050,6 @@ void Process::kill_threads() {
             }
         }
     }
-#endif
 }
 
 void Process::resume_threads() {
@@ -1090,7 +1090,6 @@ void Process::detach_threads() {
 
 void Process::stop_threads() {
 // FIXME: Factor out
-#if 0
     reap_threads() ;
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
@@ -1122,7 +1121,7 @@ void Process::stop_threads() {
     }
     // now read all the registers
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
-        Thread *thr = *t ;      
+        Thread *thr = *t ;
         thr->syncin() ;
     }
 
@@ -1133,8 +1132,6 @@ void Process::stop_threads() {
         Thread *thr = *t ;
         Trace::suspend (thr->get_tid ()) ;
     }
-#endif
-
 #endif
 }
 
@@ -4104,7 +4101,7 @@ bool Process::wait(int status) {
             if (signalnum == SIGTRAP) {  // SIGTRAP
                 if (status >> 16 != 0) {                         // extended wait status
 					// FIXME: factor out
-#if 0
+//#if 0
 #if defined (__linux__)
                     int event = status >> 16 ;
                     //printf ("extended wait event: %d\n", event) ;
@@ -4124,7 +4121,7 @@ bool Process::wait(int status) {
                         break ;
                     }
 #endif
-#endif
+//#endif
                 }
 
                 bool switched_threads = false ;

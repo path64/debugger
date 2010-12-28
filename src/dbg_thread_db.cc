@@ -341,56 +341,53 @@ void resume_thread (td_thragent_t *agent, void *threadhandle) {
 
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
 void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, Architecture *arch) {
-	//XXX
-     td_thrhandle_t handle ;
-//     handle.th_ta_p = agent ;
-//     handle.th_unique = threadhandle ;
-//     //td_err_e e = thread_db.td_thr_getgregs (&handle, (elf_greg_t*)regs) ;
+	td_thrhandle_t handle ;
+	TD_THRINFO_T_SET(handle, agent, threadhandle) ;
+
 	char	regs_buf[arch->regset_size];
-
-    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
-    td_err_e e = thread_db.td_thr_getgregs (&handle, (GRegPtr)regs_buf) ;
+	td_err_e e = thread_db.td_thr_getgregs (&handle, (GRegPtr)regs_buf) ;
+	if (e != TD_OK) {
+		throw Exception ("Unable to read thread registers") ;
+	}
 	arch->register_set_from_native(regs_buf, arch->regset_size, regs);
-
-     if (e != TD_OK) {
-         throw Exception ("Unable to read thread registers") ;
-     }
 }
 
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
 void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, Architecture *arch) {
-    //XXX
-     td_thrhandle_t handle ;
-//     handle.th_ta_p = agent ;
-//     handle.th_unique = threadhandle ;
-//     //td_err_e e = thread_db.td_thr_setgregs (&handle, (elf_greg_t*)regs) ;
+	td_thrhandle_t handle ;
+	TD_THRINFO_T_SET(handle, agent, threadhandle) ;
 
 	char	regs_buf[arch->regset_size];
 
+	td_err_e e = thread_db.td_thr_getgregs (&handle, (GRegPtr)regs_buf) ;
+	if (e != TD_OK) {
+		throw Exception ("Unable to read thread registers") ;
+	}
+
 	arch->register_set_to_native(regs_buf, arch->regset_size, regs);
-    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
-    td_err_e e = thread_db.td_thr_setgregs (&handle, (GRegPtr)regs) ;
-     if (e != TD_OK) {
-         throw Exception ("Unable to write thread registers") ;
-     }
+
+	e = thread_db.td_thr_setgregs (&handle, (GRegPtr)regs_buf) ;
+	if (e != TD_OK) {
+		throw Exception ("Unable to write thread registers") ;
+	}
 }
 
 void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
-    td_thrhandle_t handle ;
-    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
-    td_err_e e = thread_db.td_thr_getfpregs (&handle, (prfpregset_t*)regs) ;
-    if (e != TD_OK) {
-        throw Exception ("Unable to read thread floating point registers") ;
-    }
+//     td_thrhandle_t handle ;
+//     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
+//     td_err_e e = thread_db.td_thr_getfpregs (&handle, (prfpregset_t*)regs) ;
+//     if (e != TD_OK) {
+//         throw Exception ("Unable to read thread floating point registers") ;
+//     }
 }
 
 void write_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
-    td_thrhandle_t handle ;
-    TD_THRINFO_T_SET(handle, agent, threadhandle) ;
-    td_err_e e = thread_db.td_thr_setfpregs (&handle, (prfpregset_t*)regs) ;
-    if (e != TD_OK) {
-        throw Exception ("Unable to write thread floating point registers") ;
-    }
+//     td_thrhandle_t handle ;
+//     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
+//     td_err_e e = thread_db.td_thr_setfpregs (&handle, (prfpregset_t*)regs) ;
+//     if (e != TD_OK) {
+//         throw Exception ("Unable to write thread floating point registers") ;
+//     }
 }
 
 
