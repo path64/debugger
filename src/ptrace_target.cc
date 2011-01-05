@@ -8,6 +8,8 @@
 #include "target.h"
 #include "trace.h"
 #include "os.h"
+#include "dbg_thread_db.h"
+#include <sys/syscall.h>
 
 #ifndef CHAR_BIT
 #define CHAR_BIT	8
@@ -473,4 +475,43 @@ void PtraceTarget::set_debug_reg (int pid, int reg, long value) {
     if (e < 0) {
         throw Exception ("Unable to write debug register")  ;
     }
+}
+
+void *
+PtraceTarget::get_thread_tid (void *agent, void *threadhandle, int &thr_pid)
+{
+    td_thrinfo_t info ;
+    thread_db::get_thread_info ((td_thragent_t *)agent, threadhandle, info) ;
+
+#if defined (__linux__)
+    thr_pid = info.ti_lid ;
+#endif
+
+    return ((void*)info.ti_tid);
+}
+
+void
+PtraceTarget::thread_suspend (Thread *thr)
+{
+#if defined (__linux__)
+	int e = syscall (SYS_tkill, thr->get_pid(), SIGSTOP) ;
+#elif defined (__FreeBSD__)
+	 int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
+	if (e == 0)
+	  int e = ptrace (PT_SUSPEND, (intptr_t)thr->get_tid (), 0, 0) ;
+#endif
+	if (e != 0)
+		printf ("failed to suspend thread %d\n", thr->get_num()) ;
+}
+
+void
+PtraceTarget::thread_kill (Thread *thr)
+{
+#if defined (__linux__)
+	int e = syscall (SYS_tkill, thr->get_pid(), SIGKILL) ;
+#elif defined (__FreeBSD__)
+	int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGKILL) ;
+#endif
+	if (e != 0)
+		printf ("failed to kill thread %d\n", thr->get_num()) ;
 }

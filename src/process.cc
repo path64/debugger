@@ -48,9 +48,7 @@ author: David Allison <dallison@pathscale.com>
 #include "pcm.h"
 #include "cli.h"
 #include "dbg_proc_service.h"
-#include <sys/syscall.h>
 #include <sys/stat.h>
-#include <sys/ptrace.h>
 #include "trace.h"
 
 #if defined (__linux__)
@@ -878,7 +876,7 @@ void Process::attach_process(int pid) {
 
     this->pid = target->attach (program, pid) ;                     // attach to target process
     state = RUNNING ;
-    wait() ;                                            // wait for it to stop
+    wait() ; // wait for it to stop
     // state will be READY here
 
 
@@ -934,15 +932,8 @@ void Process::new_thread(void * id) {
             return ;                  // thread already exists
         }
     }
-    td_thrinfo_t info ;
-    thread_db::get_thread_info (thread_agent, id, info) ;
-    //Thread * t = new Thread (arch, this, info.ti_lid, id) ;
-
-#if defined (__linux__)
-    int thr_pid = info.ti_lid ;
-#elif defined (__FreeBSD__)
     int thr_pid = pid ;
-#endif
+    target->get_thread_tid (thread_agent, id, thr_pid) ;
     Thread * t = new Thread (arch, this, thr_pid, id) ;
 
     os.print ("[New ") ; t->print (os) ; os.print ("]\n") ;
@@ -950,8 +941,8 @@ void Process::new_thread(void * id) {
 //     target->attach (info.ti_lid) ;
     threads.push_front (t)  ;
 
-#if defined (__linux__)
-	target->attach (info.ti_lid) ;
+//#if defined (__linux__)
+    target->attach (thr_pid) ;
 
     int status ;
     //printf ("waiting for thread\n") ;
@@ -959,12 +950,12 @@ void Process::new_thread(void * id) {
     do {
         //printf ("waitpid %d\n", info.ti_lid) ;
 //         ret = waitpid (info.ti_lid, &status, __WALL) ;
-	ret = waitpid (info.ti_lid, &status, WAITPID_ALL_CHILD_TYPES) ;
+	ret = waitpid (thr_pid, &status, WAITPID_ALL_CHILD_TYPES) ;
         if (ret < 0) {
             perror ("waitpid") ;
         }
     } while ((ret == -1 && errno == EINTR)) ;
-#endif
+//#endif
 
 	t->syncin();
 
@@ -1019,25 +1010,16 @@ void Process::kill_threads() {
 	//FIXME: Factor out
     // first send them all SIGKILL signal
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
-        Thread *thr = *t ;
-#if defined (__linux__)
-        int e = syscall (SYS_tkill, thr->get_pid(), SIGKILL) ;
-#elif defined (__FreeBSD__)
-        printf("syscall(SYS_thr_kill2, %d, %p, SIGKILL)\n", thr->get_pid(), thr->get_tid());
-        int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGKILL) ;
-#endif
-        if (e != 0) {
-            printf ("failed to tkill thread %d\n", thr->get_num()) ;
-        }
+	target->thread_kill (*t);
     }
-#if 0
+//#if 0
     // now resume them so that they get the signal
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
         target->cont (thr->get_pid(), 0) ;
         thr->go() ;
     }
-#endif 
+//#endif
     uint nkilled = 0 ;
     int status ;
     while (nkilled < threads.size()) {
@@ -1095,14 +1077,8 @@ void Process::stop_threads() {
         Thread *thr = *t ;
         if (thr->is_running()) {
             //thread_db::suspend_thread (thread_agent, thr->get_tid()) ;
-#if defined (__linux__)
-            int e = syscall (SYS_tkill, thr->get_pid(), SIGSTOP) ;
-#elif defined (__FreeBSD__)
-	    int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
-#endif
-            if (e != 0) {
-                printf ("failed to tkill thread %d\n", thr->get_num()) ;
-            }
+	    //target->thread_kill (thr);
+	    target->thread_suspend (thr);
             int status ;
 //             waitpid (thr->get_pid(), &status, __WALL) ;                 // wait for it to stop
 	    waitpid (thr->get_pid(), &status, WAITPID_ALL_CHILD_TYPES) ;                 // wait for it to stop
@@ -1125,14 +1101,12 @@ void Process::stop_threads() {
         thr->syncin() ;
     }
 
-#if defined (__FreeBSD__)
     // to facilitate per-thread resume (see resume_threads()), now place all
     // threads into a suspended state.
-    for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
-        Thread *thr = *t ;
-        Trace::suspend (thr->get_tid ()) ;
-    }
-#endif
+//     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
+//         Thread *thr = *t ;
+// 	target->suspend_thread (thr);
+//     }
 }
 
 Process::ThreadList::iterator Process::find_thread (int pid) {
@@ -3321,16 +3295,9 @@ bool Process::run(const std::string& args, EnvMap& env) {
         //std::cout << "THREADS:" << '\n' ;
         for (uint i = 0 ; i < thrds.size(); i++) {
             thread_db::enable_thread_events (thread_agent, thrds[i], 1) ;
-            td_thrinfo_t info ;
-            thread_db::get_thread_info (thread_agent, thrds[i], info) ;
-            //printf ("init thread: %lld (LWP %d)\n", info.ti_tid, info.ti_lid) ;
-//             Thread *thr = new Thread (arch, this, info.ti_lid, (void*)info.ti_tid) ;
-#if defined (__linux__)
-            int thr_pid = info.ti_lid ;
-#elif defined (__FreeBSD__)
             int thr_pid = pid ;
-#endif
-            Thread *thr = new Thread (arch, this, thr_pid, (void*)info.ti_tid) ;
+            void *tid = target->get_thread_tid (thread_agent, thrds[i], thr_pid) ;
+            Thread *thr = new Thread (arch, this, thr_pid, tid) ;
             threads.push_front (thr) ;
             thr->syncin() ;
         }
@@ -3513,6 +3480,9 @@ void Process::step_from_breakpoint (Breakpoint * bp) {
     }
     //printf ("re-enabling breakpoint at 0x%llx\n", bp->get_address()) ;
     temprestore_breakpoints (bp->get_address()) ;                      // reenable the breakpoint
+
+//(*current_thread)->syncin();
+// pc = get_reg ("pc") ;
 }
 
 // step one instruction, over a call if necessary.  This does not wait for the
@@ -3934,16 +3904,11 @@ void Process::follow_fork (pid_t childpid, bool is_vfork) {
             int status ;
             waitpid (pid, &status, 0) ;
 // FIXME: factor out
-#if 0
-            if ((status >> 16) != PTRACE_EVENT_VFORK_DONE) {             // XXX: ptrace stuff
-                std::cerr << "didn't get VFORKDONE event\n" ;
-            }
-#endif
-#if defined (__linux__)
+//#if defined (__linux__)
             if ((status >> 16) != PTRACE_EVENT_VFORK_DONE) {             // XXX: ptrace stuff
                  std::cerr << "didn't get VFORKDONE event\n" ;
              }
-#endif
+//#endif
             attach_breakpoints (pid) ;           // reattach the breakpoints
         }
     } else if (followmode == FORK_BOTH) {  
@@ -4104,8 +4069,7 @@ bool Process::wait(int status) {
             if (signalnum == SIGTRAP) {  // SIGTRAP
                 if (status >> 16 != 0) {                         // extended wait status
 					// FIXME: factor out
-//#if 0
-#if defined (__linux__)
+//#if defined (__linux__)
                     int event = status >> 16 ;
                     //printf ("extended wait event: %d\n", event) ;
                     switch (event) {
@@ -4123,7 +4087,6 @@ bool Process::wait(int status) {
                     case PTRACE_EVENT_EXEC:             // XXX: do this
                         break ;
                     }
-#endif
 //#endif
                 }
 
@@ -5427,9 +5390,7 @@ static Signal sigs[] = {
     {SIGALRM, "SIGALRM", "Alarm clock", SIGACT_PASS},
     {SIGTERM, "SIGTERM", "Termination", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
 #ifdef SIGSTKFLT
-#if ! defined (__FreeBSD__)
     {SIGSTKFLT, "SIGSTKFLT", "Stack fault", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
-#endif
 #endif
     {SIGCHLD, "SIGCHLD", "Child status has changed", SIGACT_PASS},
     {SIGCONT, "SIGCONT", "Continue", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
@@ -5445,9 +5406,7 @@ static Signal sigs[] = {
     {SIGWINCH, "SIGWINCH", "Window size change", SIGACT_PASS},
     {SIGIO, "SIGIO", "I/O now possible", SIGACT_PASS},
 #ifdef SIGPWR
-#if ! defined (__FreeBSD__)
     {SIGPWR, "SIGPWR", "Power failure restart", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
-#endif
 #endif
     {SIGRTMIN, "SIGRTMIN", "Real-time signal", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},
     {SIGRTMAX, "SIGRTMAX", "Real-time signal", SIGACT_STOP | SIGACT_PRINT | SIGACT_PASS},

@@ -38,6 +38,10 @@ public:
     void init_events (int pid) ;
     pid_t get_fork_pid (pid_t pid) ;
 
+    void* get_thread_tid (void *agent, void *threadhandle, int &thr_pid);
+    void thread_suspend (Thread *);
+    void thread_kill (Thread *);
+
 protected:
 
     pid_t pid;

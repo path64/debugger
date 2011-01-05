@@ -43,6 +43,7 @@ author: David Allison <dallison@pathscale.com>
 #include "map_range.h"
 #include <sys/procfs.h>
 #include <limits.h>
+#include "thread.h"
 
 /* find the offset of X into struct user (from sys/user.h) */
 /* XXX: change long to Address, after Address is reset to long */
@@ -92,6 +93,10 @@ public:
     virtual void step(int pid) = 0 ;
     virtual long get_debug_reg (int pid, int reg) = 0 ;
     virtual void set_debug_reg (int pid, int reg, long value) = 0 ;
+
+    virtual void* get_thread_tid (void *agent, void *threadhandle, int &thr_pid) {throw Exception ("Not support") ;}
+    virtual void thread_suspend (Thread *) {throw Exception ("Not support") ;}
+    virtual void thread_kill (Thread *) {throw Exception ("Not support") ;}
 protected:
     Architecture *arch ;
 } ;
