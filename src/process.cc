@@ -3491,6 +3491,8 @@ void Process::step_from_breakpoint (Breakpoint * bp) {
     bool call = arch->is_call (this, pc) ;        // is the current instruction a call?
     
     //printf ("stepping from breakpoint %d\n", bp->get_num()) ;
+    tempremove_breakpoints (pc);
+
     if (state == STEPPING && call && stepping_over) {                  // do we want to step over it?
         Address nextpc = pc + arch->call_size(this, pc) ;
         Breakpoint *newbp = new_breakpoint (BP_STEP, "", nextpc) ;                      // insert temporary bp at next instruction
