@@ -3977,7 +3977,8 @@ int Process::dowait(int &status) {
 		int v = waitpid (t->get_pid(), &status, WNOHANG|WAITPID_ALL_CHILD_TYPES) ;
             if (v > 0) {
                 //printf ("dowait returning pid %d, status %x\n", v, status) ;
-                
+                    t->stop() ;                     // mark thread as having stopped
+                    t->set_stop_status (status) ;
                 return v ;
             }
         }
