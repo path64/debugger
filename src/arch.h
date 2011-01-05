@@ -253,8 +253,14 @@ public:
 	virtual void fpregister_set_from_native(char *, int, RegisterSet *) = 0;
 	virtual void fpregister_set_to_native(char *, int, RegisterSet *) = 0;
 
+	virtual void reset_reg() = 0;
+
 protected:
     Disassembler *disassembler ;
+    RegMap regnames ;
+    RegnameVec allnames ;
+    RegnameVec commonnames ;
+    RegnumMap regnums ; // mapping for DWARF register numbers to the internal form
 } ;
 
 class IntelArch : public Architecture {
@@ -273,6 +279,10 @@ public:
     Address stack_space (Process *proc, int bytes) ;           // allocate some stack space
     bool is_little_endian () ;
     void align_stack (Process *proc) ;
+    int st_start;
+    int sse_start;
+    int ctx_offset;
+
 private:
 
     // debug register stuff
@@ -333,13 +343,9 @@ public:
     int classify_struct (EvalContext &ctx, DIE *s) ;
     int translate_regnum (int dwarfnum) ;
     RegisterType get_register_type (std::string reg) ;
+    void reset_reg ();
 protected:
 private:
-    RegMap regnames ; 
-    RegnameVec allnames ; 
-    RegnameVec commonnames ; 
-    RegnumMap regnums ; // mapping for DWARF register numbers to the internal form
-
     int disassemble (PStream &os, Process *proc, Address addr) ;
 } ;
 
@@ -384,15 +390,13 @@ public:
     RegnameVec &get_regnames (bool all) ;
     RegisterType get_register_type (std::string reg) ;
     bool isfpreg (int dwarfnum) ;
+    void reset_reg ();
+
+    int *x86_64_sigcontext_regs;
 
 protected:
 private:
-    RegMap regnames ; 
-    RegnameVec allnames ; 
-    RegnameVec commonnames ; 
-    RegnumMap regnums ; // mapping for DWARF register numbers to the internal form
     int mode ;                  // 32 or 64
-
     int disassemble (PStream &os, Process *proc, Address addr) ;
 } ;
 

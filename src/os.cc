@@ -1,9 +1,39 @@
 #include "os.h"
 
+//From __sigset_t
+typedef struct freebsd_sigset {
+	uint32_t __bits[4];
+} freebsd_sigset_t;
+
 i386_linux_arch::i386_linux_arch()
 {
 	regset_size = sizeof (struct i386_linux_regs);
 	fpregset_size = sizeof (struct i386_linux_fpregs);
+
+    regnames["ebx"] = 0 * sizeof (long int) ;
+    regnames["ecx"] = 1 * sizeof (long int) ;
+    regnames["edx"] = 2 * sizeof (long int) ;
+    regnames["esi"] = 3 * sizeof (long int) ;
+    regnames["edi"] = 4 * sizeof (long int) ;
+    regnames["ebp"] = 5 * sizeof (long int) ;
+    regnames["eax"] = 6 * sizeof (long int) ;
+    regnames["xds"] = 7 * sizeof (long int) ;
+    regnames["es"] = 8 * sizeof (long int) ;
+    regnames["fs"] = 9 * sizeof (long int) ;
+    regnames["gs"] = 10 * sizeof (long int) ;
+    //regnames["orig_eax"] = 11 * sizeof (long int) ;
+    regnames["eip"] = 12 * sizeof (long int) ;
+    regnames["cs"] = 13 * sizeof (long int) ;
+    regnames["eflags"] = 14 * sizeof (long int) ;
+    regnames["esp"] = 15 * sizeof (long int) ;
+    regnames["ss"] = 16 * sizeof (long int) ;
+
+    st_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 ;
+
+    // there are 8 SSE registers
+    sse_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 + 32 * sizeof(long);
+
+    reset_reg ();
 }
 
 void
@@ -195,6 +225,65 @@ x86_64_linux_arch::x86_64_linux_arch()
 {
 	regset_size = sizeof (struct x86_64_linux_regs);
 	fpregset_size = sizeof (struct x86_64_linux_fpregs);
+
+    regnames["r15"] = 0 * sizeof (long int) ;
+    regnames["r14"] = 1 * sizeof (long int) ;
+    regnames["r13"] = 2 * sizeof (long int) ;
+    regnames["r12"] = 3 * sizeof (long int) ;
+    regnames["rbp"] = 4 * sizeof (long int) ;
+    regnames["rbx"] = 5 * sizeof (long int) ;
+    regnames["r11"] = 6 * sizeof (long int) ;
+    regnames["r10"] = 7 * sizeof (long int) ;
+    regnames["r9"] = 8 * sizeof (long int) ;
+    regnames["r8"] = 9 * sizeof (long int) ;
+    regnames["rax"] = 10 * sizeof (long int) ;
+    regnames["rcx"] = 11 * sizeof (long int) ;
+    regnames["rdx"] = 12 * sizeof (long int) ;
+    regnames["rsi"] = 13 * sizeof (long int) ;
+    regnames["rdi"] = 14 * sizeof (long int) ;
+    /*regnames["orig_rax"] = 15 * sizeof (long int) ; */       // orig_rax
+    regnames["rip"] = 16 * sizeof (long int) ;
+    regnames["cs"] = 17 * sizeof (long int) ;
+    regnames["eflags"] = 18 * sizeof (long int) ;
+    regnames["rsp"] = 19 * sizeof (long int) ;
+    regnames["ss"] = 20 * sizeof (long int) ;
+    /*regnames["fs_base"] = 21 * sizeof (long int) ;*/        // fs_base
+    /*regnames["gs_base"] = 22 * sizeof (long int) ;*/     // gs_base
+    regnames["ds"] = 23 * sizeof (long int) ;
+    regnames["es"] = 24 * sizeof (long int) ;
+    regnames["fs"] = 25 * sizeof (long int) ;
+    regnames["gs"] = 26 * sizeof (long int) ;
+
+    st_start = sizeof (unsigned short) * 4 + sizeof(long) * 2 + sizeof(int) * 2 ;
+
+    reset_reg ();
+
+static int x86_64_linux_sigcontext_regs[] = {
+        translate_regname ("r8"),
+        translate_regname ("r9"),
+        translate_regname ("r10"),
+        translate_regname ("r11"),
+        translate_regname ("r12"),
+        translate_regname ("r13"),
+        translate_regname ("r14"),
+        translate_regname ("r15"),
+        translate_regname ("rdi"),
+        translate_regname ("rsi"),
+        translate_regname ("rbp"),
+        translate_regname ("rbx"),
+        translate_regname ("rdx"),
+        translate_regname ("rax"),
+        translate_regname ("rcx"),
+        translate_regname ("rsp"),
+        translate_regname ("rip"),
+        translate_regname ("eflags"),
+        translate_regname ("cs"), // XXX: these are unsigned short
+        translate_regname ("gs"),
+        translate_regname ("fs"),
+        -1
+} ;
+
+    x86_64_sigcontext_regs = x86_64_linux_sigcontext_regs;
 }
 
 void
@@ -342,6 +431,70 @@ x86_64_freebsd_arch::x86_64_freebsd_arch()
 {
 	regset_size = sizeof (struct x86_64_freebsd_regs);
 	fpregset_size = sizeof (struct x86_64_freebsd_fpregs);
+
+    regnames["r15"] = 0 * sizeof (register_t) ;
+    regnames["r14"] = 1 * sizeof (register_t) ;
+    regnames["r13"] = 2 * sizeof (register_t) ;
+    regnames["r12"] = 3 * sizeof (register_t) ;
+    regnames["rbp"] = 10 * sizeof (register_t) ;
+    regnames["rbx"] = 11 * sizeof (register_t) ;
+    regnames["r11"] = 4 * sizeof (register_t) ;
+   regnames["r10"] = 5 * sizeof (register_t) ;
+    regnames["r9"] = 6 * sizeof (register_t) ;
+   regnames["r8"] = 7 * sizeof (register_t) ;
+    regnames["rax"] = 14 * sizeof (register_t) ;
+    regnames["rcx"] = 13 * sizeof (register_t) ;
+   regnames["rdx"] = 12 * sizeof (register_t) ;
+    regnames["rsi"] = 9 * sizeof (register_t) ;
+    regnames["rdi"] = 8 * sizeof (register_t) ;
+    /*regnames["orig_rax"] = 15 * sizeof (register_t) ; */        // orig_rax
+    regnames["rip"] = 17 * sizeof (register_t) ;
+    regnames["cs"] = 18 * sizeof (register_t) ;
+    regnames["eflags"] = 19 * sizeof (register_t) ;
+    regnames["rsp"] = 20 * sizeof (register_t) ;
+    regnames["ss"] = 21 * sizeof (register_t) ;
+    /*regnames["fs_base"] = 21 * sizeof (register_t) ;*/         // fs_base
+   /*regnames["gs_base"] = 22 * sizeof (register_t) ;*/         // gs_base
+    regnames["ds"] = 17 * sizeof (register_t) - sizeof (uint16_t) ;
+   regnames["es"] = 17 * sizeof (register_t) - 2 * sizeof (uint16_t) ;
+    regnames["fs"] = 15 * sizeof (register_t) + sizeof (uint32_t) ;
+    regnames["gs"] = 15 * sizeof (register_t) + sizeof (uint32_t) + sizeof (uint16_t) ;
+
+   // from x86_64 machine/reg.h, unavailable on i386 host
+    const int st_start = sizeof (unsigned long) * 4 ;
+
+    reset_reg ();
+
+    ctx_offset = sizeof (freebsd_sigset_t) + sizeof (long) ; // skip sc_mask and sc_onstack members
+
+   static int x86_64_freebsd_sigcontext_regs[] = {
+        translate_regname ("rdi"),
+        translate_regname ("rsi"),
+        translate_regname ("rdx"),
+        translate_regname ("rcx"),
+        translate_regname ("r8"),
+        translate_regname ("r9"),
+        translate_regname ("rax"),
+        translate_regname ("rbx"),
+        translate_regname ("rbp"),
+        translate_regname ("r10"),
+        translate_regname ("r11"),
+        translate_regname ("r12"),
+        translate_regname ("r13"),
+        translate_regname ("r14"),
+        translate_regname ("r15"),
+        -2,                        // sc_trapno, sc_fs, sc_gs
+        -2,                        // sc_addr
+        -2,                        // sc_flags, sc_es, sc_ds
+        -2,                        // sc_err
+        translate_regname ("rip"),
+        translate_regname ("cs"),
+        translate_regname ("eflags"),
+        translate_regname ("rsp"),
+        translate_regname ("ss"),
+        -1
+    } ;
+    x86_64_sigcontext_regs = x86_64_freebsd_sigcontext_regs;
 }
 
 void
@@ -418,6 +571,37 @@ i386_freebsd_arch::i386_freebsd_arch()
 {
 	regset_size = sizeof (struct i386_freebsd_regs);
 	fpregset_size = sizeof (struct i386_freebsd_fpregs);
+
+    // from i386 machine/reg.h, unavailable on x86_64 host
+    regnames["fs"] = 0 * sizeof (unsigned int) ;
+    regnames["es"] = 1 * sizeof (unsigned int) ;
+    regnames["xds"] = 2 * sizeof (unsigned int) ; // XXX: xds or ds? as above
+    regnames["edi"] = 3 * sizeof (unsigned int) ;
+    regnames["esi"] = 4 * sizeof (unsigned int) ;
+    regnames["ebp"] = 5 * sizeof (unsigned int) ;
+    regnames["ebx"] = 7 * sizeof (unsigned int) ;
+    regnames["edx"] = 8 * sizeof (unsigned int) ;
+    regnames["ecx"] = 9 * sizeof (unsigned int) ;
+    regnames["eax"] = 10 * sizeof (unsigned int) ;
+    regnames["eip"] = 13 * sizeof (unsigned int) ;
+    regnames["cs"] = 14 * sizeof (unsigned int) ;
+    regnames["eflags"] = 15 * sizeof (unsigned int) ;
+    regnames["esp"] = 16 * sizeof (unsigned int) ;
+    regnames["ss"] = 17 * sizeof (unsigned int) ;
+    regnames["gs"] = 18 * sizeof (unsigned int) ;
+
+
+
+    // from i386 machine/reg.h, unavailable on x86_64 host
+    st_start = sizeof (unsigned long) * 8 ;
+
+    // there are 8 SSE registers
+    // from i386 machine/reg.h, unavailable on x86_64 host
+    sse_start = sizeof (unsigned long) * 8 + (8 * 16) ;
+
+    ctx_offset = sizeof (freebsd_sigset_t) + sizeof (int) ; // skip sc_mask and sc_onstack members
+
+    reset_reg ();
 }
 
 void

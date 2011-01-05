@@ -34,8 +34,6 @@ author: David Allison <dallison@pathscale.com>
 #include "target.h"
 
 #include <limits.h>
-#if defined (__FreeBSD__)
-#endif
 
 // floating point registers:
 //    ptrace has 2 requests for getting/setting floating point registers.  They are GETFPREGS
@@ -58,7 +56,9 @@ IntelArch::IntelArch (int num_debug_regs)
      memset (refcounts, 0, num_debug_regs * sizeof (int)) ;
      status = 0 ;
      control = 0 ;
-
+     st_start = 0;
+     sse_start = 0;
+     ctx_offset = 0;
 }
 
 IntelArch::~IntelArch() {
@@ -258,52 +258,6 @@ void IntelArch::align_stack (Process *proc) {
 
 i386Arch::i386Arch () : IntelArch (4)
  {
-#if defined (__linux__)
-    regnames["ebx"] = 0 * sizeof (long int) ;
-    regnames["ecx"] = 1 * sizeof (long int) ;
-    regnames["edx"] = 2 * sizeof (long int) ;
-    regnames["esi"] = 3 * sizeof (long int) ;
-    regnames["edi"] = 4 * sizeof (long int) ;
-    regnames["ebp"] = 5 * sizeof (long int) ;
-    regnames["eax"] = 6 * sizeof (long int) ;
-    regnames["xds"] = 7 * sizeof (long int) ;
-    regnames["es"] = 8 * sizeof (long int) ;
-    regnames["fs"] = 9 * sizeof (long int) ;
-    regnames["gs"] = 10 * sizeof (long int) ;
-    //regnames["orig_eax"] = 11 * sizeof (long int) ;
-    regnames["eip"] = 12 * sizeof (long int) ;
-    regnames["cs"] = 13 * sizeof (long int) ;
-    regnames["eflags"] = 14 * sizeof (long int) ;
-    regnames["esp"] = 15 * sizeof (long int) ;
-    regnames["ss"] = 16 * sizeof (long int) ;
-                                                                                                                                         
-    //regnames["pc"] = 12 * sizeof (long int) ;                 // alias for eip
-    //regnames["sp"] = 15 * sizeof (long int) ;                 // alias for esp
-    //regnames["fp"] = 5 * sizeof (long int) ;                 // alias for ebp
-
-#elif defined (__FreeBSD__)
-    // from i386 machine/reg.h, unavailable on x86_64 host
-    regnames["fs"] = 0 * sizeof (unsigned int) ;
-    regnames["es"] = 1 * sizeof (unsigned int) ;
-    regnames["xds"] = 2 * sizeof (unsigned int) ; // XXX: xds or ds? as above
-    regnames["edi"] = 3 * sizeof (unsigned int) ;
-    regnames["esi"] = 4 * sizeof (unsigned int) ;
-    regnames["ebp"] = 5 * sizeof (unsigned int) ;
-    regnames["ebx"] = 7 * sizeof (unsigned int) ;
-    regnames["edx"] = 8 * sizeof (unsigned int) ;
-    regnames["ecx"] = 9 * sizeof (unsigned int) ;
-    regnames["eax"] = 10 * sizeof (unsigned int) ;
-    regnames["eip"] = 13 * sizeof (unsigned int) ;
-    regnames["cs"] = 14 * sizeof (unsigned int) ;
-    regnames["eflags"] = 15 * sizeof (unsigned int) ;
-    regnames["esp"] = 16 * sizeof (unsigned int) ;
-    regnames["ss"] = 17 * sizeof (unsigned int) ;
-    regnames["gs"] = 18 * sizeof (unsigned int) ;
-#endif
-
-    regnames["pc"] = translate_regname ("eip") ; // alias for eip
-    regnames["sp"] = translate_regname ("esp") ; // alias for esp
-    regnames["fp"] = translate_regname ("ebp") ; // alias for ebp
 
     // the floating point register buffer contains the user_fpxregs_struct
 
@@ -311,12 +265,32 @@ i386Arch::i386Arch () : IntelArch (4)
 
     // see /usr/include/sys/user.h for the user_fpxregs_struct definition
 
-#if defined (__linux__)
-    const int st_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 ;
-#elif defined (__FreeBSD__)
-    // from i386 machine/reg.h, unavailable on x86_64 host
-    const int st_start = sizeof (unsigned long) * 8 ;
-#endif
+    commonnames.push_back ("eax") ;
+    commonnames.push_back ("ebx") ;
+    commonnames.push_back ("ecx") ;
+    commonnames.push_back ("edx") ;
+    commonnames.push_back ("esi") ;
+    commonnames.push_back ("edi") ;
+    commonnames.push_back ("ebp") ;
+    commonnames.push_back ("esp") ;
+    commonnames.push_back ("eip") ;
+    commonnames.push_back ("eflags") ;
+    commonnames.push_back ("ds") ;
+    commonnames.push_back ("es") ;
+    commonnames.push_back ("fs") ;
+    commonnames.push_back ("gs") ;
+
+    // XXX: and others
+
+    disassembler = new OpteronDisassembler(false) ;
+}
+
+void
+i386Arch::reset_reg()
+{
+    regnames["pc"] = translate_regname ("eip") ; // alias for eip
+    regnames["sp"] = translate_regname ("esp") ; // alias for esp
+    regnames["fp"] = translate_regname ("ebp") ; // alias for ebp
 
     regnames["st0"] = st_start + 0 * 16 ;
     regnames["st1"] = st_start + 1 * 16 ;
@@ -337,15 +311,6 @@ i386Arch::i386Arch () : IntelArch (4)
     regnames["mm6"] = st_start + 6 * 16 ;
     regnames["mm7"] = st_start + 7 * 16 ;
 
-
-    // there are 8 SSE registers
-#if defined (__linux__)
-    const int sse_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 + 32 * sizeof(long);
-#elif defined (__FreeBSD__)
-    // from i386 machine/reg.h, unavailable on x86_64 host
-    const int sse_start = sizeof (unsigned long) * 8 + (8 * 16) ;
-#endif
-
     regnames["xmm0"] = sse_start + 0 * 16 ;
     regnames["xmm1"] = sse_start + 1 * 16 ;
     regnames["xmm2"] = sse_start + 2 * 16 ;
@@ -355,36 +320,6 @@ i386Arch::i386Arch () : IntelArch (4)
     regnames["xmm6"] = sse_start + 6 * 16 ;
     regnames["xmm7"] = sse_start + 7 * 16 ;
 
-    // store the register names
-    for (RegMap::iterator reg = regnames.begin() ; reg != regnames.end() ; reg++) {
-        allnames.push_back (reg->first) ;
-    }
-
-    commonnames.push_back ("eax") ;
-    commonnames.push_back ("ebx") ;
-    commonnames.push_back ("ecx") ;
-    commonnames.push_back ("edx") ;
-    commonnames.push_back ("esi") ;
-    commonnames.push_back ("edi") ;
-    commonnames.push_back ("ebp") ;
-    commonnames.push_back ("esp") ;
-    commonnames.push_back ("eip") ;
-    commonnames.push_back ("eflags") ;
-    commonnames.push_back ("ds") ;
-    commonnames.push_back ("es") ;
-    commonnames.push_back ("fs") ;
-    commonnames.push_back ("gs") ;
-
-//     regnums[0] = 6 * sizeof (long int) ;
-//     regnums[1] = 1 * sizeof (long int) ;
-//     regnums[2] = 2 * sizeof (long int) ;
-//     regnums[3] = 0 * sizeof (long int) ;
-//     regnums[4] = 15 * sizeof (long int) ;
-//     regnums[5] = 5 * sizeof (long int) ;
-//     regnums[6] = 3 * sizeof (long int) ;
-//     regnums[7] = 4 * sizeof (long int) ;
-//     regnums[8] = 12 * sizeof (long int) ;
-//     regnums[9] = 14 * sizeof (long int) ;
     // from DWARF ABI?
     regnums[0] = translate_regname ("eax");
     regnums[1] = translate_regname ("ecx");
@@ -396,6 +331,11 @@ i386Arch::i386Arch () : IntelArch (4)
     regnums[7] = translate_regname ("edi");
     regnums[8] = translate_regname ("eip");
     regnums[9] = translate_regname ("eflags");
+
+    // store the register names
+    for (RegMap::iterator reg = regnames.begin() ; reg != regnames.end() ; reg++) {
+        allnames.push_back (reg->first) ;
+    }
 
     // floating point registers
     for (int i = 11 ; i < 19 ; i++) {
@@ -411,10 +351,6 @@ i386Arch::i386Arch () : IntelArch (4)
     for (int i = 29 ; i < 37 ; i++) {
        regnums[i] = st_start + (i-29) * 16 ;
     }
-
-    // XXX: and others
-
-    disassembler = new OpteronDisassembler(false) ;
 }
 
 i386Arch::~i386Arch() {
@@ -714,9 +650,8 @@ void i386Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *reg
     } ;
 
      Address ctx = sp+ 40 ;
-#if defined (__FreeBSD__)
-    ctx += sizeof (struct __sigset) + sizeof (int) ; // skip sc_mask and sc_onstack members
-#endif
+     ctx += ctx_offset;
+
      //proc->dump (ctx, sizeof (i386_sigcontext_regs) * 4) ;
      for (int i = 0 ; i386_sigcontext_regs[i] != -1 ; i++) {
          if (i386_sigcontext_regs[i] == -2) {
@@ -809,164 +744,8 @@ int i386Arch::call_size(Process * proc, Address addr) {
 // AMD x86_64 architecture
 //
 
-static const char *x86_64_32_regnames[] = {
-    "r15d",
-    "r14d",
-    "r13d",
-    "r12d",
-    "ebp",
-    "ebx",
-    "r11d",
-    "r10d",
-    "r9d",
-    "r8d",
-    "eax",
-    "ecx",
-    "edx",
-    "esi",
-    "edi",
-    "orig_eax",         // orig_eax
-    "eip",
-    "cs",
-    "eflags",
-    "esp",
-    "ss",
-    "fs_base",         // fs_base
-    "gs_base",         // 
-    "ds",
-    "es",
-    "fs",
-    "gs"
-} ;
-
-static const char *x86_64_64_regnames[] = {
-    "r15",
-    "r14",
-    "r13",
-    "r12",
-    "rbp",
-    "rbx",
-    "r11",
-    "r10",
-    "r9",
-    "r8",
-    "rax",
-    "rcx",
-    "rdx",
-    "rsi",
-    "rdi",
-    "orig_rax",         // orig_eax
-    "rip",
-    "cs",
-    "eflags",
-    "rsp",
-    "ss",
-    "fs_base",         // fs_base
-    "gs_base",         // 
-    "ds",
-    "es",
-    "fs",
-    "gs"
-} ;
-
 x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
  {
-    // in 32 bit mode, the reg names are the 32 bit ones
-    const char **r = mode == 32 ? x86_64_32_regnames : x86_64_64_regnames ;
-
-#if defined (__linux__)
-    regnames[*r++] = 0 * sizeof (long int) ;
-    regnames[*r++] = 1 * sizeof (long int) ;
-    regnames[*r++] = 2 * sizeof (long int) ;
-    regnames[*r++] = 3 * sizeof (long int) ;
-    regnames[*r++] = 4 * sizeof (long int) ;
-    regnames[*r++] = 5 * sizeof (long int) ;
-    regnames[*r++] = 6 * sizeof (long int) ;
-    regnames[*r++] = 7 * sizeof (long int) ;
-    regnames[*r++] = 8 * sizeof (long int) ;
-    regnames[*r++] = 9 * sizeof (long int) ;
-    regnames[*r++] = 10 * sizeof (long int) ;
-    regnames[*r++] = 11 * sizeof (long int) ;
-    regnames[*r++] = 12 * sizeof (long int) ;
-    regnames[*r++] = 13 * sizeof (long int) ;
-    regnames[*r++] = 14 * sizeof (long int) ;
-    /*regnames[*r++] = 15 * sizeof (long int) ; */ r++ ;        // orig_rax
-    regnames[*r++] = 16 * sizeof (long int) ;
-    regnames[*r++] = 17 * sizeof (long int) ;
-    regnames[*r++] = 18 * sizeof (long int) ;
-    regnames[*r++] = 19 * sizeof (long int) ;
-    regnames[*r++] = 20 * sizeof (long int) ;
-    /*regnames[*r++] = 21 * sizeof (long int) ;*/  r++ ;        // fs_base
-    /*regnames[*r++] = 22 * sizeof (long int) ;*/  r++ ;        // gs_base
-    regnames[*r++] = 23 * sizeof (long int) ;
-    regnames[*r++] = 24 * sizeof (long int) ;
-    regnames[*r++] = 25 * sizeof (long int) ;
-    regnames[*r++] = 26 * sizeof (long int) ;
-                                                                                                                                         
-//     regnames["pc"] = 16 * sizeof (long int) ;                 // alias for rip
-//     regnames["sp"] = 19 * sizeof (long int) ;                 // alias for rsp
-//     regnames["fp"] = 4  * sizeof (long int) ;                 // alias for rbp
-#elif defined (__FreeBSD__)
-    regnames[*r++] = 0 * sizeof (register_t) ;
-    regnames[*r++] = 1 * sizeof (register_t) ;
-    regnames[*r++] = 2 * sizeof (register_t) ;
-    regnames[*r++] = 3 * sizeof (register_t) ;
-    regnames[*r++] = 10 * sizeof (register_t) ;
-    regnames[*r++] = 11 * sizeof (register_t) ;
-    regnames[*r++] = 4 * sizeof (register_t) ;
-   regnames[*r++] = 5 * sizeof (register_t) ;
-    regnames[*r++] = 6 * sizeof (register_t) ;
-   regnames[*r++] = 7 * sizeof (register_t) ;
-    regnames[*r++] = 14 * sizeof (register_t) ;
-    regnames[*r++] = 13 * sizeof (register_t) ;
-   regnames[*r++] = 12 * sizeof (register_t) ;
-    regnames[*r++] = 9 * sizeof (register_t) ;
-    regnames[*r++] = 8 * sizeof (register_t) ;
-    /*regnames[*r++] = 15 * sizeof (register_t) ; */ r++ ;        // orig_rax
-    regnames[*r++] = 17 * sizeof (register_t) ;
-    regnames[*r++] = 18 * sizeof (register_t) ;
-    regnames[*r++] = 19 * sizeof (register_t) ;
-    regnames[*r++] = 20 * sizeof (register_t) ;
-    regnames[*r++] = 21 * sizeof (register_t) ;
-    /*regnames[*r++] = 21 * sizeof (register_t) ;*/  r++ ;        // fs_base
-   /*regnames[*r++] = 22 * sizeof (register_t) ;*/  r++ ;        // gs_base
-    regnames[*r++] = 17 * sizeof (register_t) - sizeof (uint16_t) ;
-   regnames[*r++] = 17 * sizeof (register_t) - 2 * sizeof (uint16_t) ;
-    regnames[*r++] = 15 * sizeof (register_t) + sizeof (uint32_t) ;
-    regnames[*r++] = 15 * sizeof (register_t) + sizeof (uint32_t) + sizeof (uint16_t) ;
-#endif
-
-    regnames["pc"] = translate_regname("pc") ;                   // alias for rip
-    regnames["sp"] = translate_regname("sp") ;                   // alias for rsp
-    regnames["fp"] = translate_regname("fp") ;                   // alias for rbp
-
-#if defined (__linux__)
-     const int st_start = sizeof (unsigned short) * 4 + sizeof(long) * 2 + sizeof(int) * 2 ;
-#elif defined (__FreeBSD__)
-    // from x86_64 machine/reg.h, unavailable on i386 host
-    const int st_start = sizeof (unsigned long) * 4 ;
-#endif
-
-    regnames["st0"] = st_start + 0 * 16 ;
-    regnames["st1"] = st_start + 1 * 16 ;
-    regnames["st2"] = st_start + 2 * 16 ;
-    regnames["st3"] = st_start + 3 * 16 ;
-    regnames["st4"] = st_start + 4 * 16 ;
-    regnames["st5"] = st_start + 5 * 16 ;
-    regnames["st6"] = st_start + 6 * 16 ;
-    regnames["st7"] = st_start + 7 * 16 ;
-
-    // MMX registers are the same as the x87 registers
-    regnames["mm0"] = st_start + 0 * 16 ;
-    regnames["mm1"] = st_start + 1 * 16 ;
-    regnames["mm2"] = st_start + 2 * 16 ;
-    regnames["mm3"] = st_start + 3 * 16 ;
-    regnames["mm4"] = st_start + 4 * 16 ;
-    regnames["mm5"] = st_start + 5 * 16 ;
-    regnames["mm6"] = st_start + 6 * 16 ;
-    regnames["mm7"] = st_start + 7 * 16 ;
-
-
     // there are 8 SSE registers
     const int sse_start = st_start + sizeof(int) * 32 ;
 
@@ -989,27 +768,6 @@ x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
     regnames["xmm15"] = sse_start + 7 * 16 ;
 */
 
-    // store the register names
-    for (RegMap::iterator reg = regnames.begin() ; reg != regnames.end() ; reg++) {
-        allnames.push_back (reg->first) ;
-    }
-
-    if (mode == 32) {
-        commonnames.push_back ("eax") ;
-        commonnames.push_back ("ebx") ;
-        commonnames.push_back ("ecx") ;
-        commonnames.push_back ("edx") ;
-        commonnames.push_back ("esi") ;
-        commonnames.push_back ("edi") ;
-        commonnames.push_back ("ebp") ;
-        commonnames.push_back ("esp") ;
-        commonnames.push_back ("eip") ;
-        commonnames.push_back ("eflags") ;
-        commonnames.push_back ("ds") ;
-        commonnames.push_back ("es") ;
-        commonnames.push_back ("fs") ;
-        commonnames.push_back ("gs") ;
-    } else {
         commonnames.push_back ("rax") ;
         commonnames.push_back ("rbx") ;
         commonnames.push_back ("rcx") ;
@@ -1032,30 +790,42 @@ x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
         commonnames.push_back ("es") ;
         commonnames.push_back ("fs") ;
         commonnames.push_back ("gs") ;
+
+	disassembler = new OpteronDisassembler(mode == 64) ;
+
+	x86_64_sigcontext_regs = NULL;
+}
+
+void
+x86_64Arch::reset_reg ()
+{
+    regnames["pc"] = translate_regname("pc") ;                   // alias for rip
+    regnames["sp"] = translate_regname("sp") ;                   // alias for rsp
+    regnames["fp"] = translate_regname("fp") ;                   // alias for rbp
+
+    regnames["st0"] = st_start + 0 * 16 ;
+    regnames["st1"] = st_start + 1 * 16 ;
+    regnames["st2"] = st_start + 2 * 16 ;
+    regnames["st3"] = st_start + 3 * 16 ;
+    regnames["st4"] = st_start + 4 * 16 ;
+    regnames["st5"] = st_start + 5 * 16 ;
+    regnames["st6"] = st_start + 6 * 16 ;
+    regnames["st7"] = st_start + 7 * 16 ;
+
+    // MMX registers are the same as the x87 registers
+    regnames["mm0"] = st_start + 0 * 16 ;
+    regnames["mm1"] = st_start + 1 * 16 ;
+    regnames["mm2"] = st_start + 2 * 16 ;
+    regnames["mm3"] = st_start + 3 * 16 ;
+    regnames["mm4"] = st_start + 4 * 16 ;
+    regnames["mm5"] = st_start + 5 * 16 ;
+    regnames["mm6"] = st_start + 6 * 16 ;
+    regnames["mm7"] = st_start + 7 * 16 ;
+
+    // store the register names
+    for (RegMap::iterator reg = regnames.begin() ; reg != regnames.end() ; reg++) {
+        allnames.push_back (reg->first) ;
     }
-
-
-    if (mode == 64) {
-        // DWARF mapping.  see ABI page 37
-        // Note: the version I have says that reg 1 is %rbx and reg 3 is %rdx.  Apparently this is
-        // wrong and it should be the other way around.
-//         regnums[0] = 10 * sizeof (long int) ;           // rax
-//         regnums[1] = 12 * sizeof (long int) ;            // rdx
-//         regnums[2] = 11 * sizeof (long int) ;           // rcx
-//         regnums[3] = 5 * sizeof (long int) ;           // rbx
-//         regnums[4] = 13 * sizeof (long int) ;           // rsi
-//         regnums[5] = 14 * sizeof (long int) ;           // rdi
-//         regnums[6] = 4 * sizeof (long int) ;            // rbp
-//         regnums[7] = 19 * sizeof (long int) ;           // rsp
-//         regnums[8] = 9 * sizeof (long int) ;            // r8
-//         regnums[9] = 8 * sizeof (long int) ;            // r9
-//         regnums[10] = 7 * sizeof (long int) ;            // r10
-//         regnums[11] = 6 * sizeof (long int) ;            // r11
-//         regnums[12] = 3 * sizeof (long int) ;            // r12
-//         regnums[13] = 2 * sizeof (long int) ;            // r13
-//         regnums[14] = 1 * sizeof (long int) ;            // r14
-//         regnums[15] = 0 * sizeof (long int) ;            // r15
-//         regnums[16] = 16 * sizeof (long int) ;            // rip
 
         regnums[0] = translate_regname ("rax") ;
         regnums[1] = translate_regname ("rdx") ;
@@ -1089,48 +859,6 @@ x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
         for (int i = 41 ; i < 49 ; i++) {
            regnums[i] = st_start + (i-41) * 16 ;
         }
-    } else {
-//         regnums[0] = 10 * sizeof (long int) ;           // eax
-//         regnums[1] = 11 * sizeof (long int) ;           // ecx
-//         regnums[2] = 12 * sizeof (long int) ;           // edx
-//         regnums[3] = 5 * sizeof (long int) ;            // ebx
-//         regnums[4] = 19 * sizeof (long int) ;           // esp
-//         regnums[5] = 4 * sizeof (long int) ;            // ebp
-//         regnums[6] = 13 * sizeof (long int) ;           // esi
-//         regnums[7] = 14 * sizeof (long int) ;           // edi
-//         regnums[8] = 16 * sizeof (long int) ;           // eip
-//         regnums[9] = 18 * sizeof (long int) ;           // eflags
-
-        regnums[0] = translate_regname ("eax") ;
-        regnums[1] = translate_regname ("ecx") ;
-        regnums[2] = translate_regname ("edx") ;
-        regnums[3] = translate_regname ("ebx") ;
-        regnums[4] = translate_regname ("esp") ;
-        regnums[5] = translate_regname ("ebp") ;
-        regnums[6] = translate_regname ("esi") ;
-        regnums[7] = translate_regname ("edi") ;
-        regnums[8] = translate_regname ("eip") ;
-        regnums[9] = translate_regname ("eflags") ;
-
-        // floating point registers
-        for (int i = 11 ; i < 19 ; i++) {
-           regnums[i] = st_start + (i-11) * 16 ;
-        }
-
-        // SSE registers
-        for (int i = 21 ; i < 29 ; i++) {
-           regnums[i] = sse_start + (i-21) * 16 ;
-        }
-
-        // MMX registers (same as floating point registers)
-        for (int i = 29 ; i < 37 ; i++) {
-           regnums[i] = st_start + (i-29) * 16 ;
-        }
-    }
-
-    // XXX: and others
-
-    disassembler = new OpteronDisassembler(mode == 64) ;
 }
 
 x86_64Arch::~x86_64Arch() {
@@ -1493,62 +1221,9 @@ void x86_64Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *r
 
     // this array contains the offsets of the registers inside the destination array.
     // the index into this array is the index into the sigcontext structure.
-    static int x86_64_sigcontext_regs[] = {
-#if defined (__linux__)
-        translate_regname ("r8"),
-        translate_regname ("r9"),
-        translate_regname ("r10"),
-        translate_regname ("r11"),
-        translate_regname ("r12"),
-        translate_regname ("r13"),
-        translate_regname ("r14"),
-        translate_regname ("r15"),
-        translate_regname ("rdi"),
-        translate_regname ("rsi"),
-        translate_regname ("rbp"),
-        translate_regname ("rbx"),
-        translate_regname ("rdx"),
-        translate_regname ("rax"),
-        translate_regname ("rcx"),
-        translate_regname ("rsp"),
-        translate_regname ("rip"),
-        translate_regname ("eflags"),
-        translate_regname ("cs"), // XXX: these are unsigned short
-        translate_regname ("gs"),
-        translate_regname ("fs"),
-#elif defined (__FreeBSD__)
-        translate_regname ("rdi"),
-        translate_regname ("rsi"),
-        translate_regname ("rdx"),
-        translate_regname ("rcx"),
-        translate_regname ("r8"),
-        translate_regname ("r9"),
-        translate_regname ("rax"),
-        translate_regname ("rbx"),
-        translate_regname ("rbp"),
-        translate_regname ("r10"),
-        translate_regname ("r11"),
-        translate_regname ("r12"),
-        translate_regname ("r13"),
-        translate_regname ("r14"),
-        translate_regname ("r15"),
-        -2,                        // sc_trapno, sc_fs, sc_gs
-        -2,                        // sc_addr
-        -2,                        // sc_flags, sc_es, sc_ds
-        -2,                        // sc_err
-        translate_regname ("rip"),
-        translate_regname ("cs"),
-        translate_regname ("eflags"),
-        translate_regname ("rsp"),
-        translate_regname ("ss"),
-#endif
-        -1
-    } ;
 
      Address ctx = sp+ 40 ;
-#if defined (__FreeBSD__)
-    ctx += sizeof (struct __sigset) + sizeof (long) ; // skip sc_mask and sc_onstack members
-#endif
+     ctx += ctx_offset;
      //proc->dump (ctx, sizeof (x86_64_sigcontext_regs) * sizeof(long)) ;
      for (int i = 0 ; x86_64_sigcontext_regs[i] != -1 ; i++) {
         if (x86_64_sigcontext_regs[i] == -2) {
