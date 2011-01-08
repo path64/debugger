@@ -516,6 +516,8 @@ DwInfo::make_die(DwCUnit * cu, DIE * parent,
       return new Lo_user(cu, parent, abbrev);
    case DW_TAG_hi_user:
       return new Hi_user(cu, parent, abbrev);
+   case DW_TAG_imported_module:
+      return new imported_module(cu, parent, abbrev);
    default:
       throw Exception("Unknown DIE type");
    }

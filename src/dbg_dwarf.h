@@ -142,6 +142,7 @@ typedef DIE Hi_user;
 typedef DIE Format_label;
 typedef DIE Function_template;
 typedef DIE Class_template;
+typedef DIE imported_module;
 
 
 class Formal_parameter: public DIE  {
