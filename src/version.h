@@ -28,10 +28,10 @@ author: David Allison <dallison@pathscale.com>
 
 */
 
-#define VERSION "1.1.1"
+#define VERSION "4.0.5"
 
 #define COPYNOTE \
-  "Copyright (C) 2004-2005 Pathscale Inc.\n"\
+  "Copyright (C) 2004-2011 Pathscale Inc.\n"\
   "All Rights Reserved\n"
 
 #define WARRANTY \
