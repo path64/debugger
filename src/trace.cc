@@ -35,6 +35,8 @@ author: Jay Cornwall <jay@jcornwall.me.uk>
 #include <sys/user.h>
 #elif defined (__FreeBSD__)
 #include <sys/endian.h>
+#include <machine/reg.h>
+#include <machine/sysarch.h>
 #endif
 
 /* find the offset of X into struct user (from sys/user.h) */

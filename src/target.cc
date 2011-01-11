@@ -47,6 +47,11 @@ author: David Allison <dallison@pathscale.com>
 #include "ptrace_target.h"
 #include <limits.h>
 
+// NT_PRFPXREG is not defined on non-Linux architectures.  This is the Linux
+// value, but it may not be the correct value for other core file types.
+#ifndef NT_PRFPXREG
+#define NT_PRFPXREG       20
+#endif
 
 // this is where other targets can be created when we have some
 Target *Target::new_live_target(Architecture *arch) {

@@ -3904,11 +3904,11 @@ void Process::follow_fork (pid_t childpid, bool is_vfork) {
             int status ;
             waitpid (pid, &status, 0) ;
 // FIXME: factor out
-//#if defined (__linux__)
+#if defined (__linux__)
             if ((status >> 16) != PTRACE_EVENT_VFORK_DONE) {             // XXX: ptrace stuff
                  std::cerr << "didn't get VFORKDONE event\n" ;
              }
-//#endif
+#endif
             attach_breakpoints (pid) ;           // reattach the breakpoints
         }
     } else if (followmode == FORK_BOTH) {  
@@ -4069,7 +4069,7 @@ bool Process::wait(int status) {
             if (signalnum == SIGTRAP) {  // SIGTRAP
                 if (status >> 16 != 0) {                         // extended wait status
 					// FIXME: factor out
-//#if defined (__linux__)
+#if defined (__linux__)
                     int event = status >> 16 ;
                     //printf ("extended wait event: %d\n", event) ;
                     switch (event) {
@@ -4087,7 +4087,7 @@ bool Process::wait(int status) {
                     case PTRACE_EVENT_EXEC:             // XXX: do this
                         break ;
                     }
-//#endif
+#endif
                 }
 
                 bool switched_threads = false ;

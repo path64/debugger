@@ -1,7 +1,8 @@
-#include <sys/ptrace.h>
 #include <sys/types.h>
+#include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <sys/user.h>
+#include <signal.h>
 #include <errno.h>
 #include "ptrace_target.h"
 #include "arch.h"
@@ -455,16 +456,7 @@ void PtraceTarget::set_fpxregs(int pid, RegisterSet *reg) {
 }
 
 long PtraceTarget::get_debug_reg (int pid, int reg) {
-    /* find offset and access struct user */
-    Address addr = STRUCT_USER_OFFSET(u_debugreg[reg]);
-    //long e = ptrace (PTRACE_PEEKUSER, pid, addr, 0);
-    long e = Trace::get_dbgreg (pid, reg) ;
-    if (errno != 0) {
-        throw Exception ("Unable to read debug register");
-    }
-
-    /* cast to Address */
-    return e;
+    return Trace::get_dbgreg (pid, reg) ;
 }
 
 void PtraceTarget::set_debug_reg (int pid, int reg, long value) {
