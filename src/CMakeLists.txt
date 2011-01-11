@@ -117,7 +117,14 @@ endif()
 
 add_library(pathdb-lib STATIC ${pathdb_sources})
 set_property(TARGET pathdb-lib PROPERTY OUTPUT_NAME "pathdb")
-target_link_libraries(pathdb-lib dl ncurses iberty)
+# On Linux some things needs to link with -ldl
+# but on FBSD they should not.
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(libdl "dl")
+ELSE()
+    set(libdl "")
+ENDIF()
+target_link_libraries(pathdb-lib ncurses iberty ${libdl})
 
 # Driver
 add_executable(pathdb driver.cc)

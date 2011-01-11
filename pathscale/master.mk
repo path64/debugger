@@ -127,7 +127,7 @@ type_class.o type_enum.o type_pointer.o type_nspace.o dwf_spec.o \
 dwf_info.o dwf_locs.o dwf_names.o dwf_cunit.o file_info.o type_qual.o \
 dwf_entry.o dwf_abbrv.o gen_loc.o junk_stream.o
 
-DBGLIBS = libpathdb.a -ldl $(LNCURSES) -Wl,--export-dynamic -liberty
+DBGLIBS = libpathdb.a $(LNCURSES) -Wl,--export-dynamic -liberty
 DBGTMPS = $(srcdir)/opcodes.cc $(srcdir)/dwf_spec.h $(srcdir)/dwf_spec.cc
 
 pathdb: libpathdb.a driver.o $(hg_root)/etc/help.xml
