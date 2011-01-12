@@ -221,7 +221,10 @@ int Trace::set_options (pid_t pid, long opts) {
 
 int Trace::get_fork_pid (pid_t parent_pid, pid_t *fork_pid) {
 #if defined (__linux__)
-    return ptrace (PTRACE_GETEVENTMSG, parent_pid, (void*)0, fork_pid) ;
+	long opt = 0;
+	int ret = ptrace (PTRACE_GETEVENTMSG, parent_pid, (void*)0, &opt);
+	*fork_pid = (pid_t)opt;
+	return  ret;
 #elif defined (__FreeBSD__)
     return -1 ;
 #else
