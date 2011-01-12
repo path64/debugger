@@ -3922,6 +3922,7 @@ std::string CommandInterpreter::readline (const char *prompt, bool recordhist) {
       readl.sethistory(history.get_list());
       readl.setcompl(completor);
       readl.setdumb(flags & CLI_FLAG_NOTERM);
+      readl.setcli(this);
       str = readl.getline();
       history.push_back(str);
    } else {
@@ -3929,6 +3930,7 @@ std::string CommandInterpreter::readline (const char *prompt, bool recordhist) {
       readl.sethistory(NULL);
       readl.setcompl(NULL);
       readl.setdumb(flags & CLI_FLAG_NOTERM);
+      readl.setcli(this);
       str = readl.getline();
    }
    return str;

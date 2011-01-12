@@ -34,6 +34,8 @@ author: James Strother <jims@pathscale.com>
 #include <string>
 #include <list>
 
+class CommandInterpreter ;
+
 class Completor {
 public:
    virtual ~Completor() { }
@@ -52,6 +54,7 @@ public:
    void setprompt(const std::string&);
    void sethistory(HList * history);
    void setdumb(bool is_dumb);
+   void setcli(CommandInterpreter *c);
 
    const std::string& getline();
    int getchar(const char* allowed);
@@ -167,6 +170,7 @@ private:
    char* s_enter_insert;
    char* s_exit_insert; 
    char* s_audible_bell;
+   CommandInterpreter *cli;
 };
 
 /* give handle for global */

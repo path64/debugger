@@ -28,6 +28,7 @@ author: James Strother <jims@pathscale.com>
 
 */
 
+#include "cli.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -111,6 +112,11 @@ Readline::sethistory(HList* h) {
 void
 Readline::setdumb(bool is) {
    expl_dumb = is;
+}
+
+void
+Readline::setcli(CommandInterpreter *c) {
+   cli = c;
 }
 
 const std::string&
@@ -1267,9 +1273,11 @@ void Readline::recv_gen_char(int A) {
 }
 
 void Readline::die() {
-   unload_term();
-   putchar('\n'); 
-   exit(0);
+//    unload_term();
+//    putchar('\n');
+//    exit(0);
+	unload_term();
+	cli->quit();
 }
 
 #if 0
