@@ -3468,7 +3468,7 @@ void Process::step_from_breakpoint (Breakpoint * bp) {
         sync() ;
         target->cont ((*current_thread)->get_pid(), current_signal) ;
         current_signal = 0 ;
-        state = RUNNING ;
+        state = CSTEPPING ;
         hitbp = NULL ;                           // no breakpoint active now
         wait() ;
     } else {
@@ -3478,11 +3478,11 @@ void Process::step_from_breakpoint (Breakpoint * bp) {
         hitbp = NULL ;                           // no breakpoint active now
         wait() ;                                // wait for the process to stop
     }
-    //printf ("re-enabling breakpoint at 0x%llx\n", bp->get_address()) ;
-    temprestore_breakpoints (bp->get_address()) ;                      // reenable the breakpoint
 
 //(*current_thread)->syncin();
 // pc = get_reg ("pc") ;
+    //printf ("re-enabling breakpoint at 0x%llx\n", bp->get_address()) ;
+    temprestore_breakpoints (bp->get_address()) ;                      // reenable the breakpoint
 }
 
 // step one instruction, over a call if necessary.  This does not wait for the
@@ -4082,6 +4082,10 @@ bool Process::wait(int status) {
                             state = READY ;
                             continue ;
                         }
+			if (state == CSTEPPING) {
+				docont();
+				continue;
+			}
                         return docont() ;                      // continue execution
                         }
                     case PTRACE_EVENT_EXEC:             // XXX: do this
