@@ -372,7 +372,7 @@ void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterS
 	}
 }
 
-void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
+void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, RegisterSet *regs) {
 //     td_thrhandle_t handle ;
 //     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
 //     td_err_e e = thread_db.td_thr_getfpregs (&handle, (prfpregset_t*)regs) ;
@@ -381,7 +381,7 @@ void read_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned
 //     }
 }
 
-void write_thread_fpregisters (td_thragent_t *agent, void *threadhandle, unsigned char *regs) {
+void write_thread_fpregisters (td_thragent_t *agent, void *threadhandle, RegisterSet *regs) {
 //     td_thrhandle_t handle ;
 //     TD_THRINFO_T_SET(handle, agent, threadhandle) ;
 //     td_err_e e = thread_db.td_thr_setfpregs (&handle, (prfpregset_t*)regs) ;

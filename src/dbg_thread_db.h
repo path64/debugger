@@ -58,8 +58,8 @@ void read_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet
 void write_thread_registers(td_thragent_t *agent, void *threadhandle, RegisterSet *regs, Architecture *);
 void read_thread_fpregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
 void read_thread_fpxregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs);
-void write_thread_fpregisters(td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
-void write_thread_fpxregisters(td_thragent_t *agent, void *threadhandle, unsigned char *regs) ;
+void write_thread_fpregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs) ;
+void write_thread_fpxregisters(td_thragent_t *agent, void *threadhandle, RegisterSet *regs) ;
 
 void get_thread_info (td_thragent_t *agent, void *threadhandle, td_thrinfo_t &info) ;
 void suspend_thread (td_thragent_t *agent, void *threadhandle) ;

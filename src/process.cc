@@ -4386,11 +4386,24 @@ void Process::set_regs(RegisterSet *regs, void *tid)
 }
 
 void Process::get_fpregs(RegisterSet *regs, void *tid) {
-    arch->get_fpregs((void*)thread_agent, tid, (*current_thread)->get_pid(), target, regs) ;
+	if (thread_agent != NULL && tid != NULL)
+	{
+		thread_db::read_thread_fpregisters(thread_agent, tid, regs) ;
+	}
+	else
+	{
+		//target->get_fpregs((*current_thread)->get_pid(), regs) ;
+	}
 }
 
 void Process::set_fpregs(RegisterSet *regs, void *tid) {
-    arch->set_fpregs((void*)thread_agent, tid, (*current_thread)->get_pid(), target, regs) ;
+	if (thread_agent != NULL && tid != NULL) {
+		thread_db::write_thread_fpregisters(thread_agent, tid, regs) ;
+	}
+	else
+	{
+		//target->set_fpregs((*current_thread)->get_pid(), regs) ;
+	}
 }
 
 Breakpoint * Process::new_breakpoint(BreakpointType type, std::string text, Address addr, bool pending) {

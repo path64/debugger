@@ -80,6 +80,7 @@ public:
     virtual void get_regs(int pid, RegisterSet *regs) = 0 ;               // get register set
     virtual void set_regs(int pid, RegisterSet *regs) = 0 ;
     virtual void get_fpregs(int pid, RegisterSet *regs) = 0 ;               // get floating point register set
+    virtual void set_fpregs(int pid, RegisterSet *regs) = 0 ;
 	// FIXME: This should be providing a generic mechanism for setting extra
 	// register sets.
     virtual void get_fpxregs(int pid, RegisterSet *regs) = 0 ;               // get floating point extended register set
