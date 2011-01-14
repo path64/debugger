@@ -395,7 +395,13 @@ Address PtraceTarget::read(int pid, Address addr, int size) {
 }
 
 Address PtraceTarget::readptr (int pid, Address addr) {
-    return read(pid, addr, arch->ptrsize());
+	if (arch->ptrsize() == 8) {
+		return read(pid, addr, arch->ptrsize());
+	}
+	if (arch->ptrsize() != 4)
+		throw Exception ("Size of this arch is not support");
+
+	return (int32_t)read(pid, addr, arch->ptrsize());
 }
 
 void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
