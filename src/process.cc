@@ -1155,7 +1155,7 @@ void Process::grope_threads() {
         try {
             //thread_db::read_thread_registers (thread_agent, thr->get_tid(), regbuf) ;
             target->get_debug_reg (thr->get_pid(), 6) ;
-            //thr->syncin() ;                     // try to read the regs
+            thr->syncin() ;                     // try to read the regs
             thr->stop() ;
         } catch (...) {               // slap! oops, thread is awake (or maybe dead)
         }       

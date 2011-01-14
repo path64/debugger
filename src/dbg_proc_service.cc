@@ -66,7 +66,8 @@ ps_err_e ps_lgetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregse
     int e = Trace::get_regs (lid, gregset) ;
     if (e < 0) {
         //std::cout << "ps_lgetregs " << lid << "\n" ;
-        throw Exception ("Failed to read registers");
+        //throw Exception ("Failed to read registers");
+	return PS_ERR ;
     }
     return PS_OK ;
 }
@@ -74,7 +75,8 @@ ps_err_e ps_lgetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregse
 ps_err_e ps_lgetfpregs (struct ps_prochandle *handle, int lid, prfpregset_t *fpregset) {
     int e = Trace::get_fpregs (lid, fpregset) ;
     if (e < 0) {
-        throw Exception ("Failed to read fp registers") ;
+        //throw Exception ("Failed to read fp registers") ;
+	return PS_ERR ;
     }
     return PS_OK ;
 }
@@ -83,7 +85,8 @@ ps_err_e ps_lsetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregse
     //std::cout << "ps_lsetregs " << lid << "\n" ;
     int e = Trace::set_regs (lid, gregset) ;
     if (e < 0) {
-        throw Exception ("Failed to write registers for thread %d", lid) ;
+        //throw Exception ("Failed to write registers for thread %d", lid) ;
+	return PS_ERR ;
     }
     return PS_OK ;
 }
@@ -91,7 +94,8 @@ ps_err_e ps_lsetregs (struct ps_prochandle *handle, int lid, prgregset_t *gregse
 ps_err_e ps_lsetfpregs (struct ps_prochandle *handle, int lid, prfpregset_t *fpregset) {
     int e = Trace::set_fpregs (lid, fpregset) ;
     if (e < 0) {
-        throw Exception ("Failed to write fp registers") ;
+        //throw Exception ("Failed to write fp registers") ;
+	return PS_ERR ;
     }
     return PS_OK ;
 }
