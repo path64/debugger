@@ -28,7 +28,7 @@ author: David Allison <dallison@pathscale.com>
 
 */
 
-#ifdef __linux__
+//#ifdef __linux__
 
 #define __STDC_CONSTANT_MACROS
 #include "dbg_thread_db.h"
@@ -408,4 +408,4 @@ void write_thread_fpxregisters (td_thragent_t *agent, void *threadhandle, unsign
 
 }
 
-#endif
+//#endif

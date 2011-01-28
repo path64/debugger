@@ -32,7 +32,7 @@ author: David Allison <dallison@pathscale.com>
 /* provide the additional functions that libthread_db needs
 */
 
-#ifdef __linux__
+//#ifdef __linux__
 
 #include "dbg_proc_service.h"
 #include "trace.h"
@@ -211,4 +211,4 @@ void ps_plog(const char *fmt, ... ) {
 
 }
 
-#endif
+//#endif
