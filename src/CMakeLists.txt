@@ -54,6 +54,8 @@ set(pathdb_sources
     x86registers.cc
     os.cc
     trace.cc
+    trace-linux.cc
+    trace-freebsd.cc
 )
 
 # Getting current date/time
