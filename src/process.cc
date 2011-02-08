@@ -941,7 +941,7 @@ void Process::new_thread(void * id) {
 //     target->attach (info.ti_lid) ;
     threads.push_front (t)  ;
 
-//#if defined (__linux__)
+#if defined (__linux__)
     target->attach (thr_pid) ;
 
     int status ;
@@ -955,10 +955,11 @@ void Process::new_thread(void * id) {
             perror ("waitpid") ;
         }
     } while ((ret == -1 && errno == EINTR)) ;
-//#endif
 
 	t->syncin();
-
+#elif defined (__FreeBSD__)
+    t->go();
+#endif
 #if 0
     // if there is no child available, try cloned children
     if (ret == -1 && errno == ECHILD) {
@@ -1035,10 +1036,15 @@ void Process::kill_threads() {
 }
 
 void Process::resume_threads() {
+#if defined (__FreeBSD__)
+	target->cont ((*current_thread)->get_pid(), current_signal) ;
+	current_signal = 0 ;
+#endif
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
         Thread *thr = *t ;
         if (!thr->is_running()) {
-            //thread_db::resume_thread (thread_agent, thr->get_tid()) ;
+#if defined (__linux__)
+    		//thread_db::resume_thread (thread_agent, thr->get_tid()) ;
             thr->syncout() ;                    // synchronize the registers
             int retry = 3 ;
             while (retry-- > 0) {
@@ -1049,6 +1055,7 @@ void Process::resume_threads() {
                     printf ("failed to resume thread %d\n", thr->get_num()) ;
                 }
             }
+#endif
             //printf ("thread %d running\n", thr->get_pid()) ;
             thr->go() ;
         }
@@ -1793,7 +1800,8 @@ void Process::set_value (Value& loc, Value &v, int size) {
 
 void Process::sync_threads() {
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
-       (*t)->syncout() ;
+	if (!(*t)->is_running())
+     	    (*t)->syncout() ;
    }
 }
 
@@ -3498,9 +3506,11 @@ bool Process::step_one_instruction() {
 	if (hitbp)
 		tempremove_breakpoints (hitbp->get_address()) ;
 
+#ifdef __linux__
     if (multithreaded) {
         resume_threads() ;                              // restart all threads (except current)
     }
+#endif
 
     Address pc = get_reg ("pc") ;                 // current PC value
     bool call = arch->is_call (this, pc) ;        // is the current instruction a call?
@@ -3960,9 +3970,11 @@ int Process::mt_wait() {
         for (ThreadList::iterator i = threads.begin() ; i != threads.end() ; i++) {
             Thread *t = *i ;
             if (!t->is_disabled()) {
+		int tmp_status;
                 //int v = waitpid (t->get_pid(), &status, WNOHANG|__WALL) ;
-		int v = waitpid (t->get_pid(), &status, WNOHANG|WAITPID_ALL_CHILD_TYPES) ;
+		int v = waitpid (t->get_pid(), &tmp_status, WNOHANG|WAITPID_ALL_CHILD_TYPES) ;
                 if (v > 0) {
+		    status = tmp_status;
                     t->stop() ;                     // mark thread as having stopped
                     t->set_stop_status (status) ;
                 }
@@ -4210,7 +4222,9 @@ bool Process::wait(int status) {
                                 action = act ;
                             } else if (act == BP_ACTION_CONT && action == BP_ACTION_IGNORE) {
                                 action = act ;
-                            }
+                            } else if (act == BP_ACTION_WAIT && action == BP_ACTION_IGNORE) {
+				    action = act;
+			    }
                             // if the breakpoint survives the hit, then record it
                             if (hitbp != NULL) {
                                 activebp = hitbp ;
@@ -4338,6 +4352,8 @@ bool Process::wait(int status) {
                 } else {
                    if (action == BP_ACTION_STOP || action == BP_ACTION_IGNORE) {
                        state = READY ;
+		   } else if (action == BP_ACTION_WAIT) {
+			continue;
                    } else {
                        docont() ;
                        continue ;

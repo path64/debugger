@@ -207,6 +207,18 @@ void ps_plog(const char *fmt, ... ) {
     vfprintf (stderr, fmt, args) ;
 }
 
+ps_err_e
+ps_lgetxmmregs (struct ps_prochandle *ph, lwpid_t lwpid, char *xmmregs)
+{
+	return PS_ERR;
+}
+
+ps_err_e
+ps_lsetxmmregs (struct ps_prochandle *ph, lwpid_t lwpid, const char *xmmregs)
+{
+	return PS_ERR;
+}
+
 #endif
 
 }

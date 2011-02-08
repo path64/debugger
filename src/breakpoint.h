@@ -64,7 +64,8 @@ enum Breakpoint_action {
    BP_ACTION_NONE,              // no action
    BP_ACTION_CONT,              // continue
    BP_ACTION_IGNORE,            // ignore breakpoint
-   BP_ACTION_STOP               // stop
+   BP_ACTION_STOP,               // stop
+   BP_ACTION_WAIT,		// Keep wait
 } ;
 
 enum WatchpointType {

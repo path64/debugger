@@ -723,7 +723,11 @@ Breakpoint_action ThreadBreakpoint::hit_active(PStream &os) {
     //std::cout << "event: "  <<  event  <<  " in thread "  <<  threadhandle << '\n' ;
     thread_db::enable_thread_events (proc->thread_agent, threadhandle, 1) ;
     proc->new_thread (threadhandle) ;
+#if defined (__linux__)
     return BP_ACTION_CONT ;
+#elif defined (__FreeBSD__)
+    return BP_ACTION_WAIT;
+#endif
 }
 
 SharedLibraryBreakpoint::SharedLibraryBreakpoint (Architecture * arch, Process *proc, Address addr, int num)

@@ -130,7 +130,7 @@ typedef elf_greg_t *GRegPtr;
 #elif defined (__FreeBSD__)
 
 #define TD_THRINFO_T_SET(thr_info, agent, handle) \
-  thread_db.td_ta_map_id2thr (agent, (thread_t)handle, &thr_info) ;
+  thread_db.td_ta_map_id2thr (agent, (thread_t)handle, &thr_info)
 
 typedef reg *GRegPtr;
 
@@ -149,7 +149,7 @@ void load_thread_db (ProcessController *p) {
     pcm = p ;
     thread_db.handle = dlopen ("libthread_db.so", RTLD_NOW) ;
     if (thread_db.handle == NULL) {
-        //std::cerr << dlerror() << "\n" ;
+        std::cerr << dlerror() << "\n" ;
         throw Exception ("Unable to open thread debug library") ;
     }
     void *handle = thread_db.handle ;
@@ -293,7 +293,11 @@ void get_event_message (const td_thragent_t *agent, int &event_number, void *&th
     thread_handle = (void *)msg.th_p->th_unique ;
     data = (void*)msg.msg.data ;
 #elif defined (__FreeBSD__)
-    thread_handle = (void *)((td_thrhandle_t *)msg.th_p)->th_tid ;
+    td_thrinfo_t ti;
+    if (thread_db.td_thr_get_info ((td_thrhandle_t *)msg.th_p, &ti) != TD_OK) {
+       throw Exception ("Unable to get info") ;
+    }
+    thread_handle = (void *)ti.ti_tid ;
     data = (void*)msg.data ;
 #endif
     //std::cout << "thread handle = " << (void*)msg.th_p->th_unique << "\n" ;
@@ -355,7 +359,7 @@ void read_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSe
 // the type elf_greg_t is the native register set type (the same as ptrace uses)
 void write_thread_registers (td_thragent_t *agent, void *threadhandle, RegisterSet *regs, Architecture *arch) {
 	td_thrhandle_t handle ;
-	TD_THRINFO_T_SET(handle, agent, threadhandle) ;
+	TD_THRINFO_T_SET(handle, agent, threadhandle);
 
 	char	regs_buf[arch->regset_size];
 

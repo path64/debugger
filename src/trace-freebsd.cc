@@ -70,7 +70,7 @@ int Trace::write_data (pid_t pid, void *addr, unsigned long data) {
         void *int_addr = (int *)addr + (n_writes - 1 - i) ;
 #endif
         unsigned int write_int = (unsigned int)(data >> (i * 32)) ;
-        ret_val |= ptrace (PT_WRITE_D, pid, (caddr_t)int_addr, write_int) ;
+	ret_val |= ptrace (PT_WRITE_D, pid, (caddr_t)int_addr, write_int) ;
     }
 
     return ret_val ;

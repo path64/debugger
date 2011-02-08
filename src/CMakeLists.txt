@@ -126,7 +126,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ELSE()
     set(libdl "")
 ENDIF()
-target_link_libraries(pathdb-lib ncurses iberty ${libdl})
+target_link_libraries(pathdb-lib ncurses iberty ${libdl} -Wl,-E)
 
 # Driver
 add_executable(pathdb driver.cc)
