@@ -11,6 +11,7 @@
 #include "os.h"
 #include "dbg_thread_db.h"
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #ifndef CHAR_BIT
 #define CHAR_BIT	8
