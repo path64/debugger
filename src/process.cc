@@ -1801,7 +1801,9 @@ void Process::set_value (Value& loc, Value &v, int size) {
 
 void Process::sync_threads() {
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
+#if defined (__FreeBSD__)
 	if (!(*t)->is_running())
+#endif
      	    (*t)->syncout() ;
    }
 }
