@@ -503,12 +503,14 @@ void ProcessController::select_process (int i) {
     current_process = processes[i];
 }
 
+#if 0
 void ProcessController::list_processes () {
     os.print ("Index    PID      State      Command\n") ;
     for (uint i = 0 ; i < processes.size() ; i++) {
         os.print ("%-8d %-8d %-10s %s\n", i, processes[i]->get_pid(), processes[i]->get_state(), processes[i]->get_program().c_str()) ;
     }
 }
+#endif
 
 int ProcessController::get_current_process() {
     for (uint i = 0 ; i < processes.size() ; i++) {
@@ -521,16 +523,11 @@ int ProcessController::get_current_process() {
 
                                                                                                                           
 
-bool ProcessController::is_running() {
-    for (uint i = 0 ; i < processes.size() ; i++) {
-        if (processes[i]->is_running()) {
-            return true ;
-        }
-    }
-    return false ;
+bool ProcessController::is_running(int n) {
+    return processes[n]->is_running() ;
 }
 
-bool ProcessController::run(const std::string& args, EnvMap& env) {
+void ProcessController::run(const std::string& args, EnvMap& env) {
     Process *proc = current_process ;
     
     AttachType at = proc->get_attach_type() ;
@@ -545,8 +542,7 @@ bool ProcessController::run(const std::string& args, EnvMap& env) {
                 current_process = newproc ;           // overwrite the old process
                 delete proc ;                                    // delete the old process
             } else {
-                os.print ("Program not restarted.\n") ;
-                return false ;
+                throw Exception ("Program not restarted.") ;
             }
         } else {
             current_process->reset() ;
@@ -565,11 +561,13 @@ bool ProcessController::run(const std::string& args, EnvMap& env) {
         break ;
     }
 
-    return current_process->run (args, env) ;
+	if (current_process->run (args, env))
+		ready_wait() ;
 }
 
 bool ProcessController::cont(int sig) {
-    return current_process->cont(sig) ;
+    if (current_process->cont(sig))
+	ready_wait() ;
 }
 
 void ProcessController::single_step() {
@@ -587,7 +585,9 @@ void ProcessController::kill() {
             bool yes = cli->confirm(NULL, "Kill the program being debugged") ;
             if (yes) {
                 Process *newproc = new Process (*proc) ;   // copy the process data
-                current_process = newproc ;           // overwrite the old process
+                remove_process (proc);
+		current_process = newproc ;           // overwrite the old process
+		add_process (newproc) ;
                 delete proc ;                                    // delete the old process
             } else {
                 os.print ("Program not killed.\n") ;
@@ -723,8 +723,9 @@ void ProcessController::until(Address addr) {
     current_process->until(addr) ;
 }
 
-bool ProcessController::jump(Address addr) {
-    return current_process->jump(addr) ;
+void ProcessController::jump(Address addr) {
+	if (current_process->jump(addr))
+		ready_wait() ;
 }
 
 void ProcessController::ready_wait() {
@@ -975,3 +976,41 @@ ProcessController::new_int_type()
 	return current_process->new_int_type() ;
 }
 
+RegisterSet *
+ProcessController::get_frame_reg()
+{
+	return current_process->get_frame_reg();
+}
+
+bool
+ProcessController::file_ok ()
+{
+	return current_process->file_ok();
+}
+
+int
+ProcessController::get_pid (int n)
+{
+	if (n < 0 || n >= (int) processes.size())
+		throw Exception ("No such process") ;
+
+	return processes[n]->get_pid();
+}
+
+const char *
+ProcessController::get_state(int n)
+{
+	if (n < 0 || n >= (int) processes.size())
+		throw Exception ("No such process") ;
+
+	return processes[n]->get_state();
+}
+
+std::string
+ProcessController::get_program (int n)
+{
+	if (n < 0 || n >= (int) processes.size())
+		throw Exception ("No such process") ;
+
+	return processes[n]->get_program();
+}

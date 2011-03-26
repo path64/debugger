@@ -5633,6 +5633,7 @@ std::string Process::realname(std::string nm) {
 
 
 void Process::print_loc(const Location& loc, Frame *frame, PStream &os, bool showthread) {
+#if 0
     bool print_address = get_int_opt(PRM_P_ADDR) ;
 
     bool first_line = loc.get_funcloc() == NULL ?
@@ -5682,6 +5683,7 @@ void Process::print_loc(const Location& loc, Frame *frame, PStream &os, bool sho
         show_current_thread() ;
     }
     os.print ("\n") ;
+#endif
 }
 
 void Process::build_local_map (DIE *die, LocalMap &m) {
@@ -5770,3 +5772,8 @@ Process::new_int_type()
 	return type;
 }
 
+RegisterSet *
+Process::get_frame_reg()
+{
+	return (*current_thread)->get_frame_reg();
+}

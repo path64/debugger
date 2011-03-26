@@ -289,11 +289,14 @@ public :
     ~Process() ; 
 
     Address get_frame_pc (int tid, int fid);
+    RegisterSet *get_frame_reg();
     int get_frame () {build_frame_cache(); return current_frame;}
     int get_frame_size ();
 
     File *find_file(std::string name);
     DIE *new_int_type ();
+
+    bool file_ok() {return program != "";}
 
     // attachment methods.  These allow attachment to a core file or a live process
     void attach_core() ;                        // attach to a core file

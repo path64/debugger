@@ -466,7 +466,8 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
 
 
 void Command::get_address_arg (std::string tail, std::vector<Address> &result, bool allow_all, bool skip_preamble, int &end) {
-    Location current_location = pcm->get_current_location() ;
+    Location current_location = get_current_location() ;
+    //Location current_location = pcm->get_current_location() ;
     Address addr = 0 ;
 
     if (tail.size() == 0) {                     // no command tail?
@@ -475,7 +476,7 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
     } else if (tail[0] == '*') {               // address
         end = 1 ;
         addr = get_number (pcm, tail, 0, end) ;
-        if (pcm->is_running() && !pcm->test_address (addr)) {
+        if (pcm->is_running(pcm->get_current_process()) && !pcm->test_address (addr)) {
             throw PendingException ("Bad address") ;
         } else {
             result.push_back (addr) ;
@@ -685,7 +686,7 @@ void DebuggerCommand::execute (std::string root, std::string tail) {
             cli->rerun_push(root, tail) ;
         } else {
             std::string file = trim(tail) ;
-            if (pcm->is_running()) {
+            if (pcm->is_running(pcm->get_current_process())) {
                 bool ok = cli->confirm (NULL, "A program is being debugged already.  Kill it") ;
                 if (!ok) {
                     printf ("Program not killed.\n") ;
@@ -758,10 +759,13 @@ void DebuggerCommand::execute (std::string root, std::string tail) {
             }
         }
     } else if (root == "processes") {
-        pcm->list_processes() ;
-    } else if (root == "kill") {
-        int ch = 0 ;
-        extract_number (tail, ch) ;
+        os.print ("  Index    PID      State      Command\n") ;
+	for (uint i = 0 ; i < pcm->get_processes_number() ; i++) {
+		os.print ("%s%-8d %-8d %-10s %s\n", (pcm->get_current_process() == i)?"* ":"  ",i, pcm->get_pid(i), pcm->get_state(i), pcm->get_program(i).c_str()) ;
+	}
+//     } else if (root == "kill") {
+//         int ch = 0 ;
+//         extract_number (tail, ch) ;
     } else if (root == "thread") {
         int ch = 0 ;
         int n = extract_number (tail, ch) ;
@@ -966,53 +970,88 @@ void ControlCommand::execute (std::string root, std::string tail) {
         }
         cli->rerun_push(root, tail) ;
         cli->rerun_reset();
-        bool wait = pcm->run (cli->get_args(), cli->get_env()) ;
-        if (wait) {
-            pcm->ready_wait() ;
-        }
+        pcm->run (cli->get_args(), cli->get_env()) ;
+        print_loc(get_current_location (), true, 0);
+	os.print ("\n");
+	show_line(get_current_location (), false);
     } else if (root == "rerun") {
         int end = 0 ;
         int n = get_number (pcm, tail, 1, end) ;
         cli->rerun(n) ;
     } else if (root == "continue") {
+	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         if (tail == "") {
-            if (pcm->cont()) {
-                pcm->ready_wait() ;
-            }
+            pcm->cont();
         } else {
             int sig = get_number (pcm, tail, 0) ;
-            if (pcm->cont(sig)) {
-                pcm->ready_wait() ;
-            } 
-        } 
+            pcm->cont(sig);
+        }
+	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+		print_loc(get_current_location (), true, 0);
+		os.print ("\n");
+	}
+	show_line(get_current_location (), false);
         cli->rerun_push(root, tail) ;
     } else if (root == "signal") {
         if (tail == "") {
             printf ("Argument required (signal number).\n") ;
         } else {
+	    Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
             int sig = get_number (pcm, tail, 0) ;
             if (pcm->cont(sig)) {
                 pcm->ready_wait() ;
             }
+	    if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+		print_loc(get_current_location (), true, 0);
+		os.print ("\n");
+	    }
+	    show_line(get_current_location (), false);
             cli->rerun_push(root, tail) ;
         }
     } else if (root == "step") {
+	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (true, false, get_number (pcm, tail, 1)) ;
-        cli->rerun_push(root, tail) ;
+	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+		print_loc(get_current_location (), true, 0);
+		os.print ("\n");
+	}
+	show_line(get_current_location (), false);
+	cli->rerun_push(root, tail) ;
     } else if (root == "stepi") {
+	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (false, false, get_number (pcm, tail, 1)) ;
+	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+		print_loc(get_current_location (), true, 0);
+		os.print ("\n");
+	}
+	show_line(get_current_location (), false);
         cli->rerun_push(root, tail) ;
     } else if (root == "next") {
+	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (true, true, get_number (pcm, tail, 1)) ;
+	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+		print_loc(get_current_location (), true, 0);
+		os.print ("\n");
+	}
+	show_line(get_current_location (), false);
         cli->rerun_push(root, tail) ;
     } else if (root == "nexti") {
+	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (false, true, get_number (pcm, tail, 1)) ;
+	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+		print_loc(get_current_location (), true, 0);
+		os.print ("\n");
+	}
+	show_line(get_current_location (), false);
         cli->rerun_push(root, tail) ;
     } else if (root == "finish") {
         if (tail != "") {
             printf ("The \"finish\" command does not take any arguments.\n") ;
         } else {
             pcm->finish() ;
+	    print_loc(get_current_location (), true, 0);
+	    os.print ("\n");
+	    show_line(get_current_location (), false);
             cli->rerun_push(root, tail) ;
         }
     } else if (root == "until") {
@@ -1037,7 +1076,7 @@ void ControlCommand::execute (std::string root, std::string tail) {
             check_junk (tail, end) ;
             if (address.size() == 1) {
                 Address addr = address[0] ;
-                Location current = pcm->get_current_location() ;
+                Location current = get_current_location() ;
                 Location dest = pcm->lookup_address (addr) ;
                 if (current.get_funcloc() != dest.get_funcloc()) {
                     char buf[256] ;
@@ -1047,17 +1086,19 @@ void ControlCommand::execute (std::string root, std::string tail) {
                         snprintf (buf, sizeof(buf), "Destination is not in '%s'.  Jump anyway", current.get_symname().c_str()) ;
                     }
                     if (cli->confirm (NULL, buf)) {
-                        if (pcm->jump (addr)) {
-                            pcm->ready_wait() ;
-                        }
+                        pcm->jump (addr);
+			print_loc(get_current_location (), true, 0);
+			os.print ("\n");
+			show_line(get_current_location (), false);
                         cli->rerun_push(root, tail) ;
                     } else {
                         printf ("Not confirmed.\n") ;
                     }
                 } else {
-                    if (pcm->jump (addr)) {
-                        pcm->ready_wait() ;
-                    }
+                    pcm->jump (addr);
+		    print_loc(get_current_location (), true, 0);
+		    os.print ("\n");
+		    show_line(get_current_location (), false);
                     cli->rerun_push(root, tail) ;
                 }
             }
@@ -2196,7 +2237,7 @@ const char *QuitCommand::cmds[] = {
 } ;
 
 void QuitCommand::execute (std::string root, std::string tail) {
-    if (pcm->is_running()) {
+    if (pcm->is_running(pcm->get_current_process())) {
         bool yes = cli->confirm (NULL, "The program is running.  Exit anyway") ;
         if (!yes) {
             cli->get_os().print ("Not confirmed.\n") ;
@@ -4142,7 +4183,8 @@ Command::print_loc(const Location& loc, bool print_address, int fid)
 		} else {
 			os.print ("%s ", funcname.c_str()) ;
 		}
-		if (loc.get_funcloc() != NULL && fid > 0) {
+		//if (loc.get_funcloc() != NULL && fid > 0) {
+		if (loc.get_funcloc() != NULL) {
 			pcm->print_function_paras (fid, loc.get_funcloc()->symbol->die) ;
 		}
 
@@ -4173,6 +4215,16 @@ Command::show_line (const Location& loc, bool emacs_mode)
 Location
 Command::get_current_location ()
 {
-	return pcm->lookup_address (pcm->get_frame_pc(pcm->get_current_process(), pcm->get_current_thread(), pcm->get_frame()));
+	Address pc;
+
+	if (pcm->is_running(pcm->get_current_process()))
+		pc = pcm->get_frame_pc(pcm->get_current_process(), pcm->get_current_thread(), pcm->get_frame());
+	else {
+		pc = pcm->lookup_symbol ("MAIN__");
+		if (pc == 0)
+			pc = pcm->lookup_symbol ("main");
+	}
+
+	return pcm->lookup_address (pc);
 }
 

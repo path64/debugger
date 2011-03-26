@@ -87,6 +87,8 @@ public:
 
     void print (PStream &os) ;
     static void reset() ;
+
+    RegisterSet *get_frame_reg () { return regs;}
 protected:
 private:
 	Architecture * arch;

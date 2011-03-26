@@ -67,7 +67,13 @@ public:
 
     int get_current_thread();
 
+    int get_processes_number () {return processes.size();}
+    int get_pid (int n);
+    const char *get_state(int n);
+    std::string get_program (int n);
+
     Address get_frame_pc (int pid, int tid, int fid);
+    RegisterSet * get_frame_reg ();
     int get_frame();
     int get_frame_size();
     void print_function_paras (int fid, DIE *die);
@@ -79,18 +85,18 @@ public:
 
     void get_license() ;
 
-    bool file_ok() { return file_present ; }
+    bool file_ok();
 
     // process list control
     int add_process (Process *proc) ;
     void remove_process (Process *proc) ;
     void select_process (int i) ;
-    void list_processes () ;
+//     void list_processes () ;
     int get_current_process() ;
 
     void set_signal_actions (std::string name, std::vector<std::string> &actions) ;
 
-    bool run (const std::string& args, EnvMap& env);
+    void run (const std::string& args, EnvMap& env);
     bool cont (int sig = 0) ;
     void single_step () ;
     void wait () ;
@@ -99,7 +105,7 @@ public:
     void until() ;
     void until (Address addr) ;
     void kill() ;
-    bool jump (Address addr) ;
+    void jump (Address addr) ;
 
     bool test_address (Address addr) ;
     Address get_return_addr() ;
@@ -175,7 +181,7 @@ public:
 
     void set_cli (CommandInterpreter *cli) { this->cli = cli ; }
     CommandInterpreter *get_cli() { return cli ; }
-    bool is_running() ;
+    bool is_running(int n) ;
     AliasManager *get_aliases() { return &aliases ; }
     DirectoryTable &get_dirlist() { return dirlist ; }
 protected:
