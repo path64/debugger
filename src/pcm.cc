@@ -446,11 +446,11 @@ void ProcessController::detach_all() {
     // blow away all old processes
     std::vector<Process*>::iterator i ; 
     for (i = processes.begin(); i != processes.end(); i++) {
-        if ((*i)->is_running()) {
-           remove_process (*i);
+        //if ((*i)->is_running()) {
            delete *i ;
-        }
+        //}
     }
+    processes.clear();
 
     // setup nil process as current
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
@@ -467,6 +467,7 @@ int ProcessController::add_process (Process *proc) {
 }
 
 void ProcessController::remove_process (Process *proc) {
+#if 0
     int index = -1 ;
     for (unsigned int i = 0 ; i < processes.size() ; i++) {
         if (processes[i] == proc) {
@@ -482,6 +483,17 @@ void ProcessController::remove_process (Process *proc) {
         processes[index] = processes[index+1] ;
     }
     processes.resize (processes.size() - 1) ;
+#endif
+	std::vector<Process*>::iterator i ;
+
+	for (i = processes.begin(); i != processes.end(); i++) {
+		if (*i == proc) {
+			processes.erase (i);
+			return;
+		}
+	}
+
+	throw Exception ("No such process") ;
 }
 
 void ProcessController::select_process (int i) {
