@@ -288,6 +288,10 @@ public :
     Process (const Process &old) ;                    // copy the details from another process
     ~Process() ; 
 
+    Address get_frame_pc (int tid, int fid);
+    int get_frame () {return current_frame;}
+    int get_frame_size ();
+
     // attachment methods.  These allow attachment to a core file or a live process
     void attach_core() ;                        // attach to a core file
     void attach_process(int pid) ;                     // attach to a live process
@@ -313,6 +317,7 @@ public :
     Value evaluate_expression (Node *expr, bool addressonly=false) ;
     Node *compile_expression (std::string expr, int &end, bool single = false) ;
     void print_function_paras (Frame *frame, DIE *func) ;
+    void print_function_paras (int fid, DIE *func) ;
     void examine (const Format &fmt, Address addr) ;            // memory dump
     void print_type (std::string expr, bool show_contents = true) ;                        // print the type of the expression
     void complete_symbol (std::string name, std::vector<std::string> &result) ;
@@ -619,6 +624,8 @@ private:
     std::vector<DIE*> expression_dies ;         // DIEs created by expressions that are kept (displays etc)
 
     time_t programtime;  // modification time of executible
+
+    void switch_thread_1(int n);
 } ;
 
 #endif

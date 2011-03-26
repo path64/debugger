@@ -131,7 +131,7 @@ void CommandCompletor::reset() {
     matches.clear() ;
 }
 
-Command::Command (CommandInterpreter *cli, ProcessController *p, const char **commands) :cli(cli), pcm(p), commands(commands) {
+Command::Command (CommandInterpreter *cli, ProcessController *p, const char **commands) :cli(cli), os(cli->os),  pcm(p), commands(commands) {
 }
 
 // split a command into parts, mindful of strings in quotes
@@ -1580,6 +1580,7 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
 
 
 StackCommand::StackCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+
 }
 
 const char *StackCommand::cmds[] = {
@@ -1589,10 +1590,34 @@ const char *StackCommand::cmds[] = {
 void StackCommand::complete (std::string root, std::string tail, int ch, std::vector<std::string> &result) {
 }
 
+void StackCommand::stacktrace(int n)
+{
+	int first, last;
+
+	if (n > 0) {
+		first = pcm->get_frame();
+		last = first + n;
+		if (last > pcm->get_frame_size()) {
+			last = pcm->get_frame_size();
+		}
+	}
+	else {
+		first = 0;
+		last = pcm->get_frame_size();
+	}
+
+	int pid = pcm->get_current_process();
+	int tid = pcm->get_current_thread();
+	for (int i = first ; i < last; i++) {
+		os.print ("#%d\t", i);
+ 		print_loc(pcm->lookup_address (pcm->get_frame_pc(pid, tid, i)), true, i);
+		os.print ("\n");
+	}
+}
 
 void StackCommand::execute (std::string root, std::string tail) {
     if (root == "backtrace" || root == "where") {
-        pcm->stacktrace(get_number (pcm, tail, -1)) ;
+	stacktrace(get_number (pcm, tail, -1)) ;
     } else if (root == "down") {
         pcm->down(get_number (pcm, tail, 1)) ;  
         cli->rerun_push(root, tail) ;
@@ -3937,3 +3962,47 @@ std::string CommandInterpreter::readline (const char *prompt, bool recordhist) {
    return str;
 }
 
+void Command::print_loc(const Location& loc, bool print_address, int fid)
+{
+	bool first_line = loc.get_funcloc() == NULL ? false : loc.get_funcloc()->at_first_line (loc.get_addr()) ;
+	std::string funcname = loc.get_symname();
+
+	if (loc.get_file() == NULL) {
+		const char *parens = " ()" ;
+		if (funcname != "") {
+			if (pcm->in_sigtramp (funcname)) {
+				funcname = "<called by signal handler>" ;
+				parens = "" ;
+			}
+			// don't print () if it's already done
+			if (funcname.find('(') != std::string::npos) {
+				parens = "" ;
+			}
+			if (print_address && !first_line) {
+				os.print ("0x%016llx in %s%s", loc.get_addr(), funcname.c_str(), parens) ;
+			} else {
+				os.print ("%s%s", funcname.c_str(), parens) ;
+			}
+		} else {
+			if (print_address && !first_line) {
+				os.print ("0x%016llx in ?? ()", loc.get_addr()) ;
+			} else {
+				os.print ("?? ()") ;
+			}
+		}
+	} else {
+		if (print_address && !first_line) {
+			os.print ("0x%016llx in %s ", loc.get_addr(), funcname.c_str()) ;
+		} else {
+			os.print ("%s ", funcname.c_str()) ;
+		}
+		if (loc.get_funcloc() != NULL && fid > 0) {
+			pcm->print_function_paras (fid, loc.get_funcloc()->symbol->die) ;
+		}
+
+		os.print (" at %s", loc.get_file()->name.c_str());
+		if (loc.get_line() != -1) {
+			os.print (":%d", loc.get_line());
+		}
+	}
+}

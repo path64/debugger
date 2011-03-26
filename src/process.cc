@@ -1319,6 +1319,15 @@ int Process::get_main_language() {
     return DW_LANG_C ;
 }
 
+void Process::print_function_paras (int fid, DIE *die) {
+	build_frame_cache() ;
+
+	if (fid < 0 || fid >= frame_cache.size())
+		throw Exception("Frame is not right.");
+
+	print_function_paras (frame_cache[fid], die);
+}
+
 // get a string that shows the value of the parameters of a function
 void Process::print_function_paras (Frame *frame, DIE *die) {
     die->check_loaded() ;
@@ -3373,6 +3382,14 @@ void Process::list_threads() {
 }
 
 void Process::switch_thread(int n) {
+    switch_thread_1 (n);
+
+    os.print ("[Switching to thread %d (", n) ;
+    (*current_thread)->print (os) ;
+    os.print (")]#0 ") ;                 // NB: GDB doesn't print space between ] and the frame number
+}
+
+void Process::switch_thread_1(int n) {
     //std::cout << "switching to thread "  <<  n << '\n' ;
     ThreadList::iterator t ;
     for (t = threads.begin() ; t != threads.end() ; t++) {
@@ -3385,10 +3402,6 @@ void Process::switch_thread(int n) {
     }
     current_thread = t ;
     (*t)->syncin() ;
-
-    os.print ("[Switching to thread %d (", n) ;
-    (*t)->print (os) ;
-    os.print (")]#0 ") ;                 // NB: GDB doesn't print space between ] and the frame number
 
     invalidate_frame_cache() ;
 
@@ -5692,5 +5705,41 @@ void Process::build_local_map (DIE *die, LocalMap &m) {
         }
     }
 
+}
+
+Address Process::get_frame_pc (int tid, int fid)
+{
+	int	get_error = 0;
+	int	current_thread_id_record = -1;
+	Address ret;
+
+	try {
+		//Set tid to current_thread if need.
+		if ((*current_thread)->get_num() != tid) {
+			current_thread_id_record = (*current_thread)->get_num();
+			switch_thread_1(tid);
+		}
+
+		build_frame_cache() ;
+		ret = frame_cache[fid]->get_pc();
+	} catch (...) {
+		get_error = 1;
+	}
+
+	//Set current_thread_id_record back.
+	if (current_thread_id_record != -1)
+		switch_thread_1(current_thread_id_record);
+
+	if (get_error)
+		throw Exception("Get pc error.");
+
+	return ret;
+}
+
+int Process::get_frame_size ()
+{
+	build_frame_cache() ;
+
+	return frame_cache.size();
 }
 

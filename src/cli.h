@@ -91,11 +91,13 @@ public:
 
     virtual void execute (std::string root, std::string tail) = 0 ;          // parse the command
     virtual bool is_dangerous (std::string cmd) { return false ; }
+    void print_loc (const Location& loc, bool print_address, int fid);
 
 protected:
     CommandInterpreter *cli ;
     ProcessController *pcm ;
     const char **commands;
+    PStream &os ;
 
 public:
 
@@ -179,6 +181,7 @@ public:
     void  complete (std::string root, std::string tail, int ch, std::vector<std::string> &result) ;
 private:
     static const char *cmds[] ;
+    void stacktrace(int n);
 } ;
 
 class PrintCommand : public Command {

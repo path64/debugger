@@ -905,3 +905,42 @@ void ProcessController::search(std::string text) {
 bool ProcessController::test_address (Address addr) {
     return current_process->test_address(addr) ;
 }
+
+Address
+ProcessController::get_frame_pc (int pid, int tid, int fid)
+{
+	if (pid < 0 || pid >= (int) processes.size())
+		throw Exception ("No such process") ;
+
+	return processes[pid]->get_frame_pc (tid, fid);
+}
+
+int
+ProcessController::get_frame()
+{
+	return current_process->get_frame() ;
+}
+
+int
+ProcessController::get_frame_size()
+{
+	return current_process->get_frame_size() ;
+}
+
+int
+ProcessController::get_current_thread()
+{
+	return current_process->get_current_thread() ;
+}
+
+void
+ProcessController::print_function_paras (int fid, DIE *die)
+{
+	return current_process->print_function_paras(fid, die) ;
+}
+
+bool
+ProcessController::in_sigtramp (std::string name)
+{
+	return get_arch()->in_sigtramp (current_process, name);
+}

@@ -65,6 +65,15 @@ public:
     void detach() ;
     void detach_all() ;
 
+    int get_current_thread();
+
+    Address get_frame_pc (int pid, int tid, int fid);
+    int get_frame();
+    int get_frame_size();
+    void print_function_paras (int fid, DIE *die);
+
+    bool in_sigtramp (std::string name);
+
     void get_license() ;
 
     bool file_ok() { return file_present ; }
