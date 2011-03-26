@@ -145,15 +145,15 @@ static std::string find_program (std::string program) {
 //
 // }
 
-ProcessController::ProcessController (PStream &os, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose)
+ProcessController::ProcessController (CommandInterpreter *cli, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose)
     : arch(NULL),
+      cli(cli),
+      os (cli->os),
       target(NULL),
-      os(os),
       file_present(false),
       current_process(-1),
       aliases(aliases),
       dirlist(dirlist), subverbose(subverbose) {
-
     // create dummy process
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
     current_process = add_process (proc) ;

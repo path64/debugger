@@ -304,7 +304,9 @@ const int CLI_FLAG_EMACS = 0x08 ;
 
 class CommandInterpreter {
 public:
-    CommandInterpreter (ProcessController *pcm, PStream &os, DirectoryTable &dirlist, int flags) ;
+    CommandInterpreter (PStream &os, DirectoryTable &dirlist, int flags, bool subverbose) ;
+    ProcessController *pcm ;
+    PStream &os ;
     void run(Process *proc=NULL, Address endsp = 0) ;
     void quit() ;
     bool confirm (const char *prompt1, const char *prompt2) ;
@@ -416,8 +418,6 @@ public:
     void shrink_history();
 
 private:
-    ProcessController *pcm ;
-    PStream &os ;
     std::vector<Command*> commands ;
     //void (*oldint)(int);
     bool program_running ;

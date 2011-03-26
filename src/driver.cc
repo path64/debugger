@@ -169,10 +169,10 @@ int main (int argc, char **argv) {
 
     try {
         PStream output (1) ;          // output stream attached to standard output
-        AliasManager aliases ;
+
         DirectoryTable dirlist ;
-        ProcessController pcm (output, &aliases, dirlist, subverbose) ;
-        CommandInterpreter cli (&pcm, output, dirlist, cli_flags) ;
+        //ProcessController pcm (output, &aliases, dirlist, subverbose) ;
+        CommandInterpreter cli (output, dirlist, cli_flags, subverbose) ;
 
         if ( run_args != "" ) {
            cli.set_args (run_args);
@@ -182,14 +182,14 @@ int main (int argc, char **argv) {
 
         if (filename != "") {
             if (corepid == "") {                        // no core/pid arg, we have a new program
-                pcm.attach (filename, true) ;
+                cli.pcm->attach (filename, true) ;
             } else {
                 // the user passed a core/pid arg, have to work out what it is
                 if (isdigit (corepid[0])) {         // possible pid, but might also be core file
                     int pid = atoi (corepid.c_str()) ;          // XXX: make this better
-                    pcm.attach (pid, true) ;
+                    cli.pcm->attach (pid, true) ;
                 } else {
-                    pcm.attach_core (filename, corepid, true) ;
+                    cli.pcm->attach_core (filename, corepid, true) ;
                 }
             }
             if (filename.size() > 5 && filename.find("pathdb") == filename.size() - 6) {

@@ -47,6 +47,7 @@ author: David Allison <dallison@pathscale.com>
 #include <algorithm>
 #include <string.h>
 #include <sys/sysctl.h>
+#include "symtab.h"
 
 extern char **environ ;
 
@@ -2368,13 +2369,14 @@ void globl_sighandler(int sig) {
     }
 }
 
-CommandInterpreter::CommandInterpreter (ProcessController *pcm, PStream &os,
-   DirectoryTable &dirlist, int flags)
+CommandInterpreter::CommandInterpreter (PStream &os,
+   DirectoryTable &dirlist, int flags, bool subverbose)
   : pcm(pcm), os(os), program_running(false),
     instream(NULL), dirlist(dirlist), options(os), history(os),
     flags(flags), debugger_var_num(0), last_breakpoint_num(-1) {
 
-    pcm->set_cli (this) ;
+    AliasManager aliases ;
+    pcm = new ProcessController(this, &aliases, dirlist, subverbose) ;
     load_env();
     rerun_mark = -1;
 

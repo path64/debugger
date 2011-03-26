@@ -54,7 +54,7 @@ enum AttachType {
 
 class ProcessController {
 public:
-    ProcessController(PStream &os, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose) ;
+    ProcessController(CommandInterpreter *cli, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose) ;
     ~ProcessController() ;
 
     void attach (std::string filename, bool replace) ;
