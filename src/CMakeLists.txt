@@ -15,7 +15,6 @@ set(pathdb_sources
     dbg_dwarf.cc
     dbg_elf.cc
     dis.cc
-    cli.cc
     pstream.cc
     target.cc
     readline.cc
@@ -25,11 +24,8 @@ set(pathdb_sources
     type_struct.cc
     type_union.cc
     type_base.cc
-    cli_param.cc
-    cli_history.cc
     dwf_cfa.cc
     bstream.cc
-    xml.cc
     type_array.cc
     type_class.cc
     type_enum.cc
@@ -58,6 +54,13 @@ set(pathdb_sources
     trace.cc
     trace-linux.cc
     trace-freebsd.cc
+)
+
+set(cli_sources
+    cli.cc
+    cli_param.cc
+    cli_history.cc
+    xml.cc
 )
 
 
@@ -134,6 +137,7 @@ endif()
 
 add_library(pathdb-lib STATIC ${pathdb_sources})
 set_property(TARGET pathdb-lib PROPERTY OUTPUT_NAME "pathdb")
+add_library(cli-lib STATIC ${cli_sources})
 # On Linux some things needs to link with -ldl
 # but on FBSD they should not.
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -145,7 +149,7 @@ target_link_libraries(pathdb-lib ncurses ${libdl} -Wl,-E)
 
 # Driver
 add_executable(pathdb driver.cc)
-target_link_libraries(pathdb pathdb-lib)
+target_link_libraries(pathdb pathdb-lib cli-lib)
 
 # doctool
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/doctext.cc"
@@ -161,7 +165,7 @@ add_executable(doctool
 
 # funclookup
 add_executable(funclookup funclookup.cc)
-target_link_libraries(funclookup pathdb-lib)
+target_link_libraries(funclookup pathdb-lib cli-lib)
 
 # dependencies for stage
 add_dependencies(pathdb-stage pathdb funclookup doctool)
