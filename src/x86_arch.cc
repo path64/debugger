@@ -1392,9 +1392,16 @@ int x86_64Arch::call_size(Process * proc, Address addr) {
     throw Exception ("Unable to determine size of call instruction") ;
 }
 
-//XXX
 RegisterSetInfoList& x86_64Arch::register_properties() const {
-	throw Exception ("register_properties not support!") ;
+	static bool			inited = false;
+	static RegisterSetInfoList	list;
+
+	if (!inited) {
+		list.push_back (X86_64RegisterProperties);
+		list.push_back (X87RegisterProperties);
+		inited = true;
+	}
+	return list;
 }
 RegisterSetProperties *x86_64Arch::main_register_set_properties() {
 	return X86_64RegisterProperties;
@@ -1404,7 +1411,15 @@ RegisterSetProperties *x86_64Arch::fpu_register_set_properties(){
 }
 
 RegisterSetInfoList& i386Arch::register_properties() const {
-	throw Exception ("register_properties not support!") ;
+	static bool			inited = false;
+	static RegisterSetInfoList	list;
+
+	if (!inited) {
+		list.push_back (X86RegisterProperties);
+		list.push_back (X87RegisterProperties);
+		inited = true;
+	}
+	return list;
 }
 RegisterSetProperties *i386Arch::main_register_set_properties() {
 	return X86RegisterProperties;
