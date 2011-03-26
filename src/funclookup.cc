@@ -40,7 +40,7 @@ bool find_function (std::string file, std::string func, int offset, std::string 
     ELF *elf = new ELF (file) ;
     std::istream *s = elf->open() ;
     elf->read_symbol_table (*s, 0) ;
-    SymbolTable *symtab = new SymbolTable (NULL, elf, *s, &aliases, dirlist) ;
+    SymbolTable *symtab = new SymbolTable (NULL, elf, *s, &aliases) ;
     //symtab->list_functions() ;
     return symtab->find_function (func, offset, filename, lineno) ;
 }

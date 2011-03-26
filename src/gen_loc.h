@@ -113,8 +113,8 @@ public:
    void set_funcloc(FunctionLocation* _func) { func = _func; }
    FunctionLocation* get_funcloc() const { return func; }
 
-   void set_dirlist(DirectoryTable* _dt) { dirlist = _dt; }
-   DirectoryTable* get_dirlist() const { return dirlist; } 
+   //void set_dirlist(DirectoryTable* _dt) { dirlist = _dt; }
+   //DirectoryTable* get_dirlist() const { return dirlist; }
 
    void set_offset(int off) { offset = off; }
    int get_offset() const { return offset; }
@@ -141,7 +141,7 @@ public:
               line == ref.line);
   }
 
-   void show_line(PStream &os, bool emacs_mode);
+//    void show_line(PStream &os, bool emacs_mode);
 
 private:
    SymbolTable* stab;

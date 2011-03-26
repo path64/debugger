@@ -87,8 +87,7 @@ public:
 
 class SymbolTable: public DwInfo  {
 public:
-    SymbolTable(Architecture *arch, ELF * elf, std::istream & stream, AliasManager *aliases,
-      DirectoryTable &dirlist, PStream *os = NULL, bool reporterror = false) ;
+    SymbolTable(Architecture *arch, ELF * elf, std::istream & stream, AliasManager *aliases, PStream *os = NULL, bool reporterror = false) ;
     ~SymbolTable() ; 
     Location  find_address (Address addr, bool guess) ;
     LineInfo * get_line_info (Address address) ;
@@ -162,7 +161,7 @@ private:
     typedef std::multimap<std::string, const char*> BaseMap ;
     BaseMap cpp_basenames ;
 public:
-    DirectoryTable &dirlist ;
+    //DirectoryTable &dirlist ;
 
 } ;
 

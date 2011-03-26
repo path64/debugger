@@ -92,6 +92,8 @@ public:
     virtual void execute (std::string root, std::string tail) = 0 ;          // parse the command
     virtual bool is_dangerous (std::string cmd) { return false ; }
     void print_loc (const Location& loc, bool print_address, int fid);
+    void show_line (const Location& loc, bool emacs_mode);
+    Location get_current_location ();
 
 protected:
     CommandInterpreter *cli ;
@@ -194,6 +196,14 @@ private:
     void extract_format (std::string s, int &ch, Format &f) ;
     Format *last_format ;
     Address get_list_address (std::string s) ;
+    int last_listed_line ;
+    std::string last_search_string ;
+    void list (File *file, int sline, int eline, int currentline);
+    void list ();
+    void list_back();
+    void list(std::string filename, int line);
+    void list(std::string filename, int sline, int eline);
+    void list(Address addr, Address endaddr= 0);
 } ;
 
 class QuitCommand : public Command {
@@ -307,7 +317,7 @@ const int CLI_FLAG_EMACS = 0x08 ;
 
 class CommandInterpreter {
 public:
-    CommandInterpreter (PStream &os, DirectoryTable &dirlist, int flags, bool subverbose) ;
+    CommandInterpreter (PStream &os, int flags, bool subverbose) ;
     ProcessController *pcm ;
     PStream &os ;
     void run(Process *proc=NULL, Address endsp = 0) ;
@@ -326,6 +336,7 @@ public:
 
     std::string readline (const char *prompt, bool recordhist) ;
 
+    DirectoryTable dirlist ;
 
     // Routines to set and access program arguments 
     const std::string& get_args() const {
@@ -430,8 +441,6 @@ private:
 
     std::string saved_args;
     std::map<std::string,std::string> saved_env;
-
-    DirectoryTable &dirlist ;
 
     /* user options */
     CliParam options;

@@ -647,7 +647,7 @@ DebuggerCommand::DebuggerCommand(CommandInterpreter *cli, ProcessController *pcm
 const char *DebuggerCommand::cmds[] = {
     "directory", "file", "attach", "detach", "process", "processes", "kill", "handle", "thread",
     "history", "source", "alias", "unalias", "define", "document", "cd", "pwd", "env", "setenv",
-    "echo", "symbol", "exec", "help", "shell", "make", "if", "while", "target", "search", "complete", NULL
+    "echo", "symbol", "exec", "help", "shell", "make", "if", "while", "target",  "complete", NULL
 } ;
 
 void DebuggerCommand::complete (std::string root, std::string tail, int ch, std::vector<std::string> &result) {
@@ -923,8 +923,6 @@ void DebuggerCommand::execute (std::string root, std::string tail) {
                 printf ("Unsupported \"target\" command.  Try \"help target\".\n") ;
             }
         }
-    } else if (root == "search") {
-        pcm->search (tail) ;
     }
 }
 
@@ -1645,11 +1643,12 @@ void StackCommand::execute (std::string root, std::string tail) {
 }
 
 PrintCommand::PrintCommand (CommandInterpreter *cli, ProcessController *pcm): Command (cli, pcm, cmds) {
+    last_listed_line = 0;
     last_format = new Format() ;
 }
 
 const char *PrintCommand::cmds[] = {
-    "print", "printf", "output", "call", "display", "undisplay", "disassemble", "memdump", "list", "x", "ptype", "whatis", NULL
+    "print", "printf", "output", "call", "display", "undisplay", "disassemble", "memdump","search", "list", "x", "ptype", "whatis", NULL
 } ;
 
 void PrintCommand::extract_format (std::string s, int &ch, Format &format) {
@@ -1776,6 +1775,111 @@ void PrintCommand::complete (std::string root, std::string tail, int ch, std::ve
     }
 }
 
+void PrintCommand::list (File *file, int sline, int eline, int currentline) {
+    file->open (cli->dirlist) ;
+    file->show_line (sline, eline, os, !(cli->get_flags() & CLI_FLAG_GDB), currentline) ;
+    last_listed_line = eline ;
+}
+
+void PrintCommand::list() {
+	Location location = get_current_location ();
+
+	if (location.get_file() == NULL) {
+		os.print ("No source file.\n") ;
+		return ;
+	}
+
+	int line = last_listed_line ;
+	if (line == 0)
+		line = location.get_line() ;
+	list (location.get_file(), line, line+cli->get_int_opt(PRM_LIST_LN), location.get_line()) ;
+}
+
+void PrintCommand::list_back() {
+	Location location = get_current_location ();
+
+	if (location.get_file() == NULL) {
+		os.print ("No source file.\n") ;
+		return ;
+	}
+	int line = last_listed_line;
+	if (last_listed_line == 0) {
+		line = location.get_line();
+	}
+	else {
+		line -= 2 * cli->get_int_opt(PRM_LIST_LN);
+		if (line < 1) {
+			line = 1 ;
+        	}
+	}
+	list (location.get_file(), line, line + cli->get_int_opt(PRM_LIST_LN), location.get_line()) ;
+}
+
+void PrintCommand::list(std::string filename, int line) {
+	int listsize = cli->get_int_opt(PRM_LIST_LN);
+	line = line - listsize / 2 ;
+	if (line < 1) {
+		line = 1 ;
+	}
+	list (filename, line, line+listsize) ;
+}
+
+void PrintCommand::list(std::string filename, int sline, int eline) {
+	Location	location = get_current_location ();
+	File		*file = NULL;
+	int		currentline = 0 ;
+
+	if (filename == "") {
+		file = location.get_file();
+		if (file == NULL) {
+			os.print ("No source file.\n") ;
+			return ;
+		}
+		currentline = location.get_line();
+	}
+	else {
+		file = pcm->find_file (filename);
+		if (file == location.get_file())
+			currentline = location.get_line();
+	}
+
+	list (file, sline, eline, currentline) ;
+}
+
+void PrintCommand::list(Address addr, Address endaddr) {
+	Location start = pcm->lookup_address (addr);
+	if (start.get_file() == NULL) {
+		os.print ("No source file at address 0x%llx.\n", addr) ;
+		return ;
+	}
+	int currentline = get_current_location().get_line();
+
+	int delta = 5 ;
+	if (endaddr == 0) {
+		if (delta > start.get_line()) {
+		delta = 0 ;
+		}
+		list (start.get_file(), start.get_line()-delta, start.get_line()+cli->get_int_opt(PRM_LIST_LN) - delta, currentline) ;
+	}
+	else {
+		Location end = pcm->lookup_address (endaddr);
+
+		if (end.get_file() == NULL) {
+			os.print ("No source file at address 0x%llx.\n", endaddr) ;
+			return;
+		}
+		if (start.get_file() != end.get_file()) {
+			os.print ("Can't list lines from different files.\n") ;
+			return;
+		}
+		if (start.get_line() > end.get_line()) {
+			int tmp = start.get_line() ;
+			start.set_line(end.get_line());
+			end.set_line(tmp);
+		}
+		list (start.get_file(), start.get_line(), end.get_line(), currentline) ;
+	}
+}
 
 void PrintCommand::execute (std::string root, std::string tail) {
     Format fmt ;
@@ -1865,15 +1969,15 @@ void PrintCommand::execute (std::string root, std::string tail) {
         pcm->dump (addr, size) ;
     } else if (root == "list") {
         if (tail == "-") {
-            pcm->list_back() ;
+            list_back() ;
         } else if (tail == "") {
-            pcm->list() ;
+            list() ;
         } else {
             int end = 0 ;
             if (tail[0] == '*') {
                 end = 1 ;
                 Address addr = get_number (pcm, tail, 0, end) ;
-                pcm->list (addr) ;
+                list (addr);
             } else {
                 std::string sloc = tail ;
                 std::string eloc = "" ;
@@ -1891,9 +1995,9 @@ void PrintCommand::execute (std::string root, std::string tail) {
                         if (eloc != "") {        
                             end = 0 ;
                             int elineno = get_number (pcm, eloc, 0, end) ;
-                            pcm->list (filename, slineno, elineno) ;
+                            list (filename, slineno, elineno) ;
                         } else {
-                            pcm->list (filename, slineno) ;
+                            list (filename, slineno) ;
                         }
                     } else {                    // function name
                         std::string func = extract_word (sloc, end) ;
@@ -1901,7 +2005,7 @@ void PrintCommand::execute (std::string root, std::string tail) {
                         if (addr == 0) {
                             printf ("No function %s in file %s\n", func.c_str(), filename.c_str()) ;
                         } else {
-                            pcm->list (addr) ;
+                            list (addr) ;
                         }
                     }
                 } else {                        // no filename
@@ -1911,9 +2015,9 @@ void PrintCommand::execute (std::string root, std::string tail) {
                         if (eloc != "") {        
                             end = 0 ;
                             int elineno = get_number (pcm, eloc, 0, end) ;
-                            pcm->list ("", slineno, elineno) ;
+                            list ("", slineno, elineno) ;
                         } else {
-                            pcm->list ("", slineno) ;
+                            list ("", slineno) ;
                         }
                     } else {                    // function name
                         std::string func = extract_word (sloc, end) ;
@@ -1922,14 +2026,55 @@ void PrintCommand::execute (std::string root, std::string tail) {
                         if (addr == 0) {
                             printf ("Function \"%s\" not defined\n", func.c_str()) ;
                         } else {
-                            pcm->list (addr) ;
+                            list (addr) ;
                         }
                     }
                 }
 
             }
         }
+    }
+    else if (root == "search") {
+	Location	location = get_current_location ();
 
+	File *file = location.get_file();
+	if (file == NULL) {
+		os.print ("No source file.\n") ;
+		return ;
+	}
+	int line = last_listed_line ;
+	if (line == 0) {
+		line = location.get_line() ;
+	}
+	line++ ;                    // next line
+
+	std::string linetext ;
+	if (tail == "") {
+		tail = last_search_string ;
+	}
+	if (tail == "") {
+		throw Exception ("No previous regular expression.") ;
+	}
+	last_search_string = tail ;
+	file->open (cli->dirlist) ;           // in case we changed the directory search path
+
+	if (file->search (tail, line, linetext)) {
+		os.print ("%d  %s\n", line, linetext.c_str()) ;
+		DebuggerVar *var = cli->find_debugger_variable ("$_") ;
+
+		if (var == NULL) {
+			Value lineval(line) ;
+
+			cli->add_debugger_variable ("$_", lineval, pcm->new_int_type()) ;
+		}
+		else {
+			var->value = line ;
+		}
+		last_listed_line = line ;
+	}
+	else {
+		throw Exception ("Expression not found.") ;
+	}
     } else if (root == "x") {
         fmt = *last_format ;
         int ch = 0 ;
@@ -2395,12 +2540,12 @@ void globl_sighandler(int sig) {
 }
 
 CommandInterpreter::CommandInterpreter (PStream &os,
-   DirectoryTable &dirlist, int flags, bool subverbose)
+    int flags, bool subverbose)
   : pcm(pcm), os(os), program_running(false),
-    instream(NULL), dirlist(dirlist), options(os), history(os),
+    instream(NULL), options(os), history(os),
     flags(flags), debugger_var_num(0), last_breakpoint_num(-1) {
 
-    pcm = new ProcessController(this, dirlist, subverbose) ;
+    pcm = new ProcessController(this, subverbose) ;
     load_env();
     rerun_mark = -1;
 
@@ -3962,7 +4107,8 @@ std::string CommandInterpreter::readline (const char *prompt, bool recordhist) {
    return str;
 }
 
-void Command::print_loc(const Location& loc, bool print_address, int fid)
+void
+Command::print_loc(const Location& loc, bool print_address, int fid)
 {
 	bool first_line = loc.get_funcloc() == NULL ? false : loc.get_funcloc()->at_first_line (loc.get_addr()) ;
 	std::string funcname = loc.get_symname();
@@ -4006,3 +4152,27 @@ void Command::print_loc(const Location& loc, bool print_address, int fid)
 		}
 	}
 }
+
+void
+Command::show_line (const Location& loc, bool emacs_mode)
+{
+	if (loc.is_known()) {
+		if (emacs_mode) {
+			os.print("\032\032%s:%d:1:beg:0x%x\n", loc.get_filename().c_str(),loc.get_line(),loc.get_addr());
+		}
+		else {
+			loc.get_file()->open(cli->dirlist);
+			loc.get_file()->show_line (loc.get_line(), os, false, 0);
+		}
+	}
+	else {
+		os.print ("at address 0x%llx\n", loc.get_addr()) ;
+	}
+}
+
+Location
+Command::get_current_location ()
+{
+	return pcm->lookup_address (pcm->get_frame_pc(pcm->get_current_process(), pcm->get_current_thread(), pcm->get_frame()));
+}
+

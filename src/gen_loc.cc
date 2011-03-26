@@ -46,17 +46,17 @@ void FunctionLocation::print() {
 }
 
 
-void Location::show_line(PStream &os, bool emacs_mode) {
-    if (file == NULL) return;
-
-    if (emacs_mode) {
-        os.print("\032\032%s:%d:1:beg:0x%x\n",
-         get_filename().c_str(),line,address);
-    } else {
-        file->open(*dirlist) ;
-        file->show_line (line, os, false, 0) ;
-    }
-}
+// void Location::show_line(PStream &os, bool emacs_mode) {
+//     if (file == NULL) return;
+//
+//     if (emacs_mode) {
+//         os.print("\032\032%s:%d:1:beg:0x%x\n",
+//          get_filename().c_str(),line,address);
+//     } else {
+//         file->open(*dirlist) ;
+//         file->show_line (line, os, false, 0) ;
+//     }
+// }
 
 DIE* Location::get_subp_die() {
     if (func != NULL && func->symbol != NULL) {

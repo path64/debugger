@@ -170,9 +170,9 @@ int main (int argc, char **argv) {
     try {
         PStream output (1) ;          // output stream attached to standard output
 
-        DirectoryTable dirlist ;
+//         DirectoryTable dirlist ;
         //ProcessController pcm (output, &aliases, dirlist, subverbose) ;
-        CommandInterpreter cli (output, dirlist, cli_flags, subverbose) ;
+        CommandInterpreter cli (output, cli_flags, subverbose) ;
 
         if ( run_args != "" ) {
            cli.set_args (run_args);

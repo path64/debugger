@@ -55,7 +55,7 @@ enum AttachType {
 
 class ProcessController {
 public:
-    ProcessController(CommandInterpreter *cli, DirectoryTable &dirlist, bool subverbose) ;
+    ProcessController(CommandInterpreter *cli, bool subverbose) ;
     ~ProcessController() ;
 
     void attach (std::string filename, bool replace) ;
@@ -71,6 +71,9 @@ public:
     int get_frame();
     int get_frame_size();
     void print_function_paras (int fid, DIE *die);
+
+    File *find_file(std::string name);
+    DIE *new_int_type ();
 
     bool in_sigtramp (std::string name);
 
@@ -152,6 +155,7 @@ public:
 
     int get_main_language() ;
 
+#if 0
     // listing
     void list () ;              // list from last line
     void list (std::string filename, int line) ;      // list from this line
@@ -160,6 +164,7 @@ public:
     void list_back() ;          // the previous lines
 
     void search (std::string text) ;
+#endif
 
     Architecture *get_arch() { return arch ; }
     // breakpoint conditions etc

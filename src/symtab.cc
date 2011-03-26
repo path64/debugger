@@ -151,12 +151,12 @@ static std::string get_cpp_basename (const char *fullname, int &nlevels) {
     return std::string (s, p-s+1) ;
 }
 
-SymbolTable::SymbolTable (Architecture *arch, ELF * elf, std::istream & stream, AliasManager *aliases, DirectoryTable &dirlist, PStream *os, bool reporterror)
+SymbolTable::SymbolTable (Architecture *arch, ELF * elf, std::istream & stream, AliasManager *aliases, PStream *os, bool reporterror)
     : DwInfo(elf, stream),
       arch(arch),
       debugger_cu(NULL),
-      aliases(aliases),
-      dirlist(dirlist)
+      aliases(aliases)
+      //dirlist(dirlist)
 {
     read(os, reporterror) ;
 }
@@ -360,7 +360,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
 
         Location loc;
         loc.set_addr(addr);
-        loc.set_dirlist(&dirlist);
+        //loc.set_dirlist(&dirlist);
         loc.set_symname(symname);
         loc.set_offset(offset);
         return loc;
@@ -382,7 +382,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
                 loc.set_symtab(this);
                 loc.set_addr(addr);
                 loc.set_file(files[info->file]);
-                loc.set_dirlist(&dirlist);
+                //loc.set_dirlist(&dirlist);
                 loc.set_line(info->lineno);
                 loc.set_symname(symname);
                 loc.set_offset(offset);
@@ -403,7 +403,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
                 loc.set_addr(addr);
                 loc.set_funcloc(func);
                 loc.set_file(files[info->file]);
-                loc.set_dirlist(&dirlist);
+                //loc.set_dirlist(&dirlist);
                 loc.set_line(info->lineno);
                 loc.set_symname(symname);
                 loc.set_offset(offset);
@@ -421,7 +421,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
             loc.set_funcloc(func);
             loc.set_file(files[info->file]);
             loc.set_line(info->lineno);
-            loc.set_dirlist(&dirlist);
+            //loc.set_dirlist(&dirlist);
             loc.set_symname(funcname);
             loc.set_offset(offset);
             return loc;
@@ -447,7 +447,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
         loc.set_lineinfo(info);
         loc.set_funcloc(func);
         loc.set_addr(addr);
-        loc.set_dirlist(&dirlist);
+        //loc.set_dirlist(&dirlist);
         loc.set_symtab(this);
         loc.set_file(files[info->file]);
         loc.set_symname(find_alias(symname));
@@ -466,7 +466,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
         Location loc;
         loc.set_lineinfo(info);
         loc.set_addr(addr);
-        loc.set_dirlist(&dirlist);
+        //loc.set_dirlist(&dirlist);
         loc.set_symtab(this);
         loc.set_funcloc(func);
         loc.set_file(files[info->file]);
@@ -485,7 +485,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
     loc.set_symtab(this);
     loc.set_addr(addr);
     loc.set_file(files[info->file]);
-    loc.set_dirlist(&dirlist);
+    //loc.set_dirlist(&dirlist);
     loc.set_line(guess ? info->lineno : -1);
     loc.set_symname(funcname);
     loc.set_funcloc(func);

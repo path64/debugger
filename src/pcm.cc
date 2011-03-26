@@ -145,7 +145,7 @@ static std::string find_program (std::string program) {
 //
 // }
 
-ProcessController::ProcessController (CommandInterpreter *cli, DirectoryTable &dirlist, bool subverbose)
+ProcessController::ProcessController (CommandInterpreter *cli, bool subverbose)
     : arch(NULL),
       cli(cli),
       os (cli->os),
@@ -822,6 +822,8 @@ std::string ProcessController::realname (std::string mangled_name) {
     return rn ;
 }
 
+#if 0
+
 void ProcessController::list () {              // list from last line
     current_process->list() ;
 }
@@ -841,6 +843,8 @@ void ProcessController::list (std::string filename, int sline, int eline) {     
 void ProcessController::list (Address addr, Address endaddr) {              // list this address
     current_process->list(addr, endaddr) ;
 }
+
+#endif
 
 void ProcessController::return_from_func(Address value) {              // return from function with value
     current_process->return_from_func(value) ;
@@ -898,9 +902,11 @@ void ProcessController::complete_function (std::string name, std::vector<std::st
     current_process->complete_function(name, result) ;
 }
 
+#if 0
 void ProcessController::search(std::string text) {
     current_process->search (text) ;
 }
+#endif
 
 bool ProcessController::test_address (Address addr) {
     return current_process->test_address(addr) ;
@@ -944,3 +950,16 @@ ProcessController::in_sigtramp (std::string name)
 {
 	return get_arch()->in_sigtramp (current_process, name);
 }
+
+File *
+ProcessController::find_file(std::string name)
+{
+	return current_process->find_file(name) ;
+}
+
+DIE *
+ProcessController::new_int_type()
+{
+	return current_process->new_int_type() ;
+}
+

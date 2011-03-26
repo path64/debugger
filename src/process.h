@@ -289,8 +289,11 @@ public :
     ~Process() ; 
 
     Address get_frame_pc (int tid, int fid);
-    int get_frame () {return current_frame;}
+    int get_frame () {build_frame_cache(); return current_frame;}
     int get_frame_size ();
+
+    File *find_file(std::string name);
+    DIE *new_int_type ();
 
     // attachment methods.  These allow attachment to a core file or a live process
     void attach_core() ;                        // attach to a core file
@@ -462,6 +465,7 @@ public :
     void validate_thread (int n) ;
     int get_current_thread() ;
 
+#if 0
     // source listing
     void list () ;              // list from last line
     void list_back () ;          // list previous lines
@@ -469,6 +473,7 @@ public :
     void list (std::string filename, int sline, int eline) ;      // list from this line to that line
     void list (Address addr, Address endaddr=0) ;              // list this address
     void search (std::string regex) ;           // search for a string
+#endif
 
     // 'display' command handling
     int set_display (std::string expr, int start, Format &fmt) ;

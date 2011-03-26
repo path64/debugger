@@ -278,12 +278,12 @@ void SoftwareBreakpoint::detach() {
 }
 
 void SoftwareBreakpoint::print_location(PStream &os) {
-    if ( location.is_known() ) {
-        proc->print_loc(location, proc->get_current_frame(), os, true);
-        location.show_line(os, proc->get_cli()->isemacs());
-    } else {
-        proc->print_loc(location, proc->get_current_frame(), os, true) ;
-    }
+//     if ( location.is_known() ) {
+//         proc->print_loc(location, proc->get_current_frame(), os, true);
+//         location.show_line(os, proc->get_cli()->isemacs());
+//     } else {
+//         proc->print_loc(location, proc->get_current_frame(), os, true) ;
+//     }
 }
 
 void SoftwareBreakpoint::print_short_location(PStream &os) {
@@ -814,14 +814,14 @@ Watchpoint::~Watchpoint() {
 }
 
 void Watchpoint::print_location(PStream &os) {
-    Address pc = proc->get_reg ("pc") ;
-    Location loc = proc->lookup_address (pc) ;
-    if (loc.get_file() != NULL) {
-        proc->print_loc(loc, proc->get_current_frame(), os, true) ;
-        loc.show_line(os, proc->get_cli()->isemacs()) ;
-    } else {
-        os.print ("at address 0x%llx\n", pc) ;
-    }
+//     Address pc = proc->get_reg ("pc") ;
+//     Location loc = proc->lookup_address (pc) ;
+//     if (loc.get_file() != NULL) {
+//         proc->print_loc(loc, proc->get_current_frame(), os, true) ;
+//         loc.show_line(os, proc->get_cli()->isemacs()) ;
+//     } else {
+//         os.print ("at address 0x%llx\n", pc) ;
+//     }
 }
 
 

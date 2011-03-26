@@ -863,8 +863,8 @@ void Process::attach_core() {
     try {
         // show the position of the signal
         Frame *frame =  frame_cache[current_frame] ;
-        frame->print (os, false, false); 
-        frame->get_loc().show_line(os, get_cli()->isemacs()) ;
+         frame->print (os, false, false);
+//         frame->get_loc().show_line(os, get_cli()->isemacs()) ;
         set_current_line (frame->get_loc().get_line()) ;
     } catch (Exception e) {
         e.report (std::cout) ;
@@ -890,7 +890,7 @@ void Process::attach_process(int pid) {
     // show the position of the signal
     Frame *frame =  frame_cache[current_frame] ;
     frame->print (os, false, false); 
-    frame->get_loc().show_line(os, get_cli()->isemacs()) ;
+//     frame->get_loc().show_line(os, get_cli()->isemacs()) ;
     set_current_line (frame->get_loc().get_line()) ;
 }
 
@@ -913,7 +913,7 @@ void Process::attach_child (int childpid, State parent_state) {
         // show the position of the signal
         Frame *frame =  frame_cache[current_frame] ;
         frame->print (os, false, false); 
-        frame->get_loc().show_line(os, get_cli()->isemacs()) ;
+//         frame->get_loc().show_line(os, get_cli()->isemacs()) ;
         set_current_line (frame->get_loc().get_line()) ;
     } else {
         docont() ;              // continue running the process
@@ -1214,7 +1214,7 @@ void Process::open_object_file(std::string name, Address baseaddress, bool repor
     //elf->list_symbols() ;
     SymbolTable * symtab = NULL ;
     try {
-        symtab = new SymbolTable (arch, elf, *elfstream, pcm->get_aliases(), pcm->get_dirlist(), &os, reporterror) ;
+        symtab = new SymbolTable (arch, elf, *elfstream, pcm->get_aliases(), &os, reporterror) ;
     } catch (Exception e) {
         os.print ("no debugging information for file %s\n", name.c_str()) ;
     } catch (const char *s) {
@@ -3058,7 +3058,7 @@ void Process::set_frame(int frameno) {
     // put pc back so that the address prints correctly
     loc.set_addr(pc);
     print_loc(loc, frame_cache[current_frame], os) ;
-    loc.show_line(os, get_cli()->isemacs()) ;
+//     loc.show_line(os, get_cli()->isemacs()) ;
     set_current_line (loc.get_line()) ;
 }
 
@@ -3067,7 +3067,7 @@ void Process::show_frame() {
     Address pc = get_reg ("pc") ;
     Location loc = lookup_address (pc) ;
     print_loc(loc, frame_cache[current_frame], os) ;
-    loc.show_line(os, get_cli()->isemacs()) ;
+//     loc.show_line(os, get_cli()->isemacs()) ;
 }
 
 
@@ -3409,7 +3409,7 @@ void Process::switch_thread_1(int n) {
     Address pc = get_reg ("pc") ;
     Location loc = lookup_address (pc) ;
     print_loc(loc, frame_cache[current_frame], os) ;
-    loc.show_line(os, get_cli()->isemacs()) ;
+//     loc.show_line(os, get_cli()->isemacs()) ;
     set_current_line (loc.get_line()) ;
 }
 
@@ -3719,7 +3719,7 @@ void Process::step(bool by_line, bool over, int n) {
         if (after_fp != before_fp && frame_cache_valid) {  // stepped into or out of a function?
            print_loc(loc, frame_cache[current_frame], os) ;
         }
-        loc.show_line(os, get_cli()->isemacs()) ;
+//         loc.show_line(os, get_cli()->isemacs()) ;
         set_current_line (loc.get_line()) ;
     }
     if (!by_line) {
@@ -3757,7 +3757,7 @@ void Process::until() {
         if (after_fp != before_fp && frame_cache_valid) {                     // stepped into or out of a function?
            print_loc(loc, frame_cache[current_frame], os) ;
         }
-        loc.show_line(os, get_cli()->isemacs()) ;
+//         loc.show_line(os, get_cli()->isemacs()) ;
         set_current_line (loc.get_line()) ;
     }
     execute_displays() ;
@@ -3783,7 +3783,7 @@ void Process::until(Address addr) {
     if (frame_cache_valid) {
        print_loc(loc, frame_cache[current_frame], os) ;
     }
-    loc.show_line(os, get_cli()->isemacs()) ;
+//     loc.show_line(os, get_cli()->isemacs()) ;
     set_current_line (loc.get_line()) ;
 
     execute_displays() ;
@@ -4035,7 +4035,7 @@ bool Process::handle_signal(bool& stop_hook_executed) {
          Address pc = get_reg ("pc") ;
          Location loc = lookup_address (pc) ;
          print_loc(loc, frame_cache[current_frame], os) ;
-         loc.show_line(os, get_cli()->isemacs()) ;
+//          loc.show_line(os, get_cli()->isemacs()) ;
          set_current_line (loc.get_line()) ;
       }
       state = READY ;
@@ -4830,6 +4830,7 @@ DebuggerVar *Process::add_debugger_variable (std::string n, Value &val, DIE *typ
     return pcm->get_cli()->add_debugger_variable (n,  val, type) ;
 }
 
+#if 0
 void Process::list (File *file, int sline, int eline, int currentline) {
     file->open (pcm->get_dirlist()) ;           // in case we changed the directory search path
     file->show_line (sline, eline, os, !(get_cli()->get_flags() & CLI_FLAG_GDB), currentline) ;
@@ -5038,6 +5039,8 @@ void Process::search (std::string text) {
     
 }
 
+#endif
+
 void Process::return_from_func(Address value) {              // return from function with value
     build_frame_cache() ;
     if (frame_cache.size() > 1) {
@@ -5063,7 +5066,7 @@ void Process::return_from_func(Address value) {              // return from func
         thr->set_reg (arch->get_return_reg(), value) ;              // assign return value
         frame->set_n (0) ;              // just to match GDB output
         frame->print(os, false, false) ;
-        frame->get_loc().show_line (os, get_cli()->isemacs()) ;
+//         frame->get_loc().show_line (os, get_cli()->isemacs()) ;
         set_current_line (frame->get_loc().get_line()) ;
     }
     invalidate_frame_cache() ;
@@ -5120,7 +5123,7 @@ void Process::finish() {                                     // finish execution
         Address pc = get_reg ("pc") ;
         Location loc = lookup_address (pc) ;
         print_loc(loc, frame_cache[current_frame], os) ;
-        loc.show_line(os, get_cli()->isemacs()) ;
+//         loc.show_line(os, get_cli()->isemacs()) ;
         set_current_line (loc.get_line()) ;
     }
 
@@ -5741,5 +5744,29 @@ int Process::get_frame_size ()
 	build_frame_cache() ;
 
 	return frame_cache.size();
+}
+
+File *
+Process::find_file(std::string name)
+{
+	File	*file = NULL;
+
+	for (uint i = 0 ; i < objectfiles.size() ; i++) {
+		if ((file = objectfiles[i]->symtab->find_file (name)) != NULL)
+			break;
+	}
+	if (file == NULL)
+		 throw Exception("Can't find a file named %s\n", name.c_str()) ;
+
+	return file;
+}
+
+DIE *
+Process::new_int_type()
+{
+	DIE *type = objectfiles[0]->symtab->new_int() ;
+	objectfiles[0]->symtab->keep_temp_die (type) ;
+
+	return type;
 }
 
