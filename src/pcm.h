@@ -74,7 +74,7 @@ public:
     void remove_process (Process *proc) ;
     void select_process (int i) ;
     void list_processes () ;
-    int get_current_process() { return current_process ; }
+    int get_current_process() ;
 
     void set_signal_actions (std::string name, std::vector<std::string> &actions) ;
 
@@ -173,7 +173,7 @@ private:
     std::vector<Process *> processes ;          // all processes
 
     bool file_present ;
-    int current_process ;
+    Process *current_process ;
     CommandInterpreter *cli ;
     AliasManager aliases ;
     DirectoryTable &dirlist ;

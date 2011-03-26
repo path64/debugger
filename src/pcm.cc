@@ -151,11 +151,12 @@ ProcessController::ProcessController (CommandInterpreter *cli, DirectoryTable &d
       os (cli->os),
       target(NULL),
       file_present(false),
-      current_process(-1),
+      current_process(NULL),
       dirlist(dirlist), subverbose(subverbose) {
     // create dummy process
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
-    current_process = add_process (proc) ;
+    current_process = proc ;
+    add_process (proc) ;
 }
 
 void ProcessController::get_license() {
@@ -282,8 +283,10 @@ void ProcessController::attach (std::string filename, bool replace) {
          if (ok) {
             // create dummy process   XXX: 'replace' parameter?
             Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
-            delete processes[current_process] ;
-            current_process = add_process (proc) ;
+            remove_process (current_process);
+            delete current_process ;
+            add_process (proc) ;
+            current_process = proc;
             program = "" ;
             printf ("No symbol file now.\n") ;
             return ;
@@ -299,14 +302,15 @@ void ProcessController::attach (std::string filename, bool replace) {
     target = Target::new_live_target (arch) ;
 
     if (replace) {
-        Process *oldp = processes[current_process] ;
+        Process *oldp = current_process ;
         remove_process (oldp) ;
         delete oldp ;
     }
     
 
     Process *proc = new Process (this, program, arch, target, os, ATTACH_NONE) ;
-    current_process = add_process (proc) ;
+    add_process (proc) ;
+    current_process = proc;
     file_present = true ;
     get_license() ;
 }
@@ -351,12 +355,13 @@ void ProcessController::attach (int pid, bool replace) {
     target = Target::new_live_target (arch) ;
 
     if (replace) {
-        Process *oldp = processes[current_process] ;
+        Process *oldp = current_process ;
         remove_process (oldp) ;
         delete oldp ;
     }
     Process *proc = new Process (this, program, arch, target, os, ATTACH_PROCESS) ;
-    current_process = add_process (proc) ;
+    add_process (proc) ;
+    current_process = proc;
 
     proc->attach_process (pid) ;
     file_present = true ;
@@ -374,12 +379,13 @@ void ProcessController::attach_core (std::string corefile, bool replace) {
     target = new CoreTarget (arch, corefile) ;
 
     if (replace) {
-        Process *oldp = processes[current_process] ;
+        Process *oldp = current_process ;
         remove_process (oldp) ;
         delete oldp ;
     }
     Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
-    current_process = add_process (proc) ;
+    add_process (proc) ;
+    current_process = proc;
 
     proc->attach_core() ;
     file_present = true ;
@@ -411,12 +417,13 @@ void ProcessController::attach_core (std::string filename, std::string corefile,
     target = new CoreTarget (arch, corefile) ;
 
     if (replace) {
-        Process *oldp = processes[current_process] ;
+        Process *oldp = current_process ;
         remove_process (oldp) ;
         delete oldp ;
     } 
     Process *proc = new Process (this, program, arch, target, os, ATTACH_CORE) ;
-    current_process = add_process (proc) ;
+    add_process (proc) ;
+    current_process = proc;
 
     proc->attach_core() ;
     file_present = true ;
@@ -428,8 +435,10 @@ void ProcessController::detach() {
         printf ("Detaching from program: %s\n", program.c_str()) ;
         // create dummy process
         Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
-        delete processes[current_process] ;
-        current_process = add_process (proc) ;
+        remove_process (current_process);
+        delete current_process ;
+        add_process (proc) ;
+        current_process = proc;
     }
 }
 
@@ -438,13 +447,15 @@ void ProcessController::detach_all() {
     std::vector<Process*>::iterator i ; 
     for (i = processes.begin(); i != processes.end(); i++) {
         if ((*i)->is_running()) {
+           remove_process (*i);
            delete *i ;
         }
     }
 
     // setup nil process as current
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
-    current_process = add_process(proc); 
+    add_process(proc);
+    current_process = proc;
 }
 
 ProcessController::~ProcessController() {
@@ -477,7 +488,7 @@ void ProcessController::select_process (int i) {
     if (i < 0 || i >= (int) processes.size()) {
         throw Exception ("No such process") ;
     }
-    current_process = i ;
+    current_process = processes[i];
 }
 
 void ProcessController::list_processes () {
@@ -485,6 +496,15 @@ void ProcessController::list_processes () {
     for (uint i = 0 ; i < processes.size() ; i++) {
         os.print ("%-8d %-8d %-10s %s\n", i, processes[i]->get_pid(), processes[i]->get_state(), processes[i]->get_program().c_str()) ;
     }
+}
+
+int ProcessController::get_current_process() {
+    for (uint i = 0 ; i < processes.size() ; i++) {
+        if (processes[i] == current_process) {
+            return i ;
+        }
+    }
+    throw Exception ("Get id of current process error") ;
 }
 
                                                                                                                           
@@ -499,7 +519,7 @@ bool ProcessController::is_running() {
 }
 
 bool ProcessController::run(const std::string& args, EnvMap& env) {
-    Process *proc = processes[current_process] ;
+    Process *proc = current_process ;
     
     AttachType at = proc->get_attach_type() ;
     switch (at) {
@@ -510,14 +530,14 @@ bool ProcessController::run(const std::string& args, EnvMap& env) {
                                     "Start it from the beginning") ;
             if (yes) {
                 Process *newproc = new Process (*proc) ;   // copy the process data
-                processes[current_process] = newproc ;           // overwrite the old process
+                current_process = newproc ;           // overwrite the old process
                 delete proc ;                                    // delete the old process
             } else {
                 os.print ("Program not restarted.\n") ;
                 return false ;
             }
         } else {
-            processes[current_process]->reset() ;
+            current_process->reset() ;
         }
         break ;
 
@@ -528,24 +548,24 @@ bool ProcessController::run(const std::string& args, EnvMap& env) {
         target = Target::new_live_target (arch) ;
         Process *newproc = new Process (*proc) ;   // copy the process data
         newproc->set_target (target) ;
-        processes[current_process] = newproc ;           // overwrite the old process
+        current_process = newproc ;           // overwrite the old process
         delete proc ;                                    // delete the old process
         break ;
     }
 
-    return processes[current_process]->run (args, env) ;
+    return current_process->run (args, env) ;
 }
 
 bool ProcessController::cont(int sig) {
-    return processes[current_process]->cont(sig) ;
+    return current_process->cont(sig) ;
 }
 
 void ProcessController::single_step() {
-    processes[current_process]->single_step() ;
+    current_process->single_step() ;
 }
 
 void ProcessController::kill() {
-    Process *proc = processes[current_process] ;
+    Process *proc = current_process ;
     
     AttachType at = proc->get_attach_type() ;
     switch (at) {
@@ -555,7 +575,7 @@ void ProcessController::kill() {
             bool yes = cli->confirm(NULL, "Kill the program being debugged") ;
             if (yes) {
                 Process *newproc = new Process (*proc) ;   // copy the process data
-                processes[current_process] = newproc ;           // overwrite the old process
+                current_process = newproc ;           // overwrite the old process
                 delete proc ;                                    // delete the old process
             } else {
                 os.print ("Program not killed.\n") ;
@@ -573,126 +593,126 @@ void ProcessController::kill() {
         target = Target::new_live_target (arch) ;
         Process *newproc = new Process (*proc) ;   // copy the process data
         newproc->set_target (target) ;
-        processes[current_process] = newproc ;           // overwrite the old process
+        current_process = newproc ;           // overwrite the old process
         delete proc ;                                    // delete the old process
         break ;
     }
 }
 
 void ProcessController::wait() {
-    processes[current_process]->wait() ;
+    current_process->wait() ;
 }
 
 void ProcessController::interrupt() {
-    processes[current_process]->interrupt() ;
+    current_process->interrupt() ;
 }
 
 Breakpoint * ProcessController::new_breakpoint(BreakpointType type, std::string text, Address addr, bool pending) {
-    return processes[current_process]->new_breakpoint (type, text, addr, pending) ;
+    return current_process->new_breakpoint (type, text, addr, pending) ;
 }
 
 Watchpoint *ProcessController::new_watchpoint (BreakpointType type, std::string expr, Node *node, Address addr, int size, bool pending) {
-    return processes[current_process]->new_watchpoint (type, expr, node, addr, size, pending) ;
+    return current_process->new_watchpoint (type, expr, node, addr, size, pending) ;
 }
 
 Catchpoint *ProcessController::new_catchpoint (CatchpointType type, std::string data) {
-    return processes[current_process]->new_catchpoint (type, data) ;
+    return current_process->new_catchpoint (type, data) ;
 }
 
 Address ProcessController::lookup_symbol(std::string name, std::string objectfile) {
-    return processes[current_process]->lookup_symbol (name, objectfile) ;
+    return current_process->lookup_symbol (name, objectfile) ;
 }
 
 Location ProcessController::lookup_address (Address addr) {
-    return processes[current_process]->lookup_address (addr) ;
+    return current_process->lookup_address (addr) ;
 }
 
 void ProcessController::push_location () {
-    return processes[current_process]->push_location() ;
+    return current_process->push_location() ;
 }
 
 Address ProcessController::lookup_function(std::string name, std::string filename, bool skip_preamble) {
-    return processes[current_process]->lookup_function (name, filename, skip_preamble) ;
+    return current_process->lookup_function (name, filename, skip_preamble) ;
 }
 
 void ProcessController::list_breakpoints() {
-    processes[current_process]->list_breakpoints(false) ;
+    current_process->list_breakpoints(false) ;
 }
 
 void ProcessController::list_symbols() {
-    processes[current_process]->list_symbols() ;
+    current_process->list_symbols() ;
 }
 
 void ProcessController::list_threads() {
-    processes[current_process]->list_threads() ;
+    current_process->list_threads() ;
 }
 
 void ProcessController::switch_thread(int n) {
-    processes[current_process]->switch_thread(n) ;
+    current_process->switch_thread(n) ;
 }
 
 void ProcessController::dump(Address addr, int size) {
-    processes[current_process]->dump(addr, size) ;
+    current_process->dump(addr, size) ;
 }
 
 void ProcessController::stacktrace(int n) {
-    processes[current_process]->stacktrace(n) ;
+    current_process->stacktrace(n) ;
 }
 
 void ProcessController::up(int n) {
-    processes[current_process]->up(n) ;
+    current_process->up(n) ;
 }
 
 void ProcessController::down(int n) {
-    processes[current_process]->down(n) ;
+    current_process->down(n) ;
 }
 
 void ProcessController::set_frame(int n) {
-    processes[current_process]->set_frame(n) ;
+    current_process->set_frame(n) ;
 }
 
 void ProcessController::print_regs() {
-    processes[current_process]->print_regs(true) ;
+    current_process->print_regs(true) ;
 }
 
 void ProcessController::show_frame() {
-    processes[current_process]->show_frame() ;
+    current_process->show_frame() ;
 }
 
 void ProcessController::print_expression(std::string expr, Format &fmt, bool terse, bool record) {
-    processes[current_process]->print_expression(expr, fmt, terse, record) ;
+    current_process->print_expression(expr, fmt, terse, record) ;
 }
 
 void ProcessController::print_type(std::string expr, bool show_contents) {
-    processes[current_process]->print_type(expr, show_contents) ;
+    current_process->print_type(expr, show_contents) ;
 }
 
 Address ProcessController::evaluate_expression(std::string expr, int &end, bool needint) {
-    return processes[current_process]->evaluate_expression (expr, end, needint) ;
+    return current_process->evaluate_expression (expr, end, needint) ;
 }
 
 Value ProcessController::evaluate_expression(Node *expr, bool addronly) {
-    return processes[current_process]->evaluate_expression (expr, addronly) ;
+    return current_process->evaluate_expression (expr, addronly) ;
 }
 
 Node *ProcessController::compile_expression(std::string expr, int &end, bool single) {
-    return processes[current_process]->compile_expression (expr, end, single) ;
+    return current_process->compile_expression (expr, end, single) ;
 }
 
 void ProcessController::step(bool by_line, bool over, int n) {
-    processes[current_process]->step (by_line, over, n) ;
+    current_process->step (by_line, over, n) ;
 }
 
 void ProcessController::until() {
-    processes[current_process]->until() ;
+    current_process->until() ;
 }
 
 void ProcessController::until(Address addr) {
-    processes[current_process]->until(addr) ;
+    current_process->until(addr) ;
 }
 
 bool ProcessController::jump(Address addr) {
-    return processes[current_process]->jump(addr) ;
+    return current_process->jump(addr) ;
 }
 
 void ProcessController::ready_wait() {
@@ -712,9 +732,9 @@ void ProcessController::ready_wait() {
                 bool keep_waiting = processes[i]->wait (status) ;
                 processes[i]->execute_displays() ;
                 if (!keep_waiting) {
-                    if (i != (uint) current_process) {
+                    if (processes[i] != current_process) {
                         os.print ("Current process is now %d.\n", i) ;
-                        current_process = i ;
+                        current_process = processes[i];
                     }
                     return ;
                 }
@@ -725,73 +745,73 @@ void ProcessController::ready_wait() {
 
 
 void ProcessController::disassemble (Address addr) {
-    processes[current_process]->disassemble (addr) ;
+    current_process->disassemble (addr) ;
 }
 
 void ProcessController::disassemble (Address start, Address end) {
-    processes[current_process]->disassemble (start, end) ;
+    current_process->disassemble (start, end) ;
 }
 
 int ProcessController::set_display (std::string expr, int start, Format &fmt) {
-    return processes[current_process]->set_display (expr, start, fmt) ;
+    return current_process->set_display (expr, start, fmt) ;
 }
 
 void ProcessController::undisplay (int n)  {
-    processes[current_process]->undisplay (n) ;
+    current_process->undisplay (n) ;
 }
 
 void ProcessController::enable_display (int n)  {
-    processes[current_process]->enable_display (n) ;
+    current_process->enable_display (n) ;
 }
 
 void ProcessController::disable_display (int n)  {
-    processes[current_process]->disable_display (n) ;
+    current_process->disable_display (n) ;
 }
 
 void ProcessController::list_displays() {
-    processes[current_process]->list_displays() ;
+    current_process->list_displays() ;
 
 }
 
 void ProcessController::delete_breakpoint(int n) {
-    processes[current_process]->delete_breakpoint(n) ;
+    current_process->delete_breakpoint(n) ;
 }
 
 void ProcessController::disable_breakpoint(int n) {
-    processes[current_process]->disable_breakpoint(n) ;
+    current_process->disable_breakpoint(n) ;
 }
 
 void ProcessController::enable_breakpoint(int n) {
-    processes[current_process]->enable_breakpoint(n) ;
+    current_process->enable_breakpoint(n) ;
 }
 
 void ProcessController::set_breakpoint_disposition(int n, Disposition disp) {
-    processes[current_process]->set_breakpoint_disposition(n, disp) ;
+    current_process->set_breakpoint_disposition(n, disp) ;
 }
 
 void ProcessController::set_breakpoint_condition (int bpnum, std::string cond) {
-    processes[current_process]->set_breakpoint_condition (bpnum, cond) ;
+    current_process->set_breakpoint_condition (bpnum, cond) ;
 }
                                                                                                                                                    
 void ProcessController::set_breakpoint_ignore_count (int bpnum, int n) {
-    processes[current_process]->set_breakpoint_ignore_count (bpnum, n) ;
+    current_process->set_breakpoint_ignore_count (bpnum, n) ;
 }
                                                                                                                                                    
 void ProcessController::set_breakpoint_commands (int bpnum, std::vector<ComplexCommand*>& cmds) {
-    processes[current_process]->set_breakpoint_commands (bpnum, cmds) ;
+    current_process->set_breakpoint_commands (bpnum, cmds) ;
 }
 
 Address ProcessController::lookup_line (std::string filename, int lineno) {
-    return processes[current_process]->lookup_line (filename, lineno) ;
+    return current_process->lookup_line (filename, lineno) ;
     
 }
 
 Address ProcessController::lookup_line (int lineno) {
-    return processes[current_process]->lookup_line (lineno) ;
+    return current_process->lookup_line (lineno) ;
 }
 
 void ProcessController::enumerate_functions (std::string name, std::vector<std::string> &results) {
-    processes[current_process]->enumerate_functions (name, results) ;
+    current_process->enumerate_functions (name, results) ;
 }
 
 std::string ProcessController::realname (std::string mangled_name) {
@@ -803,35 +823,35 @@ std::string ProcessController::realname (std::string mangled_name) {
 }
 
 void ProcessController::list () {              // list from last line
-    processes[current_process]->list() ;
+    current_process->list() ;
 }
 
 void ProcessController::list_back () {              // list from last line
-    processes[current_process]->list_back() ;
+    current_process->list_back() ;
 }
 
 void ProcessController::list (std::string filename, int line) {      // list from this line
-    processes[current_process]->list(filename, line) ;
+    current_process->list(filename, line) ;
 }
 
 void ProcessController::list (std::string filename, int sline, int eline) {      // list from this line to that line
-    processes[current_process]->list(filename, sline, eline) ;
+    current_process->list(filename, sline, eline) ;
 }
 
 void ProcessController::list (Address addr, Address endaddr) {              // list this address
-    processes[current_process]->list(addr, endaddr) ;
+    current_process->list(addr, endaddr) ;
 }
 
 void ProcessController::return_from_func(Address value) {              // return from function with value
-    processes[current_process]->return_from_func(value) ;
+    current_process->return_from_func(value) ;
 }
 
 void ProcessController::finish() {                                     // finish execution of current function
-    processes[current_process]->finish() ;
+    current_process->finish() ;
 }
 
 void ProcessController::examine (const Format &fmt, Address addr) {            // memory dump
-    processes[current_process]->examine (fmt, addr) ;
+    current_process->examine (fmt, addr) ;
 }
 
 
@@ -842,46 +862,46 @@ void ProcessController::info (std::string root, std::string tail) {
 }
 
 void ProcessController::set_signal_actions (std::string name, std::vector<std::string> &actions) {
-    processes[current_process]->set_signal_actions (name, actions) ;
+    current_process->set_signal_actions (name, actions) ;
 }
 
 
 Location ProcessController::get_current_location() {
-    return processes[current_process]->get_current_location() ;
+    return current_process->get_current_location() ;
 }
 
 int ProcessController::breakpoint_count() {
-    return processes[current_process]->breakpoint_count() ;
+    return current_process->breakpoint_count() ;
 }
 
 void ProcessController::reset_bp_num() {
-    return processes[current_process]->reset_bp_num() ;
+    return current_process->reset_bp_num() ;
 }
 
 void ProcessController::clear_breakpoints(Address addr) {
-    processes[current_process]->clear_breakpoints (addr) ;
+    current_process->clear_breakpoints (addr) ;
 }
 
 Address ProcessController::get_return_addr() {
-    return processes[current_process]->get_return_addr() ;
+    return current_process->get_return_addr() ;
 }
 
 int ProcessController::get_main_language() {
-    return processes[current_process]->get_main_language() ;
+    return current_process->get_main_language() ;
 }
 
 void ProcessController::complete_symbol (std::string name, std::vector<std::string> &result) {
-    processes[current_process]->complete_symbol(name, result) ;
+    current_process->complete_symbol(name, result) ;
 }
 
 void ProcessController::complete_function (std::string name, std::vector<std::string> &result) {
-    processes[current_process]->complete_function(name, result) ;
+    current_process->complete_function(name, result) ;
 }
 
 void ProcessController::search(std::string text) {
-    processes[current_process]->search (text) ;
+    current_process->search (text) ;
 }
 
 bool ProcessController::test_address (Address addr) {
-    return processes[current_process]->test_address(addr) ;
+    return current_process->test_address(addr) ;
 }
