@@ -35,6 +35,7 @@ author: David Allison <dallison@pathscale.com>
 #include "target.h"
 #include "pstream.h"
 #include "breakpoint.h"
+#include "symtab.h"
 
 class Process ;
 class Architecture ;
@@ -42,7 +43,7 @@ class Breakpoint ;
 class Format ;
 class Target ;
 class CommandInterpreter ;
-class AliasManager ;
+//class AliasManager ;
 class ProcessController ;
 class ComplexCommand ;
 
@@ -54,7 +55,7 @@ enum AttachType {
 
 class ProcessController {
 public:
-    ProcessController(CommandInterpreter *cli, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose) ;
+    ProcessController(CommandInterpreter *cli, DirectoryTable &dirlist, bool subverbose) ;
     ~ProcessController() ;
 
     void attach (std::string filename, bool replace) ;
@@ -161,7 +162,7 @@ public:
     void set_cli (CommandInterpreter *cli) { this->cli = cli ; }
     CommandInterpreter *get_cli() { return cli ; }
     bool is_running() ;
-    AliasManager *get_aliases() { return aliases ; }
+    AliasManager *get_aliases() { return &aliases ; }
     DirectoryTable &get_dirlist() { return dirlist ; }
 protected:
 private:
@@ -174,7 +175,7 @@ private:
     bool file_present ;
     int current_process ;
     CommandInterpreter *cli ;
-    AliasManager *aliases ;
+    AliasManager aliases ;
     DirectoryTable &dirlist ;
     bool subverbose ;
 } ;

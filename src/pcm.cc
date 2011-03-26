@@ -145,14 +145,13 @@ static std::string find_program (std::string program) {
 //
 // }
 
-ProcessController::ProcessController (CommandInterpreter *cli, AliasManager *aliases, DirectoryTable &dirlist, bool subverbose)
+ProcessController::ProcessController (CommandInterpreter *cli, DirectoryTable &dirlist, bool subverbose)
     : arch(NULL),
       cli(cli),
       os (cli->os),
       target(NULL),
       file_present(false),
       current_process(-1),
-      aliases(aliases),
       dirlist(dirlist), subverbose(subverbose) {
     // create dummy process
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
@@ -796,7 +795,7 @@ void ProcessController::enumerate_functions (std::string name, std::vector<std::
 }
 
 std::string ProcessController::realname (std::string mangled_name) {
-    const char *rn = aliases->find_alias (mangled_name.c_str()) ;
+    const char *rn = aliases.find_alias (mangled_name.c_str()) ;
     if (rn == NULL) {
         return mangled_name ;
     }

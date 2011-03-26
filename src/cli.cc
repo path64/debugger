@@ -2375,8 +2375,7 @@ CommandInterpreter::CommandInterpreter (PStream &os,
     instream(NULL), dirlist(dirlist), options(os), history(os),
     flags(flags), debugger_var_num(0), last_breakpoint_num(-1) {
 
-    AliasManager aliases ;
-    pcm = new ProcessController(this, &aliases, dirlist, subverbose) ;
+    pcm = new ProcessController(this, dirlist, subverbose) ;
     load_env();
     rerun_mark = -1;
 
