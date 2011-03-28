@@ -788,6 +788,9 @@ void ProcessController::list_displays() {
 
 void ProcessController::delete_breakpoint(int n) {
     current_process->delete_breakpoint(n) ;
+
+	if (n == 0)
+		reset_bp_num();
 }
 
 void ProcessController::disable_breakpoint(int n) {

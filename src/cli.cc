@@ -4132,7 +4132,7 @@ void CommandInterpreter::rerun(int delta) {
         bool oldconfirm = get_int_opt(PRM_CONFIRM) ;
         set_opt("confirm", "off") ;
         pcm->delete_breakpoint (0) ;                    // delete all breakpoints
-        pcm->reset_bp_num();
+        //pcm->reset_bp_num();
         std::istream *savedstream = instream ;          // save current input stream
         std::stringstream newcommands ;
         for (int i = 0 ; i < (int)rerun_hist.size() - delta ; i++) {
