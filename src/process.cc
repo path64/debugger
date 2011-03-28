@@ -3722,10 +3722,10 @@ void Process::step(bool by_line, bool over, int n) {
 //         loc.show_line(os, get_cli()->isemacs()) ;
         set_current_line (loc.get_line()) ;
     }
-    if (!by_line) {
-        Address pc = get_reg("pc") ;
-        disassemble (pc, pc, true) ;
-    }
+//     if (!by_line) {
+//         Address pc = get_reg("pc") ;
+//         disassemble (pc, pc, true) ;
+//     }
     execute_displays() ;
 }
 
@@ -4769,9 +4769,11 @@ void Process::list_displays() {
 }
 
 void Process::execute_displays() {
+#if 0
     for (DisplayList::reverse_iterator i = displays.rbegin() ; i != displays.rend() ; i++) {
         (*i)->execute (this) ;
     }
+#endif
 }
 
 

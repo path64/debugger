@@ -1014,3 +1014,9 @@ ProcessController::get_program (int n)
 
 	return processes[n]->get_program();
 }
+
+Architecture *
+ProcessController::get_arch()
+{
+	return current_process->get_arch();
+}

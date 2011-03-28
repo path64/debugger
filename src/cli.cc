@@ -971,9 +971,7 @@ void ControlCommand::execute (std::string root, std::string tail) {
         cli->rerun_push(root, tail) ;
         cli->rerun_reset();
         pcm->run (cli->get_args(), cli->get_env()) ;
-        print_loc(get_current_location (), true, 0);
-	os.print ("\n");
-	show_line(get_current_location (), false);
+        exec_stop_show (0, false);
     } else if (root == "rerun") {
         int end = 0 ;
         int n = get_number (pcm, tail, 1, end) ;
@@ -986,11 +984,7 @@ void ControlCommand::execute (std::string root, std::string tail) {
             int sig = get_number (pcm, tail, 0) ;
             pcm->cont(sig);
         }
-	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
-		print_loc(get_current_location (), true, 0);
-		os.print ("\n");
-	}
-	show_line(get_current_location (), false);
+	exec_stop_show (fp, false);
         cli->rerun_push(root, tail) ;
     } else if (root == "signal") {
         if (tail == "") {
@@ -1001,68 +995,50 @@ void ControlCommand::execute (std::string root, std::string tail) {
             if (pcm->cont(sig)) {
                 pcm->ready_wait() ;
             }
-	    if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
-		print_loc(get_current_location (), true, 0);
-		os.print ("\n");
-	    }
-	    show_line(get_current_location (), false);
+	    exec_stop_show (fp, false);
             cli->rerun_push(root, tail) ;
         }
     } else if (root == "step") {
 	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (true, false, get_number (pcm, tail, 1)) ;
-	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
-		print_loc(get_current_location (), true, 0);
-		os.print ("\n");
-	}
-	show_line(get_current_location (), false);
+	exec_stop_show (fp, false);
 	cli->rerun_push(root, tail) ;
     } else if (root == "stepi") {
 	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (false, false, get_number (pcm, tail, 1)) ;
-	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
-		print_loc(get_current_location (), true, 0);
-		os.print ("\n");
-	}
-	show_line(get_current_location (), false);
+	exec_stop_show (fp, true);
         cli->rerun_push(root, tail) ;
     } else if (root == "next") {
 	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (true, true, get_number (pcm, tail, 1)) ;
-	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
-		print_loc(get_current_location (), true, 0);
-		os.print ("\n");
-	}
-	show_line(get_current_location (), false);
+	exec_stop_show (fp, false);
         cli->rerun_push(root, tail) ;
     } else if (root == "nexti") {
 	Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
         pcm->step (false, true, get_number (pcm, tail, 1)) ;
-	if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
-		print_loc(get_current_location (), true, 0);
-		os.print ("\n");
-	}
-	show_line(get_current_location (), false);
+	exec_stop_show (fp, true);
         cli->rerun_push(root, tail) ;
     } else if (root == "finish") {
         if (tail != "") {
             printf ("The \"finish\" command does not take any arguments.\n") ;
         } else {
             pcm->finish() ;
-	    print_loc(get_current_location (), true, 0);
-	    os.print ("\n");
-	    show_line(get_current_location (), false);
+	    exec_stop_show (0, false);
             cli->rerun_push(root, tail) ;
         }
     } else if (root == "until") {
         if (tail == "") {
+	    Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
             pcm->until() ;
+	    exec_stop_show (fp, false);
             cli->rerun_push(root, tail) ;
         } else {
             std::vector<Address> address ;
             get_address_arg (tail, address, false, true) ;
             if (address.size() == 1) {
+		Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
                 pcm->until (address[0]) ;
+		exec_stop_show (fp, false);
                 cli->rerun_push(root, tail) ;
             }
         }
@@ -1086,19 +1062,17 @@ void ControlCommand::execute (std::string root, std::string tail) {
                         snprintf (buf, sizeof(buf), "Destination is not in '%s'.  Jump anyway", current.get_symname().c_str()) ;
                     }
                     if (cli->confirm (NULL, buf)) {
+			Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
                         pcm->jump (addr);
-			print_loc(get_current_location (), true, 0);
-			os.print ("\n");
-			show_line(get_current_location (), false);
+			exec_stop_show (fp, false);
                         cli->rerun_push(root, tail) ;
                     } else {
                         printf ("Not confirmed.\n") ;
                     }
                 } else {
+		    Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
                     pcm->jump (addr);
-		    print_loc(get_current_location (), true, 0);
-		    os.print ("\n");
-		    show_line(get_current_location (), false);
+		    exec_stop_show (fp, false);
                     cli->rerun_push(root, tail) ;
                 }
             }
@@ -1192,8 +1166,13 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
                     if (root == "tbreak" || root == "thbreak" || root == "advance") {
                         bp->set_disposition (DISP_DELETE) ;
                         if (root == "advance") {
-                            pcm->cont() ;
-                            pcm->ready_wait() ;
+				Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
+				pcm->cont() ;
+				if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+			    		print_loc(get_current_location (), true, 0);
+					os.print ("\n");
+				}
+				show_line(get_current_location (), false);
                         }
                     }
                 }
@@ -1276,8 +1255,13 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
                 if (root == "tbreak" || root == "thbreak" || root == "advance") {
                     bp->set_disposition (DISP_DELETE) ;
                     if (root == "advance") {
-                        pcm->cont() ;
-                        pcm->ready_wait() ;
+				Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
+				pcm->cont() ;
+				if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+			    		print_loc(get_current_location (), true, 0);
+					os.print ("\n");
+				}
+				show_line(get_current_location (), false);
                     }
                 }
                 
@@ -1346,7 +1330,7 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
         }
     } else if (root == "clear") {
         if (tail == "") {
-            Location loc = pcm->get_current_location() ;
+            Location loc = get_current_location() ;
             pcm->clear_breakpoints (loc.get_addr()) ;
             cli->rerun_push(root, tail) ;
         } else {
@@ -4209,6 +4193,29 @@ Command::show_line (const Location& loc, bool emacs_mode)
 	}
 	else {
 		os.print ("at address 0x%llx\n", loc.get_addr()) ;
+	}
+}
+
+void
+Command::exec_stop_show (Address fp, bool show_asm)
+{
+	Location	loc = get_current_location();
+	int		pid = pcm->get_current_process();
+
+	if (pcm->is_running(pid)) {
+		if (fp != pcm->get_frame_reg()->get_register_as_integer("fp")) {
+			print_loc(loc, true, 0);
+			os.print ("\n");
+		}
+		show_line(loc, false);
+		if (show_asm) {
+			Address pc = loc.get_addr();
+			pcm->disassemble (pc, pc) ;
+		}
+		pcm->list_displays();
+	}
+	else {
+		os.print ("Process %d exit.\n", loc.get_addr()) ;
 	}
 }
 

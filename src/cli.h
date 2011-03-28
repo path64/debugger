@@ -93,6 +93,7 @@ public:
     virtual bool is_dangerous (std::string cmd) { return false ; }
     void print_loc (const Location& loc, bool print_address, int fid);
     void show_line (const Location& loc, bool emacs_mode);
+    void exec_stop_show (Address fp, bool show_asm);
     Location get_current_location ();
 
 protected:

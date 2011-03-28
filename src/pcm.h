@@ -65,6 +65,8 @@ public:
     void detach() ;
     void detach_all() ;
 
+    Architecture *get_arch();
+
     int get_current_thread();
 
     int get_processes_number () {return processes.size();}
@@ -172,7 +174,6 @@ public:
     void search (std::string text) ;
 #endif
 
-    Architecture *get_arch() { return arch ; }
     // breakpoint conditions etc
     void set_breakpoint_condition (int bpnum, std::string cond) ;
     void set_breakpoint_ignore_count (int bpnum, int n) ;

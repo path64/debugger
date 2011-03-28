@@ -464,7 +464,6 @@ public :
     void finish() ;                                     // finish execution of current function
     void wait_for_child(pid_t childpid);
     void follow_fork (pid_t childpid, bool is_vfork) ;
-    void execute_displays() ;
     void validate_thread (int n) ;
     int get_current_thread() ;
 
@@ -484,6 +483,7 @@ public :
     void enable_display (int n) ;
     void disable_display (int n) ;
     void list_displays() ;
+    void execute_displays() ;
 
     CommandInterpreter *get_cli() ;
     AttachType get_attach_type() { return attach_type ; }
