@@ -2858,7 +2858,7 @@ void CommandInterpreter::execute_command (std::string cmd, bool is_repeat, int d
     CommandVec matched ;
 
     // have pcm store the current location of current process
-    pcm->push_location();
+    //pcm->push_location();
 
     // check for alias
     // XXX: more flexibility?  arguments?  replace whole command?

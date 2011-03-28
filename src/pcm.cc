@@ -528,6 +528,8 @@ bool ProcessController::is_running(int n) {
 }
 
 void ProcessController::run(const std::string& args, EnvMap& env) {
+	push_location();
+
     Process *proc = current_process ;
     
     AttachType at = proc->get_attach_type() ;
@@ -566,11 +568,15 @@ void ProcessController::run(const std::string& args, EnvMap& env) {
 }
 
 bool ProcessController::cont(int sig) {
+	push_location ();
+
     if (current_process->cont(sig))
 	ready_wait() ;
 }
 
 void ProcessController::single_step() {
+	push_location();
+
     current_process->single_step() ;
 }
 
@@ -712,18 +718,26 @@ Node *ProcessController::compile_expression(std::string expr, int &end, bool sin
 }
 
 void ProcessController::step(bool by_line, bool over, int n) {
+	push_location();
+
     current_process->step (by_line, over, n) ;
 }
 
 void ProcessController::until() {
+	push_location();
+
     current_process->until() ;
 }
 
 void ProcessController::until(Address addr) {
+	push_location();
+
     current_process->until(addr) ;
 }
 
 void ProcessController::jump(Address addr) {
+	push_location ();
+
 	if (current_process->jump(addr))
 		ready_wait() ;
 }
@@ -867,6 +881,8 @@ void ProcessController::return_from_func(Address value) {              // return
 }
 
 void ProcessController::finish() {                                     // finish execution of current function
+	push_location();
+
     current_process->finish() ;
 }
 
