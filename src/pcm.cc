@@ -671,13 +671,13 @@ void ProcessController::stacktrace(int n) {
     current_process->stacktrace(n) ;
 }
 
-void ProcessController::up(int n) {
-    current_process->up(n) ;
-}
-
-void ProcessController::down(int n) {
-    current_process->down(n) ;
-}
+// void ProcessController::up(int n) {
+//     current_process->up(n) ;
+// }
+//
+// void ProcessController::down(int n) {
+//     current_process->down(n) ;
+// }
 
 void ProcessController::set_frame(int n) {
     current_process->set_frame(n) ;

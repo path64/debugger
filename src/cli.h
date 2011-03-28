@@ -185,6 +185,8 @@ public:
 private:
     static const char *cmds[] ;
     void stacktrace(int n);
+    void up (int n);
+    void down (int n);
 } ;
 
 class PrintCommand : public Command {

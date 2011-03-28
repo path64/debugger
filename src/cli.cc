@@ -1638,18 +1638,64 @@ void StackCommand::stacktrace(int n)
 	}
 }
 
+void StackCommand::up(int n)
+{
+	int fid = pcm->get_frame();
+	int size = pcm->get_frame_size();
+
+	if (n > 1) {
+		if (fid + n >= size) {
+			n = size - fid - 1 ;
+		}
+		pcm->set_frame (n);
+	}
+	else {
+		if (fid == size - 1) {
+			os.print ("Initial frame selected; you cannot go up.\n") ;
+		}
+		else {
+			pcm->set_frame (fid + 1);
+		}
+	}
+
+	exec_stop_show (0, false);
+}
+
+void StackCommand::down(int n)
+{
+	int fid = pcm->get_frame();
+
+	if (n > 1) {
+		if ((fid - n) < 0) {
+			n = fid;
+		}
+		pcm->set_frame (fid - n);
+	}
+	else {
+		if (fid == 0) {
+			os.print ("Bottom (i.e., innermost) frame selected; you cannot go down.\n") ;
+		}
+		else {
+			pcm->set_frame (fid - 1);
+		}
+	}
+
+	exec_stop_show (0, false);
+}
+
 void StackCommand::execute (std::string root, std::string tail) {
     if (root == "backtrace" || root == "where") {
 	stacktrace(get_number (pcm, tail, -1)) ;
     } else if (root == "down") {
-        pcm->down(get_number (pcm, tail, 1)) ;  
+        down(get_number (pcm, tail, 1)) ;
         cli->rerun_push(root, tail) ;
     } else if (root == "frame" || root == "select-frame") {
         int n = get_number (pcm, tail, 1000000) ;
         if (n == 1000000) {
-            pcm->show_frame() ;
+            print_loc(get_current_location (), true, 0);
         } else {
-            pcm->set_frame(n) ;  
+            pcm->set_frame(n) ;
+	    print_loc(get_current_location (), true, 0);
             cli->rerun_push(root, tail) ;
         }
     } else if (root == "return") {              // XXX: confirm and return value
@@ -1662,7 +1708,7 @@ void StackCommand::execute (std::string root, std::string tail) {
         pcm->return_from_func (v) ;
         cli->rerun_push(root, tail) ;
     } else if (root == "up") {
-        pcm->up(get_number (pcm, tail, 1)) ;
+        up(get_number (pcm, tail, 1)) ;
         cli->rerun_push(root, tail) ;
     }
 }

@@ -133,8 +133,8 @@ public:
     void switch_thread (int n) ;
     void dump (Address addr, int size) ;
     void stacktrace (int n) ;
-    void up (int n) ;
-    void down (int n) ;
+//     void up (int n) ;
+//     void down (int n) ;
     void print_regs () ;
     Location get_current_location() ;
     void complete_symbol (std::string name, std::vector<std::string> &result) ;
