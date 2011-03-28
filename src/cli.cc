@@ -4261,7 +4261,7 @@ Command::exec_stop_show (Address fp, bool show_asm)
 		pcm->list_displays();
 	}
 	else {
-		os.print ("Process %d exit.\n", loc.get_addr()) ;
+		os.print ("Process %d exit.\n", pid) ;
 	}
 }
 

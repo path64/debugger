@@ -3707,26 +3707,26 @@ void Process::step(bool by_line, bool over, int n) {
     }
 
 
-    Address after_fp = get_reg ("fp") ;
     if (state == EXITED) {
         return ;
     }
-
-    if (!stepped_onto_breakpoint && !(hitbp != NULL && hitbp->is_user())) {
-        Address pc = get_reg ("pc") ;
-        Location loc = lookup_address (pc) ;
-        build_frame_cache() ;
-        if (after_fp != before_fp && frame_cache_valid) {  // stepped into or out of a function?
-           print_loc(loc, frame_cache[current_frame], os) ;
-        }
-//         loc.show_line(os, get_cli()->isemacs()) ;
-        set_current_line (loc.get_line()) ;
-    }
-//     if (!by_line) {
-//         Address pc = get_reg("pc") ;
-//         disassemble (pc, pc, true) ;
+//     Address after_fp = get_reg ("fp") ;
+// 
+//     if (!stepped_onto_breakpoint && !(hitbp != NULL && hitbp->is_user())) {
+//         Address pc = get_reg ("pc") ;
+//         Location loc = lookup_address (pc) ;
+//         build_frame_cache() ;
+//         if (after_fp != before_fp && frame_cache_valid) {  // stepped into or out of a function?
+//            print_loc(loc, frame_cache[current_frame], os) ;
+//         }
+// //         loc.show_line(os, get_cli()->isemacs()) ;
+//         set_current_line (loc.get_line()) ;
 //     }
-    execute_displays() ;
+// //     if (!by_line) {
+// //         Address pc = get_reg("pc") ;
+// //         disassemble (pc, pc, true) ;
+// //     }
+//     execute_displays() ;
 }
 
 // single step until line is increased or out of frame
@@ -3747,20 +3747,20 @@ void Process::until() {
             break ;
         }
     }
-    Address after_fp = get_reg ("fp") ;
-
-    if (stepped_onto_breakpoint || (hitbp != NULL && hitbp->is_user())) {
-    } else {
-        Address pc = get_reg ("pc") ;
-        Location loc = lookup_address (pc) ;
-        build_frame_cache() ;
-        if (after_fp != before_fp && frame_cache_valid) {                     // stepped into or out of a function?
-           print_loc(loc, frame_cache[current_frame], os) ;
-        }
-//         loc.show_line(os, get_cli()->isemacs()) ;
-        set_current_line (loc.get_line()) ;
-    }
-    execute_displays() ;
+//     Address after_fp = get_reg ("fp") ;
+// 
+//     if (stepped_onto_breakpoint || (hitbp != NULL && hitbp->is_user())) {
+//     } else {
+//         Address pc = get_reg ("pc") ;
+//         Location loc = lookup_address (pc) ;
+//         build_frame_cache() ;
+//         if (after_fp != before_fp && frame_cache_valid) {                     // stepped into or out of a function?
+//            print_loc(loc, frame_cache[current_frame], os) ;
+//         }
+// //         loc.show_line(os, get_cli()->isemacs()) ;
+//         set_current_line (loc.get_line()) ;
+//     }
+//     execute_displays() ;
 }
 
 // continue until address or end of frame
@@ -3779,10 +3779,10 @@ void Process::until(Address addr) {
 
     Address pc = get_reg ("pc") ;
     Location loc = lookup_address (pc) ;
-    build_frame_cache() ;
-    if (frame_cache_valid) {
-       print_loc(loc, frame_cache[current_frame], os) ;
-    }
+//     build_frame_cache() ;
+//     if (frame_cache_valid) {
+//        print_loc(loc, frame_cache[current_frame], os) ;
+//     }
 //     loc.show_line(os, get_cli()->isemacs()) ;
     set_current_line (loc.get_line()) ;
 
