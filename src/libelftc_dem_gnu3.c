@@ -167,19 +167,20 @@ cpp_demangle_gnu3(const char *org)
 	struct cpp_demangle_data ddata;
 	ssize_t org_len;
 	unsigned int limit;
-	char *rtn;
+	char *rtn = NULL;
 
 	if (org == NULL)
 		return (NULL);
 
 	// Try demangling as a type for short encodings
 	if (((org_len = strlen(org)) < 2) || (org[0] != '_' || org[1] != 'Z' )) {
-		if (!cpp_demangle_data_init(&ddata, org))
-			return (NULL);
-		if (!cpp_demangle_read_type(&ddata, 0))
-			goto clean;
-		rtn = vector_str_get_flat(&ddata.output, (size_t *) NULL);
-		goto clean;
+		return (NULL);
+// 		if (!cpp_demangle_data_init(&ddata, org))
+// 			return (NULL);
+// 		if (!cpp_demangle_read_type(&ddata, 0))
+// 			goto clean;
+// 		rtn = vector_str_get_flat(&ddata.output, (size_t *) NULL);
+// 		goto clean;
 	}
 	if (org_len > 11 && !strncmp(org, "_GLOBAL__I_", 11)) {
 		if ((rtn = malloc(org_len + 19)) == NULL)
