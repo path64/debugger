@@ -4313,8 +4313,12 @@ bool Process::wait(int status) {
                     // and if we are, stop in the 'fixup' routine and continue to there
                     if (stepping_lines && !in_dynamic_linker && pc >= dyn_start && pc <= dyn_end) {
                         //println ("inside PLT, continuing")
-                        new_breakpoint (BP_DYNLINK, "", fixup_addr) ;
-                        docont() ;                          // continue execution until breakpoint at fixup
+			if (fixup_addr) {
+                        	new_breakpoint (BP_DYNLINK, "", fixup_addr) ;
+                        	docont() ;                          // continue execution until breakpoint at fixup
+			} else {
+				step_one_instruction() ;
+			}
                         in_dynamic_linker = true ;
                         continue ;
                     } else if  (pc < dyn_start || pc > dyn_end) {
