@@ -1344,7 +1344,7 @@ void Process::print_function_paras (Frame *frame, DIE *die) {
     if (autolang) {
         language = die->get_language() ;
     }
-    EvalContext context (this, frame->get_fp(), language, os) ;
+    EvalContext context (this, die->get_frame_base (this), language, os) ;
     context.show_contents = false ;
     context.show_reference = false ;
     context.truncate_aggregates = true ;
