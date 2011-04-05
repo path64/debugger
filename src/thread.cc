@@ -183,15 +183,15 @@ void Thread::reset() {
 void Thread::soft_set_regs(RegisterSet *r, bool force) {
 	if (force || r->is_dirty())
 	{
-		proc->get_regs(r, tid) ;
-		r->clear_dirty_flag();
+		regs->take_values_from(r);
+		regs->clear_dirty_flag();
 	}
 }
 
 void Thread::soft_set_fp_regs(RegisterSet *r, bool force) {
 	if (force || r->is_dirty())
 	{
-		proc->get_fpregs(r, tid) ;
-		r->clear_dirty_flag();
+		fpregs->take_values_from(r);
+		fpregs->clear_dirty_flag();
 	}
 }

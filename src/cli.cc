@@ -1631,11 +1631,14 @@ void StackCommand::stacktrace(int n)
 
 	int pid = pcm->get_current_process();
 	int tid = pcm->get_current_thread();
+	int cfid = pcm->get_frame();
 	for (int i = first ; i < last; i++) {
 		os.print ("#%d\t", i);
+		pcm->set_frame (i);
  		print_loc(pcm->lookup_address (pcm->get_frame_pc(pid, tid, i)), true, i);
 		os.print ("\n");
 	}
+	pcm->set_frame (cfid);
 }
 
 void StackCommand::up(int n)
