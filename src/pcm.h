@@ -68,6 +68,7 @@ public:
     Architecture *get_arch();
 
     int get_current_thread();
+    int get_threads_number();
 
     int get_processes_number () {return processes.size();}
     int get_pid (int n);

@@ -922,9 +922,9 @@ void Process::attach_child (int childpid, State parent_state) {
 }
 
 void Process::show_current_thread() {
-    if (multithreaded) {
-        os.print (" (thread %d)", (*current_thread)->get_num()) ;
-    }
+//     if (multithreaded) {
+//         os.print (" (thread %d)", (*current_thread)->get_num()) ;
+//     }
 }
 
 void Process::new_thread(void * id) {
@@ -975,17 +975,26 @@ void Process::new_thread(void * id) {
 }
 
 void Process::validate_thread (int n) {
-    for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
-        Thread *thr = *t ;
-        if (thr->get_num() == n) {
-            return ;
-        }
-    }
-    throw Exception ("Unknown thread %d.", n) ;
+    if (n < 0 || n >= get_threads_number())
+	throw Exception ("Unknown thread %d.", n) ;
+	
+//     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
+//         Thread *thr = *t ;
+//         if (thr->get_num() == n) {
+//             return ;
+//         }
+//     }
 }
 
 int Process::get_current_thread() {
-    return (*current_thread)->get_num() ;
+	int	i = 0;
+
+	for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++, i++) {
+		if (t == current_thread)
+			return i;
+	}
+
+	throw Exception ("Don't have current thread.") ;
 }
 
 // disable all threads except the current one
@@ -3369,16 +3378,25 @@ void Process::list_symbols() {
 }
 
 void Process::list_threads() {
-    for (ThreadList::iterator t = threads.begin() ; t != threads.end() ; t++) {
-        Thread *thr = *t ;
-        os.print ("%c %d ", t==current_thread?'*':' ', thr->get_num()) ;
-        thr->print (os) ;
-        os.print ("  ") ;
-        Address pc = thr->get_reg("pc") ;
-        Location loc = lookup_address (pc) ;
-        print_loc(loc, get_current_frame(), os) ;
-        // XXX: GDB also prints 'from /lib64/tls/libpthread.so.0' and the like
-    }
+//     for (ThreadList::iterator t = threads.begin() ; t != threads.end() ; t++) {
+//         Thread *thr = *t ;
+//         os.print ("%c %d ", t==current_thread?'*':' ', thr->get_num()) ;
+//         thr->print (os) ;
+//         os.print ("  ") ;
+//         Address pc = thr->get_reg("pc") ;
+//         Location loc = lookup_address (pc) ;
+//         print_loc(loc, get_current_frame(), os) ;
+//         // XXX: GDB also prints 'from /lib64/tls/libpthread.so.0' and the like
+//     }
+}
+
+int Process::get_threads_number()
+{
+	int	i = 0;
+
+	for (ThreadList::iterator t = threads.begin() ; t != threads.end() ; t++, i++);
+
+	return i;
 }
 
 void Process::switch_thread(int n) {
@@ -3392,8 +3410,9 @@ void Process::switch_thread(int n) {
 void Process::switch_thread_1(int n) {
     //std::cout << "switching to thread "  <<  n << '\n' ;
     ThreadList::iterator t ;
-    for (t = threads.begin() ; t != threads.end() ; t++) {
-        if ((*t)->get_num() == n) {
+    int i = 0;
+    for (t = threads.begin(); t != threads.end() ; t++, i++) {
+        if (i == n) {
             break ;
         }
     }
@@ -5375,8 +5394,8 @@ void Process::info (std::string root, std::string tail) {
             int signum = signal_manager.translate_signame (tail) ;
             signal_manager.show (signum, os) ;
         }
-    } else if (root == "threads") {
-        list_threads() ;
+//     } else if (root == "threads") {
+//         list_threads() ;
     } else if (root == "types") {
     } else if (root == "variables") {
         build_frame_cache() ;
@@ -5726,8 +5745,8 @@ Address Process::get_frame_pc (int tid, int fid)
 
 	try {
 		//Set tid to current_thread if need.
-		if ((*current_thread)->get_num() != tid) {
-			current_thread_id_record = (*current_thread)->get_num();
+		if (get_current_thread() != tid) {
+			current_thread_id_record = get_current_thread();
 			switch_thread_1(tid);
 		}
 

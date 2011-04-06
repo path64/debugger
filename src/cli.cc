@@ -2318,6 +2318,16 @@ void InfoSubcommand::execute (std::string root, std::string tail) {
     } else if (root == "warranty" || root == "copying") {
         printf ("%s\n", COPYNOTE);
         printf ("%s\n", WARRANTY);
+    } else if (root == "threads") {
+	int	i;
+
+	int pid = pcm->get_current_process();
+	for (i = 0; i < pcm->get_threads_number(); i++) {
+		os.print ("%c %d ", i==pcm->get_current_thread()?'*':' ', i) ;
+		//os.print ("%x\n", pcm->get_frame_pc(pid, i, 0));
+		print_loc(pcm->lookup_address (pcm->get_frame_pc(pid, i, 0)), true, 0);
+		os.print ("\n");
+	}
     } else {
         pcm->info (root, tail) ;
     }

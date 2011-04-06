@@ -424,6 +424,7 @@ public :
     void list_symbols () ;
     void list_threads () ;
     void switch_thread (int n) ;
+    int get_threads_number();
     bool stepping_stops(Address pc);
     bool test_address (Address addr) ;
     Address read (Address addr, int size);

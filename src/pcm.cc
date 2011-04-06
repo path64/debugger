@@ -1039,3 +1039,9 @@ ProcessController::get_arch()
 {
 	return current_process->get_arch();
 }
+
+int
+ProcessController::get_threads_number ()
+{
+	return current_process->get_threads_number();
+}
