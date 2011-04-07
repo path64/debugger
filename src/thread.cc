@@ -173,7 +173,7 @@ void Thread::restore_regs(RegisterSet *sr, RegisterSet *sfpr)
 }
 
 void Thread::print (PStream &os) {
-    os.print ("Thread %lld (LWP %d)", tid, pid) ;
+    os.print ("Thread %lu (LWP %d)", tid, pid) ;
 }
 
 void Thread::reset() {
