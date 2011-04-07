@@ -4101,7 +4101,9 @@ bool Process::wait(int status) {
                 (*current_thread)->syncin() ;
                 (*current_thread)->stop() ;                 // mark current thread as stopped
             } else {
+#if defined (__FreeBSD__)
                 grope_threads() ;                       // find stopped threads
+#endif
                 stop_threads() ;                        // stop all that aren't stopped
             }
 
