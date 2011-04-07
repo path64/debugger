@@ -3980,6 +3980,8 @@ bool Process::is_child_pid (int p) {
 }
 
 int Process::dowait(int &status) {
+    switched_threads = false;
+
     if (multithreaded) {
         for (ThreadList::iterator i = threads.begin() ; i != threads.end() ; i++) {
             Thread *t = *i ;
@@ -3989,6 +3991,16 @@ int Process::dowait(int &status) {
                 //printf ("dowait returning pid %d, status %x\n", v, status) ;
                     t->stop() ;                     // mark thread as having stopped
                     t->set_stop_status (status) ;
+
+                    if (current_thread != i) {
+			//Mark it as current_thread
+                       os.print ("[Switching to ") ;
+                       (*i)->print (os) ;
+                       os.print ("]\n") ;
+                       switched_threads = true ;
+			current_thread = i ;
+                    }
+
                 return v ;
             }
         }
@@ -4000,6 +4012,7 @@ int Process::dowait(int &status) {
 
 int Process::mt_wait() {
     int status = -1 ;
+    switched_threads = false;
     
     while (status == -1) {
         for (ThreadList::iterator i = threads.begin() ; i != threads.end() ; i++) {
@@ -4012,6 +4025,15 @@ int Process::mt_wait() {
 		    status = tmp_status;
                     t->stop() ;                     // mark thread as having stopped
                     t->set_stop_status (status) ;
+
+                    if (current_thread != i) {
+			//Mark it as current_thread
+                       os.print ("[Switching to ") ;
+                       (*i)->print (os) ;
+                       os.print ("]\n") ;
+                       switched_threads = true ;
+			current_thread = i ;
+                    }
                 }
             }
         }
@@ -4027,7 +4049,7 @@ bool Process::handle_signal(bool& stop_hook_executed) {
    }
   if (sigact & SIGACT_PRINT) {
       if (multithreaded) {
-          os.print ("Program (thread %d) received signal ", (*current_thread)->get_num()) ;
+          os.print ("Program (thread %d) received signal ", (*current_thread)->get_pid()) ;
       } else {
           os.print ("Program received signal ") ;
       }
@@ -4143,7 +4165,7 @@ bool Process::wait(int status) {
 #endif
                 }
 
-                bool switched_threads = false ;
+                //bool switched_threads = false ;
 
                 if (multithreaded) {
                     std::vector<ThreadList::iterator> hit_threads ;             // threads that have a hit pending

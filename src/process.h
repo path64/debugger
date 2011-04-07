@@ -637,6 +637,8 @@ private:
     time_t programtime;  // modification time of executible
 
     void switch_thread_1(int n);
+
+    bool switched_threads;
 } ;
 
 #endif
