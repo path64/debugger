@@ -69,6 +69,7 @@ public:
 
     int get_current_thread();
     int get_threads_number();
+    int get_thread_pid(int n);
 
     int get_processes_number () {return processes.size();}
     int get_pid (int n);

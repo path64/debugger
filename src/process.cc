@@ -5804,3 +5804,16 @@ Process::get_frame_reg()
 {
 	return (*current_thread)->get_frame_reg();
 }
+
+int
+Process::get_thread_pid(int n)
+{
+	int	i = 0;
+
+	for (ThreadList::iterator t = threads.begin() ; t != threads.end() ; t++, i++) {
+		if (i == n)
+			return (*t)->get_pid();
+	}
+
+	throw Exception("Don't have this thread.") ;
+}

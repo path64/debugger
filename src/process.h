@@ -298,6 +298,8 @@ public :
 
     bool file_ok() {return program != "";}
 
+    int get_thread_pid(int n);
+
     // attachment methods.  These allow attachment to a core file or a live process
     void attach_core() ;                        // attach to a core file
     void attach_process(int pid) ;                     // attach to a live process

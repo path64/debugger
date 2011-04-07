@@ -2323,7 +2323,7 @@ void InfoSubcommand::execute (std::string root, std::string tail) {
 
 	int pid = pcm->get_current_process();
 	for (i = 0; i < pcm->get_threads_number(); i++) {
-		os.print ("%c %d ", i==pcm->get_current_thread()?'*':' ', i) ;
+		os.print ("%c %d\t%d\t", i==pcm->get_current_thread()?'*':' ', i, pcm->get_thread_pid (i)) ;
 		//os.print ("%x\n", pcm->get_frame_pc(pid, i, 0));
 		print_loc(pcm->lookup_address (pcm->get_frame_pc(pid, i, 0)), true, 0);
 		os.print ("\n");

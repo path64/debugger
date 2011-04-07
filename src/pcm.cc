@@ -1048,3 +1048,9 @@ ProcessController::get_threads_number ()
 {
 	return current_process->get_threads_number();
 }
+
+int
+ProcessController::get_thread_pid (int n)
+{
+	return current_process->get_thread_pid(n);
+}
