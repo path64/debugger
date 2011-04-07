@@ -998,6 +998,9 @@ ProcessController::new_int_type()
 RegisterSet *
 ProcessController::get_frame_reg()
 {
+	if (!current_process->is_running())
+		throw Exception ("Program not restarted.") ;
+
 	return current_process->get_frame_reg();
 }
 
