@@ -234,6 +234,9 @@ void ProcessController::get_license() {
     case DW_LANG_Fortran90:
         lang = "FORTRAN90" ;
         break ;
+    case DW_LANG_Fortran95:
+        lang = "FORTRAN95" ;
+        break ;
     }
     if (subverbose) {
         printf ("Attempting to get license for language: %s\n", lang) ;

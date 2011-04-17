@@ -555,7 +555,7 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
             // for fortran, the user might type 'b main' when he really wants to stop at "MAIN__".
             if (func == "main" || func == "MAIN") {
                 int lang = pcm->get_main_language() ;
-                if (lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90) {
+                if (lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90 || lang == DW_LANG_Fortran95) {
                     printf ("Note: breakpoint set at the beginning of the FORTRAN program.\n") ;
                     func = "MAIN_" ;
                 }

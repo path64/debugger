@@ -282,6 +282,7 @@ void SymbolTable::read(PStream *os, bool reporterror) {
             if (cu->get_language() == DW_LANG_C_plus_plus) {
                 cpp_found = true ;
             } else if (cu->get_language() == DW_LANG_Fortran77 || cu->get_language() == DW_LANG_Fortran90) {
+		//XXX DW_LANG_Fortran95 don't need it.
                 fortran_found = true ;
             }
         }
@@ -521,7 +522,7 @@ void SymbolTable::list_functions(EvalContext &context) {
         for (DIEMap::iterator f = funcs.begin() ; f != funcs.end() ; f++) {
             f->second->check_loaded() ;
             f->second->print (context, 0, 0) ;  
-            if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90) {
+            if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
             } else {
                 context.os.print (";\n") ;
             }
@@ -540,7 +541,7 @@ void SymbolTable::list_variables(EvalContext &context) {
         for (DIEMap::iterator f = syms.begin() ; f != syms.end() ; f++) {
             if (f->second->get_tag() == DW_TAG_variable) {
                 f->second->print (context, 0, 0) ;
-                if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90) {
+                if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
                 } else {
                     context.os.print (";\n") ;
                 }

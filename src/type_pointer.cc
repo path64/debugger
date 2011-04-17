@@ -61,6 +61,7 @@ TypePointer::print(EvalContext & ctx, int indent, int level)
       break;
    case DW_LANG_Fortran77:
    case DW_LANG_Fortran90:
+   case DW_LANG_Fortran95:
       get_type()->print(ctx, indent, level + 1);
       ctx.os.print(", pointer");
       break;
@@ -122,6 +123,7 @@ TypePointer::print_value(EvalContext & context, Value & value, int indent)
       throw Exception("COBOL is not a supported language");
 
    case DW_LANG_Fortran77:
+   case DW_LANG_Fortran95:
    case DW_LANG_Fortran90:{	// we want to print both the address
 				// pointed to and the contents of it
 	 // value is the address pointed to

@@ -1412,7 +1412,7 @@ void Process::print_expression(std::string expr, Format &fmt, bool terse, bool r
     if (language == DW_LANG_C || language == DW_LANG_C89 || language == DW_LANG_C_plus_plus) {
         CExpressionHandler e (symtab, arch, language) ;
         tree = e.parse (expr, this, end) ;
-    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90) {
+    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90  || language == DW_LANG_Fortran95) {
         FortranExpressionHandler e (symtab, arch, language) ;
         tree = e.parse (expr, this, end) ;
     }
@@ -1573,7 +1573,7 @@ void Process::print_type(std::string expr, bool show_contents) {
     if (language == DW_LANG_C || language == DW_LANG_C89 || language == DW_LANG_C_plus_plus) {
         CExpressionHandler e (symtab, arch, language) ;
         tree = e.parse (expr, this) ;
-    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90) {
+    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90  || language == DW_LANG_Fortran95) {
         FortranExpressionHandler e (symtab, arch, language) ;
         tree = e.parse (expr, this) ;
     }
@@ -1652,7 +1652,7 @@ Node *Process::compile_expression(std::string expr, int &end, bool single) {
     if (language == DW_LANG_C || language == DW_LANG_C89 || language == DW_LANG_C_plus_plus) {
         CExpressionHandler e (symtab, arch, language) ;
         tree = single ? e.parse_single (expr, this, end) : e.parse (expr, this, end) ;
-    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90) {
+    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90  || language == DW_LANG_Fortran95) {
         FortranExpressionHandler e (symtab, arch, language) ;
         tree = single ? e.parse_single (expr, this, end) : e.parse (expr, this, end) ;
     }
@@ -1686,7 +1686,7 @@ Address Process::evaluate_expression(std::string expr, int &end, bool needint) {
     if (language == DW_LANG_C || language == DW_LANG_C89 || language == DW_LANG_C_plus_plus) {
         CExpressionHandler e (symtab, arch, language) ;
         tree = e.parse (expr, this, end) ;
-    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90) {
+    } else if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90 || language == DW_LANG_Fortran95) {
         FortranExpressionHandler e (symtab, arch, language) ;
         tree = e.parse (expr, this, end) ;
     }
@@ -2594,6 +2594,12 @@ Address Process::lookup_function(std::string name, std::string filename, bool sk
     for (uint i = 0 ; i < objectfiles.size(); i++) {
         ObjectFile *file = objectfiles[i] ;
         Address addr = file->elf->find_symbol (name, is_case_blind()) ;
+	if (addr == 0) {
+		class DIE *die = file->symtab->find_symbol(name, true);
+		if (die && die->is_function()) {
+			addr = (Address)die->getAttribute (DW_AT_low_pc) ;
+		}
+	}
         if (addr != 0) {
             if (skip_preamble && file->symtab != NULL) {         // debug information for it?
                 Address addr1 = file->symtab->skip_preamble (addr) ;
@@ -2614,7 +2620,7 @@ Address Process::lookup_function(std::string name, std::string filename, bool sk
 bool Process::is_case_blind() {
     bool autolang ;
     int language = get_language (autolang) ;
-    return language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90 ;
+    return language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90 || language == DW_LANG_Fortran95;
 }
 
 Location Process::lookup_address(Address addr, bool guess) {

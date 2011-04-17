@@ -152,7 +152,7 @@ DIE::doindent(int indent)
 bool DIE::is_case_blind()
 {
    int lang = cu->get_language();
-   return lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90;
+   return lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90 || lang == DW_LANG_Fortran95;
 }
 
 // this is like reading a normal Attribute, except we need to know what the offset is
@@ -207,7 +207,7 @@ bool DIE::is_skippable()
    // XXX: if this turns out to be slow for a large fortran program then
    // I'll have to revisit this decision
    int language = cu->get_language();
-   if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90) {
+   if (language == DW_LANG_Fortran77 || language == DW_LANG_Fortran90 || language == DW_LANG_Fortran95) {
       return false;
    }
    switch (get_tag()) {

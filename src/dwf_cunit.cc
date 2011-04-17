@@ -226,6 +226,7 @@ void DwCUnit::info (PStream &os) {
         break ;
     case DW_LANG_Fortran77:
     case DW_LANG_Fortran90:
+    case DW_LANG_Fortran95:
         os.print ("fortran") ;
         break ;
     case DW_LANG_Ada83:

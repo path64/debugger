@@ -212,6 +212,7 @@ TypeStruct::print(EvalContext & ctx, int indent, int level)
       break;
    case DW_LANG_Fortran77:
    case DW_LANG_Fortran90:
+   case DW_LANG_Fortran95:
       print_fort(ctx, indent, level);
       break;
    default:
@@ -740,6 +741,7 @@ TypeStruct::print_value(EvalContext & context, Value & value,
    case DW_LANG_Cobol85:
       throw Exception("COBOL is not a supported language");
    case DW_LANG_Fortran77:
+   case DW_LANG_Fortran95:
    case DW_LANG_Fortran90:{	// fortran types print like C ones as
 				// there is no better alternative
 	 context.os.print("{");

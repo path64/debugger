@@ -389,7 +389,8 @@ void Formal_parameter::print(EvalContext &ctx, int indent, int level) {
             get_type()->print (ctx, 0, level+1) ;
             ctx.os.print (" %s", get_name().c_str()) ;
             break ;
-        case DW_LANG_Fortran90: 
+        case DW_LANG_Fortran90:
+        case DW_LANG_Fortran95:
             get_type()->print (ctx, 0, level+1) ;
             ctx.os.print (" :: %s", get_name().c_str()) ;
             break ;
@@ -529,6 +530,7 @@ void Member::print(EvalContext &ctx, int indent, int level) {
             ctx.os.print (" %s", get_name().c_str()) ;
             break ;
         case DW_LANG_Fortran90: 
+        case DW_LANG_Fortran95: 
             get_type()->print (ctx, 0, level+1) ;
             ctx.os.print (" :: %s", get_name().c_str()) ;
             break ;
@@ -685,6 +687,7 @@ void Reference_type::print_value(EvalContext &context, Value &value, int indent)
             throw Exception ("COBOL is not a supported language") ;
         case DW_LANG_Fortran77:
         case DW_LANG_Fortran90:
+        case DW_LANG_Fortran95:
             break ;
         case DW_LANG_Pascal83:
             throw Exception ("Pascal is not a supported language") ;
@@ -838,6 +841,7 @@ void String_type::print(EvalContext &ctx, int indent, int level) {
         ctx.os.print ("character*%d", get_length(ctx)) ;
         break ;
     case DW_LANG_Fortran90: 
+    case DW_LANG_Fortran95: 
         ctx.os.print ("character(len=%d)", get_length(ctx)) ;
         break ;
     }
@@ -878,6 +882,7 @@ void String_type::print_value(EvalContext &context, Value &value, int indent) {
             throw Exception ("COBOL is not a supported language") ;
         case DW_LANG_Fortran77:
         case DW_LANG_Fortran90:
+        case DW_LANG_Fortran95:
             context.os.print("\'") ;
             Utils::print_string (context, s);
             context.os.print ("\'") ;
@@ -1081,6 +1086,7 @@ void Base_type::print(EvalContext &ctx, int indent, int level) {
         }
         break ;
         }
+    case DW_LANG_Fortran95:
     case DW_LANG_Fortran90: {
         int size = getAttribute (DW_AT_byte_size) ;
         int encoding = getAttribute (DW_AT_encoding) ;
@@ -1240,7 +1246,7 @@ void Base_type::print_value(EvalContext &context, Value &value, int indent) {
       EvalContext ctx = context;
 
       int lang = ctx.process->get_language();
-      if (lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90 ) {
+      if (lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90 || lang == DW_LANG_Fortran95 ) {
          if (ctx.truncate_aggregates) {
             ctx.num_sigdigs = 4;
             ctx.trunc_digs = false;
@@ -1467,6 +1473,7 @@ void Subprogram::print(EvalContext &ctx, int indent, int level) {
         break ;
         }
     case DW_LANG_Fortran77:
+    case DW_LANG_Fortran95:
     case DW_LANG_Fortran90: {
         std::string name = getAttribute (DW_AT_name).str ;
         int len = name.size() -1 ;
@@ -1526,7 +1533,7 @@ void Subprogram::print(EvalContext &ctx, int indent, int level) {
                     try {
                         child->print (ctx, indent+4, level) ;
                     } catch (Exception e) {
-                        if (ctx.language == DW_LANG_Fortran90) {
+                        if (ctx.language == DW_LANG_Fortran90 || ctx.language == DW_LANG_Fortran95) {
                             ctx.os.print ("<unknown> :: %s", child->get_name().c_str()) ;
                         } else {
                             ctx.os.print ("<unknown> %s", child->get_name().c_str()) ;
@@ -1937,6 +1944,7 @@ void Variable::print(EvalContext &ctx, int indent, int level) {
             ctx.os.print (" %s", get_name().c_str()) ;
             break ;
         case DW_LANG_Fortran90: 
+        case DW_LANG_Fortran95: 
             get_type()->print (ctx, 0, level+1) ;
             ctx.os.print (" :: %s", get_name().c_str()) ;
             break ;

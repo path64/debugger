@@ -84,6 +84,7 @@ TypeArray::print(EvalContext & ctx, int indent, int level)
 	 ctx.os.print(")");
 	 break;
       }
+   case DW_LANG_Fortran95:
    case DW_LANG_Fortran90:{
 	 get_type()->print(ctx, 0, level + 1);
 	 ctx.os.print(", dimension(");
@@ -274,7 +275,7 @@ TypeArray::get_index(EvalContext & context, int dim, Address currentaddr,
    DIE *type = get_type();
    int phi = type->get_size();
    if (context.language == DW_LANG_Fortran77
-       || context.language == DW_LANG_Fortran90) {
+       || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
       for (int i = 0; i < dim; i++) {
 	 phi *= dims[i].size();
       }
@@ -285,7 +286,7 @@ TypeArray::get_index(EvalContext & context, int dim, Address currentaddr,
    }
    Address addr;
    if (context.language == DW_LANG_Fortran77
-       || context.language == DW_LANG_Fortran90) {
+       || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
       addr = currentaddr + ((indexval - dims[dim].low) * phi);	// subtract 
 								// the
 								// lower
@@ -682,6 +683,7 @@ TypeArray::print_value(EvalContext & ctx, Value & value, int indent)
       switch (context.language & 0xff) {
       case DW_LANG_Fortran77:
       case DW_LANG_Fortran90:
+      case DW_LANG_Fortran95:
 	 maxelem = 5;
 	 break;
       default:
@@ -708,6 +710,7 @@ TypeArray::print_value(EvalContext & ctx, Value & value, int indent)
    case DW_LANG_Cobol85:
       throw Exception("COBOL is not a supported language");
    case DW_LANG_Fortran77:
+   case DW_LANG_Fortran95:
    case DW_LANG_Fortran90:{
 	 bool comma = false;
 	 get_dims(context);

@@ -410,6 +410,7 @@ enum DwLangId {
    DW_LANG_Fortran90                           = 0x0008,
    DW_LANG_Pascal83                            = 0x0009,
    DW_LANG_Modula2                             = 0x000a,
+   DW_LANG_Fortran95                           = 0x000e,
    DW_LANG_lo_user                             = 0x8000,
    DW_LANG_hi_user                             = 0xffff
 };

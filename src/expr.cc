@@ -2264,7 +2264,7 @@ Value CallExpression::evaluate(EvalContext &context) {
             // fortran passes everything by reference, so push constants onto the stack
             // all nonconstants have already had their address taken
 
-            if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90) {
+            if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
                 if (args[i]->is_constant()) {
                     int size = paras[i]->get_type()->get_size() ;
                     Address tmp = arch->stack_space (context.process, size) ;
@@ -2288,7 +2288,7 @@ Value CallExpression::evaluate(EvalContext &context) {
                 v.integer = tmp ;
             } else {
                 // fortran passes everything by reference, so push all values onto the stack
-                if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90) {
+                if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
                     DIE *t = paras[i]->get_type() ;
                     // if the struct is small and in a register then it needs to be copied to memory
                     // constants are also pushed
@@ -2319,7 +2319,7 @@ Value CallExpression::evaluate(EvalContext &context) {
         if (args[i]->get_type()->is_struct()) {
             is_aggregate = true ;
             pass_aggregate_by_value = true ;
-            if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90) {       // fortran passes by reference
+            if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {       // fortran passes by reference
                 pass_aggregate_by_value = false ;
             } else if (i < (int)paras.size()) {
                 if (paras[i]->get_tag() == DW_TAG_reference_type) {                     // references are passed by reference (duh)
@@ -2731,7 +2731,7 @@ Value ArrayExpression::evaluate(EvalContext &context) {
     if (type->is_string()) {
         int len = type->get_real_size(context) ;
         int lb = 0 ;
-        if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90) {
+        if (context.language == DW_LANG_Fortran77 || context.language == DW_LANG_Fortran90 || context.language == DW_LANG_Fortran95) {
             lb = 1 ;
         }
         if (indices[0]->get_opcode() == RANGE) {

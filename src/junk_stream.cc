@@ -423,6 +423,7 @@ void JunkStream::print (EvalContext &ctx, bool v)  {
          break;
       case DW_LANG_Fortran77:
       case DW_LANG_Fortran90:
+      case DW_LANG_Fortran95:
          PStream::print (v ? ".true." : ".false.");     
          break;
       default:
