@@ -13,7 +13,7 @@
  *
  * When distributing Covered Code, include this CDDL HEADER in each
  * file and include the License file at src/CDDL.LICENSE.
- * If applicable, add the following below this CDDL HEADER, with the
+ * If applicable, add the following beSingle stepping tolow this CDDL HEADER, with the
  * fields enclosed by brackets "[]" replaced with your own identifying
  * information: Portions Copyright [yyyy] [name of copyright owner]
  *
@@ -4310,7 +4310,8 @@ bool Process::wait(int status) {
                         //println ("BP_ACTION_CONT:")
                         if (state == STEPPING) {
                             if (hitbp == NULL) {
-                                step_one_instruction() ;
+				bool wascont = step_one_instruction();
+				state = wascont ? CSTEPPING : STEPPING ;
                             } else {
                                 step_from_breakpoint (hitbp) ;               // XXX: check this
                             }
@@ -4334,7 +4335,8 @@ bool Process::wait(int status) {
                     state = READY ;
                     continue ;
                 } else if (sw_wp_hit) {                 // a software watchpoint was hit but said continue
-                    step_one_instruction() ;
+		    bool wascont = step_one_instruction();
+		    state = wascont ? CSTEPPING : STEPPING ;
                     continue ;
                 }
 
@@ -4366,7 +4368,8 @@ bool Process::wait(int status) {
                         	new_breakpoint (BP_DYNLINK, "", fixup_addr) ;
                         	docont() ;                          // continue execution until breakpoint at fixup
 			} else {
-				step_one_instruction() ;
+				bool wascont = step_one_instruction();
+				state = wascont ? CSTEPPING : STEPPING ;
 			}
                         in_dynamic_linker = true ;
                         continue ;
@@ -4405,7 +4408,6 @@ bool Process::wait(int status) {
                                printf ("Single stepping to the end of function %s because it has "
                                        "no debug information.\n", loc.get_symname().c_str()) ;
                             }
-
                             bool wascont = step_one_instruction();
                             proper_state = PSTATE_QUIET_STEP;
                             state = wascont ? CSTEPPING : STEPPING ;
@@ -4414,7 +4416,8 @@ bool Process::wait(int status) {
                     }
 
                     if (stepping_lines) {
-                        step_one_instruction() ;    // if we get here then we are not on a line
+                        bool wascont = step_one_instruction() ;    // if we get here then we are not on a line
+			state = wascont ? CSTEPPING : STEPPING ;
                     } else {
                         state = READY ;
                     }
