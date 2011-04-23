@@ -1,4 +1,5 @@
 #include "register_set.h"
+#include "dbg_except.h"
 //XXX
 // #include "x86registers.h"
 // #include "x87_register_set.h"
@@ -27,9 +28,13 @@ public:
 	virtual bool is_address(int) const { return true; }
 
 	virtual int register_number_for_dwarf_number(int n) const
-		{ return n <= 7 ? n : -1; };
+	{
+		if (n < 0 || n > 9)
+			throw Exception("The dwarf reg %d is not support.", n);
+		return n;
+	}
 	virtual int dwarf_number_for_register_number(int n) const
-		{ return -1; };
+	{ throw Exception("Not support convent reg to dwarf reg."); };
 	//XXX
 	//virtual RegisterSet* new_empty_register_set(void) { return NULL;};
 private:
@@ -75,9 +80,13 @@ public:
 	virtual bool is_integer() const { return false; }
 
 	virtual int register_number_for_dwarf_number(int n) const
-		{ return (n < 33 || n > 40) ? -1 : n - 33; }
+	{
+		if (n < 33 || n > 40)
+			throw Exception("The dwarf reg %d is not support.", n);
+		return n - 33;
+	}
 	virtual int dwarf_number_for_register_number(int n) const
-		{ return -1; };
+	{ throw Exception("Not support convent reg to dwarf reg."); };
 	//XXX
 	//virtual RegisterSet* new_empty_register_set(void) { return NULL;};
 private:
@@ -110,9 +119,62 @@ public:
 	virtual bool is_address(int) const { return true; }
 
 	virtual int register_number_for_dwarf_number(int n) const
-		{ return n <= 7 ? n : -1; };
+	{
+		switch (n) {
+		case 0:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			return n;
+			break;
+		case 1:
+			return 2;
+			break;
+		case 2:
+			return 1;
+			break;
+		case 8:
+		case 9:
+		case 10:
+		case 11:
+		case 12:
+		case 13:
+		case 14:
+		case 15:
+			return n + 8;
+			break;
+		case 16:
+			return 8;
+			break;
+		case 41:
+			return 15;
+			break;
+		case 42:
+			return 12;
+			break;
+		case 43:
+			return 9;
+			break;
+		case 44:
+			return 10;
+			break;
+		case 45:
+			return 11;
+			break;
+		case 46:
+			return 13;
+			break;
+		case 47:
+			return 14;
+			break;
+		}
+
+		throw Exception("The dwarf reg %d is not support.", n);
+	}
 	virtual int dwarf_number_for_register_number(int n) const
-		{ return -1; };
+		{ throw Exception("Not support convent reg to dwarf reg."); };
 	//XXX
 	//virtual RegisterSet* new_empty_register_set(void) { return NULL;};
 
