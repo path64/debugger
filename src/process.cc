@@ -1837,7 +1837,7 @@ Address Process::get_fpreg(std::string name) {
     if (threads.size() == 0 || state == IDLE || state == EXITED) {
         throw Exception ("No registers") ;
     }
-    return (*current_thread)->get_fpreg (name) ;
+    return (Address)(*current_thread)->get_fpreg (name) ;
 }
 
 Address Process::get_reg(int num) {
