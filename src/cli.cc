@@ -964,6 +964,7 @@ void ControlCommand::complete (std::string root, std::string tail, int ch, std::
 
 void ControlCommand::execute (std::string root, std::string tail) {
     cli->set_running(true) ;
+    cli->last_listed_line = 0;
     if (root == "run") {
         if ( tail != "" ) {
            cli->set_args (tail) ;
@@ -1717,7 +1718,6 @@ void StackCommand::execute (std::string root, std::string tail) {
 }
 
 PrintCommand::PrintCommand (CommandInterpreter *cli, ProcessController *pcm): Command (cli, pcm, cmds) {
-    last_listed_line = 0;
     last_format = new Format() ;
 }
 
@@ -1852,7 +1852,7 @@ void PrintCommand::complete (std::string root, std::string tail, int ch, std::ve
 void PrintCommand::list (File *file, int sline, int eline, int currentline) {
     file->open (cli->dirlist) ;
     file->show_line (sline, eline, os, !(cli->get_flags() & CLI_FLAG_GDB), currentline) ;
-    last_listed_line = eline ;
+    cli->last_listed_line = eline ;
 }
 
 void PrintCommand::list() {
@@ -1863,7 +1863,7 @@ void PrintCommand::list() {
 		return ;
 	}
 
-	int line = last_listed_line ;
+	int line = cli->last_listed_line ;
 	if (line == 0)
 		line = location.get_line() ;
 	list (location.get_file(), line, line+cli->get_int_opt(PRM_LIST_LN), location.get_line()) ;
@@ -1876,8 +1876,8 @@ void PrintCommand::list_back() {
 		os.print ("No source file.\n") ;
 		return ;
 	}
-	int line = last_listed_line;
-	if (last_listed_line == 0) {
+	int line = cli->last_listed_line;
+	if (cli->last_listed_line == 0) {
 		line = location.get_line();
 	}
 	else {
@@ -2116,7 +2116,7 @@ void PrintCommand::execute (std::string root, std::string tail) {
 		os.print ("No source file.\n") ;
 		return ;
 	}
-	int line = last_listed_line ;
+	int line = cli->last_listed_line ;
 	if (line == 0) {
 		line = location.get_line() ;
 	}
@@ -2144,7 +2144,7 @@ void PrintCommand::execute (std::string root, std::string tail) {
 		else {
 			var->value = line ;
 		}
-		last_listed_line = line ;
+		cli->last_listed_line = line ;
 	}
 	else {
 		throw Exception ("Expression not found.") ;
@@ -2627,7 +2627,7 @@ CommandInterpreter::CommandInterpreter (PStream &os,
     int flags, bool subverbose)
   : pcm(pcm), os(os), program_running(false),
     instream(NULL), options(os), history(os),
-    flags(flags), debugger_var_num(0), last_breakpoint_num(-1) {
+    flags(flags), debugger_var_num(0), last_breakpoint_num(-1), last_listed_line (0) {
 
     pcm = new ProcessController(this, subverbose) ;
     load_env();

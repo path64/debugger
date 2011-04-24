@@ -199,7 +199,6 @@ private:
     void extract_format (std::string s, int &ch, Format &f) ;
     Format *last_format ;
     Address get_list_address (std::string s) ;
-    int last_listed_line ;
     std::string last_search_string ;
     void list (File *file, int sline, int eline, int currentline);
     void list ();
@@ -433,6 +432,8 @@ public:
     void load_history();
     void save_history();
     void shrink_history();
+
+    int last_listed_line;
 
 private:
     std::vector<Command*> commands ;
