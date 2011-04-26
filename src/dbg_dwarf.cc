@@ -661,6 +661,9 @@ void Reference_type::print_value(EvalContext &context, Value &value, int indent)
         case DW_LANG_C89:
         case DW_LANG_C:
         case DW_LANG_C_plus_plus:
+        case DW_LANG_Fortran77:
+        case DW_LANG_Fortran90:
+        case DW_LANG_Fortran95:
             if (context.process->get_int_opt(PRM_P_ADDR)) {
                 context.os.print ("@0x%llx", (int64_t)value) ;
             }
@@ -685,14 +688,13 @@ void Reference_type::print_value(EvalContext &context, Value &value, int indent)
         case DW_LANG_Cobol74:
         case DW_LANG_Cobol85:
             throw Exception ("COBOL is not a supported language") ;
-        case DW_LANG_Fortran77:
-        case DW_LANG_Fortran90:
-        case DW_LANG_Fortran95:
-            break ;
+           break ;
         case DW_LANG_Pascal83:
             throw Exception ("Pascal is not a supported language") ;
+           break ;
         case DW_LANG_Modula2:
             throw Exception ("Modula2 is not a supported language") ;
+           break ;
         }
 }
 
