@@ -417,11 +417,11 @@ void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
 void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
 	char	regs_buf[regset_size];
 
-	if (Trace::get_regs (pid, &regs_buf) < 0) {
+	if (Trace::get_regs (pid, regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
 	arch->register_set_to_native(regs_buf, regset_size, reg);
-	if (Trace::set_regs (pid, &regs_buf) < 0) {
+	if (Trace::set_regs (pid, regs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}
 }
