@@ -1248,7 +1248,7 @@ void Base_type::print_value(EvalContext &context, Value &value, int indent) {
       EvalContext ctx = context;
 
       int lang = ctx.process->get_language();
-      if (lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90 || lang == DW_LANG_Fortran95 ) {
+      if (lang == DW_LANG_Fortran77 || lang == DW_LANG_Fortran90) {
          if (ctx.truncate_aggregates) {
             ctx.num_sigdigs = 4;
             ctx.trunc_digs = false;
