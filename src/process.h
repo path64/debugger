@@ -84,7 +84,7 @@ class FDE;
 class Frame {
 public:
 	Frame(Process *proc, Architecture *arch, int n);
-	Frame(Process *proc, Architecture *arch, int n, Location &l, Address pc, Address sp, Address fp);
+	Frame(Process *proc, Architecture *arch, int n, Location &l, RegisterSet *r);
 	virtual ~Frame(); 
 	void set_loc(Location &loc);
 	Location & get_loc();

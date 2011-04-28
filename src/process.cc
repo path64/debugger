@@ -136,12 +136,10 @@ Address LinkMap::get_addr() {
 }
 
 
-Frame::Frame (Process *proc, Architecture *arch, int n, Location &loc, Address pc, Address sp, Address fp)
+Frame::Frame (Process *proc, Architecture *arch, int n, Location &loc, RegisterSet *r)
 {
 	init(proc, arch, n);
-	set_pc(pc);
-	set_sp(sp);
-	set_fp(fp);
+	regs->take_values_from(r);
 	set_loc(loc);
 }
 
@@ -1343,7 +1341,8 @@ void Process::print_function_paras (Frame *frame, DIE *die) {
     Frame *cf = frame_cache[current_frame] ;
     Thread *ct = (*current_thread) ;
 
-    frame->publish_regs(ct) ;           // set registers to those in frame
+    if (cf != frame)
+    	frame->publish_regs(ct) ;           // set registers to those in frame
 
     Subprogram *subprogram = dynamic_cast<Subprogram*>(die) ;
     std::vector<DIE*> paras ;
@@ -1382,7 +1381,8 @@ void Process::print_function_paras (Frame *frame, DIE *die) {
         para->get_type()->print_value (context, value) ;
     }
     os.print (")") ;
-    cf->publish_regs(ct) ;
+    if (cf != frame)
+    	cf->publish_regs(ct) ;
 }
 
 void Process::print_expression(std::string expr, Format &fmt, bool terse, bool record) {
@@ -2711,7 +2711,7 @@ void Process::build_frame_cache() {
     Location loc = lookup_address (pc);
 
     /* instantiate top frame */
-    Frame *frame = new Frame (this, arch, n++, loc, pc, sp, fp);
+    Frame *frame = new Frame (this, arch, n++, loc, get_frame_reg());
     frame_cache.push_back (frame);
 
     /* iterate up through stack frames */
