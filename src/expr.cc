@@ -698,6 +698,7 @@ IntrinsicIdentifier::~IntrinsicIdentifier() {
 
 MemberExpression::MemberExpression (SymbolTable *symtab, Node *l, std::string name)
     : Node(symtab), left(l), membername(name) {
+type = 
     type = left->get_type() ;                   // best we can do
 }
 
@@ -1952,7 +1953,8 @@ Value ConstructorExpression::evaluate(EvalContext &context) {
         DIE *child = children[i] ;
         if (child->get_tag() == DW_TAG_member) {
             if (val == values.size()) {
-                throw Exception ("Too many values for type constructor") ;
+		break;
+                //throw Exception ("Too many values for type constructor") ;
             }
             Value v = values[val]->evaluate (context) ;                 // value to assign
             Value mem = child->evaluate (context, addr) ;               // get address of child
@@ -4932,6 +4934,8 @@ Node *FortranExpressionHandler::array() {
                 left = new IntrinsicExpression (symtab, dynamic_cast<IntrinsicIdentifier*>(left), args) ;
             } else {
                 DIE *type = left->get_type() ;              // static type only
+		DIE *tmps = type->find_member (((MemberExpression *)left)->membername) ;
+		type = tmps->get_type() ;
                 // if we don't have a type for the left, assume it's an array
                 if (type->get_tag() == DW_TAG_array_type || type->get_tag() == DW_TAG_string_type) {
                     std::vector<Node*> indices ;

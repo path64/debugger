@@ -396,9 +396,9 @@ public:
     Node *get_this_pointer() ;          // get the base of the member expression
     void resolve (EvalContext &ctx, std::vector<DIE*> &result) ;
     int num_variables() ;
+    std::string membername ;
 private:
     Node *left ;
-    std::string membername ;
 } ;
 
 class Expression: public Node  {
