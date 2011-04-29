@@ -698,7 +698,6 @@ IntrinsicIdentifier::~IntrinsicIdentifier() {
 
 MemberExpression::MemberExpression (SymbolTable *symtab, Node *l, std::string name)
     : Node(symtab), left(l), membername(name) {
-type = 
     type = left->get_type() ;                   // best we can do
 }
 
@@ -1953,8 +1952,7 @@ Value ConstructorExpression::evaluate(EvalContext &context) {
         DIE *child = children[i] ;
         if (child->get_tag() == DW_TAG_member) {
             if (val == values.size()) {
-		break;
-                //throw Exception ("Too many values for type constructor") ;
+                throw Exception ("Too many values for type constructor") ;
             }
             Value v = values[val]->evaluate (context) ;                 // value to assign
             Value mem = child->evaluate (context, addr) ;               // get address of child
