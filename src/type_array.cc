@@ -230,7 +230,8 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 	       ub = lb + (int) count - 1;
 	       variabledims = true;
 	    } else {
-	       lb = (int) lowerbound;
+		/* If cannot get the value of this attr.  Use the 0. */
+	       lb = 0;
 	    }
 	 }
 	 AttributeValue & upperbound =
@@ -242,7 +243,7 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 	       ub = v;
 	       variabledims = true;
 	    } else {
-	       ub = (int) upperbound;
+	       ub = lb - 1;
 	    }
 	 }
 	 dims.push_back(Dimension(lb, ub));
