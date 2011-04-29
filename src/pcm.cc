@@ -544,7 +544,9 @@ void ProcessController::run(const std::string& args, EnvMap& env) {
                                     "Start it from the beginning") ;
             if (yes) {
                 Process *newproc = new Process (*proc) ;   // copy the process data
-                current_process = newproc ;           // overwrite the old process
+                remove_process (proc);
+		current_process = newproc ;           // overwrite the old process
+		add_process (newproc) ;
                 delete proc ;                                    // delete the old process
             } else {
                 throw Exception ("Program not restarted.") ;
