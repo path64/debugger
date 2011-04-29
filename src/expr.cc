@@ -4933,7 +4933,8 @@ Node *FortranExpressionHandler::array() {
             } else {
                 DIE *type = left->get_type() ;              // static type only
 		DIE *tmps = type->find_member (((MemberExpression *)left)->membername) ;
-		type = tmps->get_type() ;
+		if (tmps)
+			type = tmps->get_type() ;
                 // if we don't have a type for the left, assume it's an array
                 if (type->get_tag() == DW_TAG_array_type || type->get_tag() == DW_TAG_string_type) {
                     std::vector<Node*> indices ;
