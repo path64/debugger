@@ -243,7 +243,7 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 	       ub = v;
 	       variabledims = true;
 	    } else {
-	       ub = lb - 1;
+	       ub = lb;
 	    }
 	 }
 	 dims.push_back(Dimension(lb, ub));
