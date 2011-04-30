@@ -698,7 +698,11 @@ IntrinsicIdentifier::~IntrinsicIdentifier() {
 
 MemberExpression::MemberExpression (SymbolTable *symtab, Node *l, std::string name)
     : Node(symtab), left(l), membername(name) {
-    type = left->get_type() ;                   // best we can do
+
+	type = left->get_type() ;
+	while (type && (type->get_tag() == DW_TAG_const_type || type->get_tag() == DW_TAG_reference_type || type->get_tag() == DW_TAG_formal_parameter)) {
+		type = type->get_type() ;
+	}
 }
 
 MemberExpression::~MemberExpression() {
@@ -851,10 +855,9 @@ Value MemberExpression::evaluate(EvalContext &context) {
     Value leftvalue = left->evaluate (context) ;                // address of aggregate
     context.addressonly = save ;
 
-    if (!left->get_type()->is_struct()) {
+    if (!type->is_struct()) {
         throw Exception ("struct/union/class type expected") ;
     }
-    type = left->get_type() ;
     // at this point, type points to the Structure or Union DIE
 
     // copy to memory if it is in a register
