@@ -700,9 +700,14 @@ MemberExpression::MemberExpression (SymbolTable *symtab, Node *l, std::string na
     : Node(symtab), left(l), membername(name) {
 
 	type = left->get_type() ;
+	DIE *prev_type = NULL;
 	while (type && (type->get_tag() == DW_TAG_const_type || type->get_tag() == DW_TAG_reference_type || type->get_tag() == DW_TAG_formal_parameter)) {
+		DIE *prev_type = type;
 		type = type->get_type() ;
 	}
+
+	if (!type)
+		type = prev_type;
 }
 
 MemberExpression::~MemberExpression() {
