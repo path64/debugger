@@ -212,10 +212,11 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
       DIE *
 	  child = children[i];
       if (child->get_tag() == DW_TAG_subrange_type) {
-	 int
-	     ub = 0;
-	 int
-	     lb = 0;
+	 int	ub = 0;
+	 int	lb = 0;
+	 if ((ctx.language & 0xff) ==  DW_LANG_Fortran77 || (ctx.language & 0xff) ==  DW_LANG_Fortran90 || (ctx.language & 0xff) ==  DW_LANG_Fortran95) {
+		lb = 1;
+	 }
 	 AttributeValue & lowerbound =
 	     child->getAttribute(DW_AT_lower_bound);
 	 if (lowerbound.type != AV_NONE) {	// lower bound present?
@@ -229,9 +230,8 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 		   count = countdie->evaluate(ctx);
 	       ub = lb + (int) count - 1;
 	       variabledims = true;
-	    } else {
-		/* If cannot get the value of this attr.  Use the 0. */
-	       lb = 0;
+	    } else if (lowerbound.type == AV_INTEGER){
+	       lb = lowerbound.integer;
 	    }
 	 }
 	 AttributeValue & upperbound =
@@ -242,8 +242,11 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 		   v = ((DIE *) upperbound)->evaluate(ctx);
 	       ub = v;
 	       variabledims = true;
-	    } else {
-	       ub = lb;
+	    } else if (upperbound.type == AV_INTEGER){
+	       ub = upperbound.integer;
+	    }
+	    else {
+		ub = lb;
 	    }
 	 }
 	 dims.push_back(Dimension(lb, ub));
