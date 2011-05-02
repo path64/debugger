@@ -214,6 +214,7 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
       if (child->get_tag() == DW_TAG_subrange_type) {
 	 int	ub = 0;
 	 int	lb = 0;
+	 bool	notset = false;
 	 if ((ctx.language & 0xff) ==  DW_LANG_Fortran77 || (ctx.language & 0xff) ==  DW_LANG_Fortran90 || (ctx.language & 0xff) ==  DW_LANG_Fortran95) {
 		lb = 1;
 	 }
@@ -233,7 +234,11 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 	    } else if (lowerbound.type == AV_INTEGER){
 	       lb = lowerbound.integer;
 	    }
+	    else
+		notset = true;
 	 }
+	else
+		notset = true;
 	 AttributeValue & upperbound =
 	     child->getAttribute(DW_AT_upper_bound);
 	 if (upperbound.type != AV_NONE) {	// upper bound present?
@@ -242,14 +247,16 @@ std::vector < Dimension > &TypeArray::get_dims(EvalContext & ctx)
 		   v = ((DIE *) upperbound)->evaluate(ctx);
 	       ub = v;
 	       variabledims = true;
+		notset = false;
 	    } else if (upperbound.type == AV_INTEGER){
 	       ub = upperbound.integer;
+		notset = false;
 	    }
 	    else {
 		ub = lb;
 	    }
 	 }
-	 dims.push_back(Dimension(lb, ub));
+	 dims.push_back(Dimension(lb, ub, notset));
       }
    }
    if (!variabledims) {		// only keep dimensions if they were
@@ -283,6 +290,9 @@ TypeArray::get_index(EvalContext & context, int dim, Address currentaddr,
       for (int i = 0; i < dim; i++) {
 	 phi *= dims[i].size();
       }
+	if (dims[dim].notset)
+		currentaddr = context.process->read(currentaddr, sizeof(char *));
+
    } else {
       for (int i = dims.size() - 1; i > dim; i--) {
 	 phi *= dims[i].size();
@@ -562,6 +572,9 @@ TypeArray::print_dim_fortran(EvalContext & context, TypeArray * array,
    Value last_value;
    bool lv_valid = false;
    int nrepeats = 0;
+
+	if (array->dims[dim].notset)
+		addr = context.process->read(addr, sizeof(char *));
 
    // for each element in the dimension
    bool comma = false;

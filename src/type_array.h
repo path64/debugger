@@ -37,9 +37,12 @@ author: David Allison <dallison@pathscale.com>
 // XXX: variable dimensions arrays?
 struct Dimension {
    Dimension(int lo, int hi):low(lo),
-      high(hi) {
+      high(hi),notset(false) {
    } Dimension(int i):low(0),
-      high(i) {
+      high(i),notset(false) {
+   }
+   Dimension(int lo, int hi, bool notset):low(lo),
+      high(hi),notset(notset) {
    }
    int low;
    int high;
@@ -55,6 +58,8 @@ struct Dimension {
    bool operator==(Dimension & d) {
       return low == d.low && high == d.high;
    }
+
+   bool notset;
 };
 
 class TypeArray:public DIE {
