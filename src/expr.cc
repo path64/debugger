@@ -1134,7 +1134,11 @@ void Expression::convert(EvalContext &context, DIE *ltype, Value &l, DIE *rtype,
 
 bool Expression::scale(EvalContext &context, DIE *ltype, Value &l, DIE *rtype, Value &r, Value &result) {
     if (ltype->is_pointer() && rtype->is_integral()) {
-        int size = ltype->get_type()->get_real_size(context) ;
+	int size;
+	if (ltype->get_type()->is_array())
+		size = ltype->get_type()->get_type()->get_real_size(context) ;
+	else
+		size = ltype->get_type()->get_real_size(context) ;
         r.integer *= size ;
         type = ltype ;
         return false ;
@@ -2690,9 +2694,14 @@ Value ArrayExpression::evaluate(EvalContext &context) {
     Value currentvalue = array->evaluate (context) ;// address of memory to be indexed (or vector of values)
     type = array->get_type() ;          // default to the type of the left
 
+recheck:
     if (type == NULL) {
         throw Exception ("Cannot subscript a void type") ;
     }
+	if (type->is_pointer()) {
+		type = type->get_type();
+		goto recheck;
+	}
     if (!type->is_string() && !type->is_pointer() && !type->is_array() && !type->is_struct_deref()) {
         throw Exception ("Cannot subscript scalar variables") ; 
     }
@@ -2785,7 +2794,9 @@ Value ArrayExpression::evaluate(EvalContext &context) {
 
     elementsize = type->get_real_size(context) ;
     if (!array->is_vector()) {
-        die = (TypeArray*)array->get_type() ;           
+        die = (TypeArray*)array->get_type() ;
+	if (die->is_pointer())
+		die=(TypeArray*)die->get_type();
         maxdims = die->get_dims(context).size() ;
     }
     int dim = 0 ;// current dimension number
@@ -4946,7 +4957,7 @@ Node *FortranExpressionHandler::array() {
 				type = tmps->get_type() ;
 		}
                 // if we don't have a type for the left, assume it's an array
-                if (type->get_tag() == DW_TAG_array_type || type->get_tag() == DW_TAG_string_type) {
+                if (type->get_tag() == DW_TAG_array_type || type->get_tag() == DW_TAG_string_type || type->get_tag() == DW_TAG_pointer_type) {
                     std::vector<Node*> indices ;
                     try {
                         for (;;) {
