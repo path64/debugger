@@ -1,0 +1,295 @@
+ProcessController::ProcessController (CommandInterpreter *cli, bool subverbose)
+This is the constructor.
+cli		Command line for output and quesy.
+subverbose	If true, output running message.
+
+ProcessController::~ProcessController()
+
+void ProcessController::set_cli (CommandInterpreter *new_cli);
+Set the new_cli to replace the current cli.
+Before call this function, current cli need call flush.
+
+void ProcessController::attach (std::string filename, bool replace)
+Attach the file.
+filename	File directory name.
+replace		If true, remove the current process.
+
+void ProcessController::attach (int pid, bool replace)
+Attach the process.
+pid		The pid of process.
+replace		If true, remove the current process.
+
+void ProcessController::attach_core (std::string corefile, bool replace)
+Attach the core file.
+codefile	Core file directory name.
+replace		If true, remove the current process.
+
+void ProcessController::attach_core (std::string filename, std::string corefile, bool replace)
+Attach file and core file.
+filename	File directory name.
+codefile	Core file directory name.
+replace		If true, remove the current process.
+
+void ProcessController::detach()
+Detach current process.
+
+void ProcessController::add_process ()
+Add empty slot for process.
+
+void ProcessController::remove_process (int n)
+Remove the n process.
+The process id will start with 1.
+
+void ProcessController::select_process (int n)
+Select n process as the current process.
+
+int ProcessController::get_current_process()
+Return the number of current process.
+
+bool ProcessController::is_running(int n)
+Return true if process n is running.
+
+Architecture	*ProcessController::get_arch()
+Get arch of current process.
+
+bool ProcessController::test_address (Address addr)
+Return true if addr is right address of current process.
+
+int ProcessController::get_processes_number ()
+Return the number of processes.
+
+int ProcessController::get_pid(int n)
+Return the pid of process n.
+
+const char * ProcessController::get_state(int n)
+Return the state of process n.
+
+std::string ProcessController::get_program (int n)
+Get the execution file name of the process n.
+
+int ProcessController::get_current_thread()
+Return the number of current thread of current process.
+
+void ProcessController::switch_thread(int n);
+Set the thread n to be the current thread of current process.
+
+int ProcessController::get_threads_number();
+Get the threads number of current process.
+
+File *ProcessController::find_file(std::string name)
+Find file name from current process.
+
+void ProcessController::set_signal_actions (std::string name, std::vector<std::string> &actions)
+Set the signal actions of current process.
+
+Address ProcessController::lookup_symbol (std::string name, std::string objectfile="") ;
+Lockup symbol name in objectfile.
+
+Address ProcessController::lookup_function(std::string name, std::string filename, bool skip_preamble)
+Get the address of file filename and function name.
+If skip_preamble is true, Get the address will skip the function preamble.
+
+std::string ProcessController::realname (std::string mangled_name)
+Get the real name of function.
+
+bool ProcessController::file_ok ()
+Return true if current have program.
+
+DIE * ProcessController::new_int_type ()
+Return the new int type.
+
+void ProcessController::print_expression(std::string expr, Format &fmt, bool terse, bool record)
+Print the expression expr in format fmt.
+
+Node *ProcessController::compile_expression(std::string expr, int &end, bool single)
+Get the Node form expr and return the size to end.
+
+Address ProcessController::evaluate_expression(std::string expr, int &end, bool needint)
+Get the addr of expr.
+
+Value ProcessController::evaluate_expression (Node *tree, bool addressonly=false) 
+Get the value of tree.
+
+int ProcessController::breakpoint_count()
+Return the number of breakpoint.
+
+int ProcessController::new_breakpoint (BreakpointType type, std::string text, Address addr, bool pending)
+Add the new breakpoint to current process.
+type	The type of breakpoint.
+text	The address string for the breakpoint.
+addr	The address for the breakpoint.
+pending	If true, this is the pending breakpoint.
+Return	The return value is the id of the breakpoint.
+
+int ProcessController::new_watchpoint (BreakpointType type, std::string expr, Node *node, Address addr, int size, bool pending) ;
+Add the new watchpoint to current process.
+
+int new_catchpoint (CatchpointType type, std::string data)
+Add the new catchpoint to current process.
+
+void ProcessController::set_breakpoint_condition (int bpnum, std::string cond) ;
+Set the condition cond to breakpoint bpnum of current process.
+
+void ProcessController::set_breakpoint_ignore_count (int bpnum, int n) ;
+Set the ignore count n to breakpoint bpnum of current process.
+
+void ProcessController::set_breakpoint_commands (int bpnum, std::vector<ComplexCommand *>& cmds) ;
+Set the commands cmds to breakpoint bpnum of current process.
+
+void ProcessController::set_breakpoint_disposition(int n, Disposition disp)
+Set the disposition of breakpooint. 
+
+void ProcessController::enable_breakpoint (int n) ;
+Enable the breakpoint n of current process.
+If n is 0, will enable all breakpoints of current process.
+
+void ProcessController::disable_breakpoint (int n) ;
+Disable the breakpoint n of current process.
+If n is 0, will disable all breakpoints of current process.
+
+void ProcessController::delete_breakpoint (int n) ;
+Delete the breakpoint n of current process.
+If n is 0, will delete all breakpoints of current process.
+
+void ProcessController::clear_breakpoints(Address addr) ;
+Delete the breakpoint in addr of current process.
+
+int ProcessController::set_display (std::string expr, int start, Format &fmt)
+Set the display expr in current process.
+
+void ProcessController::enable_display (int n)
+Enable display n of current process.
+If n is -1, it will enable all display.
+
+void ProcessController::disable_display (int n)
+Disable display n of current process.
+If n is -1, it will enable all display.
+
+void ProcessController::undisplay (int n)
+Remove the display n.
+If n is -1, it will remove all display.
+
+void ProcessController::list_displays (void)
+Show all the display.
+
+int ProcessController::get_main_language()
+Get the main language of current process.
+enum DwLangId {
+   DW_LANG_C89                                 = 0x0001,
+   DW_LANG_C                                   = 0x0002,
+   DW_LANG_Ada83                               = 0x0003,
+   DW_LANG_C_plus_plus                         = 0x0004,
+   DW_LANG_Cobol74                             = 0x0005,
+   DW_LANG_Cobol85                             = 0x0006,
+   DW_LANG_Fortran77                           = 0x0007,
+   DW_LANG_Fortran90                           = 0x0008,
+   DW_LANG_Pascal83                            = 0x0009,
+   DW_LANG_Modula2                             = 0x000a,
+   DW_LANG_lo_user                             = 0x8000,
+   DW_LANG_hi_user                             = 0xffff
+};
+
+Address	ProcessController::get_frame_pc (int pid, int tid, int fid)
+Get the pc of current process thread id and frame level n.
+pid	The id of process.
+tid	The id of thread.
+fid	The frame level number.  0 is the first level, the current frame.
+
+RegisterSet *ProcessController::get_frame_reg ()
+Get the registers of current process thread id and current frame.
+
+Address ProcessController::get_return_addr()
+Get the return address of frame 0 of current process.
+
+void ProcessController::return_from_func(Address value)
+Return from current frame with value.
+
+Location ProcessController::lookup_address (Address addr)
+Return the location info of address addr from current process.
+
+Address ProcessController::lookup_line (std::string filename, int lineno)
+Return the address of the filename line lineno.
+
+void ProcessController::enumerate_functions (std::string name, std::vector<std::string> &results)
+Return all the function in results that fit for the name.
+
+void ProcessController::complete_symbol (std::string name, std::vector<std::string> &result)
+Complete the symbol name and put return to the result.
+
+void ProcessController::complete_function (std::string name, std::vector<std::string> &result)
+Complete the function name and put return to the result.
+
+int ProcessController::get_frame ()
+Get current frame id of current process and thread.
+
+void ProcessController::set_frame (int n)
+Set the frame level n to current procee and thread.
+
+int ProcessController::get_frame_size ()
+Get the frame size of current process and thread.
+
+void ProcessController::print_function_paras (int fid, DIE *die)
+Output the function paras of frame fid.
+
+bool ProcessController::in_sigtramp (std::string name)
+Return true if current process in signal tramp.
+
+void ProcessController::dump(Address addr, int size)
+Dump the addr and size of current process.
+
+void ProcessController::examine (const Format &fmt, Address addr)
+Examine the addr in fmt.
+
+void ProcessController::print_type(std::string expr, bool show_contents)
+Print the type of expr.
+
+void ProcessController::info (std::string root, std::string tail)
+Show the info of root, and argument is tail.
+
+void ProcessController::disassemble (Address addr)
+Output the asm code in addr in current process.
+The output will through the funciton in class cli.
+
+void ProcessController::disassemble (Address start, Address end) ;
+Output the asm code from start to end in current process.
+The output will through the funciton in class cli.
+
+void ProcessController::print_expression (std::string expr, Format &fmt, bool terse, bool record) ;
+Output the expr's value.
+The output will through the funciton in class cli.
+
+void ProcessController::print_type (std::string expr, bool show_contents = true) ;
+Output the type.
+The output will through the funciton in class cli.
+
+void ProcessController::run (const std::string& args, EnvMap& env)
+Run the current process with args and env.
+
+void ::cont(int sig = 0)
+Continue the current process with signal sig.
+
+void ProcessController::step(bool insn, bool over, int n)
+Let the current process step.
+insn	If true, just step one instruction.
+over	If true, go over the call insn.
+n	Do this step n times.
+
+void ProcessController::until()
+Execute until the current process reaches a source line greater than the current within the current frame.
+
+void ProcessController::until(Address addr)
+Execute until the current process reaches a source line greater than addr within the current frame.
+
+void ProcessController::finish()
+Finish execution of current function in current process.
+
+void ProcessController::jump(Address addr)
+Continue program being debugged at specified address.
+
+void ProcessController::interrupt()
+Stop the current process that is running.
+
+void ProcessController::kill()
+Kill the current process.
+
+
