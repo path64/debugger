@@ -2664,6 +2664,7 @@ CommandInterpreter::CommandInterpreter (PStream &os,
     add_alias ("r", "run") ;
     add_alias ("exit", "quit") ;
     add_alias ("core", "target core") ;
+    add_alias ("core-file", "target core") ;
 
 
     /* dimensions found runtime */
