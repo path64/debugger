@@ -1,0 +1,45 @@
+set_board_info gdb_prompt "pathdb\\>"
+
+set_board_info gdb_board_support 1
+load_lib gdb.exp
+
+load_generic_config "unix"
+process_multilib_options ""
+
+# The default compiler for this target.
+set_board_info compiler "[find_gcc]"
+#set_board_info hostname "localhost"
+
+global INTERNAL_GDBFLAGS
+set INTERNAL_GDBFLAGS ""
+
+proc gdb_reinitialize_dir { subdir } {
+}
+
+proc gdb_version { } {
+  verbose -log "gdb_version"
+  return "pathdb";
+}
+
+proc ${board}_spawn { board cmd } {
+  global board_info
+
+  set baseboard [lindex [split $board "/"] 0]
+
+  set board_info($baseboard,isremote) 0
+  set result [remote_spawn $board $cmd]
+  set board_info($baseboard,isremote) 1
+
+  return $result
+}
+
+proc ${board}_download { board host dest } {
+  return $host
+}
+
+proc ${board}_file { dest op args } {
+    if { $op == "delete" } {
+        return 0
+    }
+    return [eval [list standard_file $dest $op] $args]
+}

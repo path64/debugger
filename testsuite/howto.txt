@@ -1,0 +1,60 @@
+Files under this directory is about running gdb testsuite for pathdb.  We
+don't import gdb testsuite into pathdb repository, so the first step to run
+gdb testsuite for pathdb is to checkout gdb source code and build it
+somewhere.
+
+Supposing gdb is built in dir GDB_BUILD_DIR, we can run gdb testsuite in
+GDB_BUILD_DIR/testsuite like this,
+
+  DEJAGNU=$PATHDB_SRC/testsuite/site.exp make check RUNTESTFLAGS=--tool gdb GDB=$PATHDB_SRC/bin/pathdb --target_board=pathdb --directory=gdb.base
+
+PATHDB_SRC is the source directory of pathdb.
+  
+Note that gdb testsuite should be modified in a minor way to fit to pathdb.
+
+Index: gdb/testsuite/lib/gdb.exp
+===================================================================
+RCS file: /cvs/src/src/gdb/testsuite/lib/gdb.exp,v
+retrieving revision 1.172
+diff -u -p -r1.172 gdb.exp
+--- gdb/testsuite/lib/gdb.exp	27 Apr 2011 19:44:42 -0000	1.172
++++ gdb/testsuite/lib/gdb.exp	9 May 2011 09:15:20 -0000
+@@ -168,7 +168,7 @@ proc delete_breakpoints {} {
+     send_gdb "delete breakpoints\n"
+     gdb_expect 100 {
+ 	 -re "Delete all breakpoints.*y or n.*$" {
+-	    send_gdb "y\n";
++	    send_gdb "y";
+ 	    exp_continue
+ 	}
+ 	 -re "$gdb_prompt $" { # This happens if there were no breakpoints
+@@ -180,7 +180,7 @@ proc delete_breakpoints {} {
+ 	 -re "No breakpoints or watchpoints..*$gdb_prompt $" {}
+ 	 -re "$gdb_prompt $" { perror "breakpoints not deleted" ; return }
+ 	 -re "Delete all breakpoints.*or n.*$" {
+-	    send_gdb "y\n";
++	    send_gdb "y";
+ 	    exp_continue
+ 	}
+ 	 timeout { perror "info breakpoints (timeout)" ; return }
+@@ -930,6 +930,11 @@ proc gdb_test_no_output { args } {
+ 		pass "$message"
+             }
+         }
++        -re "^$gdb_prompt $" {
++            if ![string match "" $message] then {
++                pass "$message PATHDB"
++            }
++        }
+     }
+ }
+ 
+@@ -1271,7 +1276,7 @@ proc gdb_file_cmd { arg } {
+ 	    return 0
+         }
+         -re "Load new symbol table from \".*\".*y or n. $" {
+-            send_gdb "y\n"
++            send_gdb "y"
+             gdb_expect 120 {
+                 -re "Reading symbols from.*done.*$gdb_prompt $" {
+                     verbose "\t\tLoaded $arg with new symbol table into $GDB"
