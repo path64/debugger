@@ -1869,7 +1869,7 @@ struct StateHolder
 	StateHolder(RegisterSetProperties *props, RegisterSetProperties *fp_props)
 	{
 		regs = props->new_empty_register_set();
-		fpregs = props->new_empty_register_set();
+		fpregs = fp_props->new_empty_register_set();
 	}
 	~StateHolder()
 	{
