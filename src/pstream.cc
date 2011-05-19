@@ -28,7 +28,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
