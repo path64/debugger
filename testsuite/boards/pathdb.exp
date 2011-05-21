@@ -43,3 +43,38 @@ proc ${board}_file { dest op args } {
     }
     return [eval [list standard_file $dest $op] $args]
 }
+
+# Overwrite gdb's default version.
+proc gdb_test { args } {
+    global verbose
+    global gdb_prompt
+    global GDB
+    upvar timeout timeout
+
+    if [llength $args]>2 then {
+	set message [lindex $args 2]
+    } else {
+	set message [lindex $args 0]
+    }
+    set command [lindex $args 0]
+    set pattern [lindex $args 1]
+
+    if [llength $args]==5 {
+	set question_string [lindex $args 3];
+	set response_string [lindex $args 4];
+    } else {
+	set question_string "^FOOBAR$"
+    }
+
+    return [gdb_test_multiple $command $message {
+	-re "\[\r\n\]*($pattern)\[\r\n\]*$gdb_prompt $" {
+	    if ![string match "" $message] then {
+		pass "$message"
+            }
+        }
+	-re "(${question_string})$" {
+	    send_gdb "$response_string\n";
+	    exp_continue;
+	}
+     }]
+}
