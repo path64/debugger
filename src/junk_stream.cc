@@ -416,7 +416,7 @@ void JunkStream::print (EvalContext &ctx, bool v)  {
       switch (ctx.language & 0xff) {
       case DW_LANG_C89:
       case DW_LANG_C:
-         PStream::print (v ? "TRUE" : "FALSE");     
+         PStream::print (v ? "1" : "0");
          break;
       case DW_LANG_C_plus_plus:
          PStream::print (v ? "true" : "false");     
