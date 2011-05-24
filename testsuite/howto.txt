@@ -9,6 +9,24 @@ GDB_BUILD_DIR/testsuite like this,
   DEJAGNU=$PATHDB_SRC/testsuite/site.exp make check RUNTESTFLAGS=--tool gdb GDB=$PATHDB_SRC/bin/pathdb --target_board=pathdb --directory=gdb.base
 
 PATHDB_SRC is the source directory of pathdb.
+
+
+If we want to run testsuite with a certain compiler, instead of default
+one (usually gcc), there are two ways to do that,
+
+  - 1.  Append RUNTESTFLAGS with CC_FOR_TARGET and CXX_FOR_TARGET, like this,
+
+      make check RUNTESTFLAGS='XXXXX CC_FOR_TARGET=/dir/bin/pathcc CXX_FOR_TARGET=/dir/bin/pathcxx'
+
+  -2.  Append the following lines to board file pathdb.exp
+
+      set_board_info compiler pathcc
+      set_board_info c++compiler pathc++
+      set_board_info f77compiler pathfortan
+      set_board_info multitop ""
+
+   See more details in http://sourceware.org/gdb/wiki/Running%20the%20test%20suite%20with%20a%20non-GCC%20compiler
+      
   
 Note that gdb testsuite should be modified in a minor way to fit to pathdb.
 
