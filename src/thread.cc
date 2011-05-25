@@ -75,12 +75,12 @@ void Thread::set_reg(int num, Address value)
 
 double Thread::get_fpreg(const std::string &name)
 {
-	return regs->get_register_as_integer(name);
+	return fpregs->get_register_as_integer(name);
 }
 
 double Thread::get_fpreg(int num)
 {
-	return regs->get_register_as_integer(num);
+	return fpregs->get_register_as_integer(num);
 }
 
 void Thread::set_fpreg(const std::string &name, double v)

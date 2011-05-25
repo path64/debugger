@@ -5159,7 +5159,7 @@ void Process::finish() {                                     // finish execution
         Value v ;
         if (type->is_real()) {
             std::string retreg = arch->get_return_fpreg() ;           // return value
-            v = get_reg (retreg) ;
+            v = get_fpreg (retreg) ;
             v.type = VALUE_REAL ;
         } else {
             std::string retreg = arch->get_return_reg() ;           // return value
