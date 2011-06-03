@@ -526,6 +526,7 @@ private:
     void invalidate_frame_cache () ;
     void build_frame_cache () ;
     void execute_fde (FDE * fde, Address pc, Frame * from, Frame *to, bool debug) ;
+    void execute_fde_1 (FDE * fde, Address pc, Frame * from, Frame *to, bool debug) ;
     Address get_fde_return_address (FDE * fde, Address pc, Frame * frame) ;
     void execute_cfa (Architecture *arch, CFATable *table, BVector code, Address pc,
         int caf, int daf, int ra, bool debug);

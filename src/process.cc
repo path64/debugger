@@ -2978,7 +2978,7 @@ void Process::execute_cfa (Architecture *arch, CFATable *table,
     }
 }
 
-void Process::execute_fde(FDE * fde, Address pc, Frame * from, Frame *to, bool debug) {
+void Process::execute_fde_1(FDE * fde, Address pc, Frame * from, Frame *to, bool debug) {
     int caf = 0 ;// code alignment factor
     int daf = 0 ;// data alignment factor
     int ra = 0 ;// return address register
@@ -3008,6 +3008,11 @@ void Process::execute_fde(FDE * fde, Address pc, Frame * from, Frame *to, bool d
         table.print() ;
     }
     table.apply (from, to) ;
+}
+
+void Process::execute_fde(FDE * fde, Address pc, Frame * from, Frame *to, bool debug) {
+	execute_fde_1(fde, pc, from, to, debug);
+	execute_fde_1(fde, to->get_pc(), from, to, debug);
 }
 
 Address Process::get_fde_return_address (FDE *fde, Address pc, Frame *frame) {
