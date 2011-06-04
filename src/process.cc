@@ -448,11 +448,22 @@ void CFATable::apply(Frame *from, Frame * to) {
             Rule *rule = regs[i] ;
             switch (rule->type) {
 	    case CFA_CFA:
-		break; // added by bos for -Wall niceness
-            case CFA_UNDEFINED: ;
-            case CFA_SAME_VALUE: {
-                break ;
-                }
+	    case CFA_UNDEFINED:
+	    case CFA_SAME_VALUE:
+		{
+		int rnum;
+		try {
+			rnum = arch->translate_regnum (rule->reg);
+		} catch (...) {
+                	continue;
+            	}
+		if (rnum == from->get_regs()->get_properties()->register_number_for_name("sp")
+		    || rnum == from->get_regs()->get_properties()->register_number_for_name("pc")
+		    || rnum == from->get_regs()->get_properties()->register_number_for_name("fp"))
+			continue;
+		to->set_reg (rnum, from->get_reg(rnum));
+		}
+           	break;
             case CFA_OFFSET: {
                 int cfa_reg = arch->translate_regnum (cfa->reg) ;
                 //proc->dump (from->get_reg (cfa_reg), 32) ;
@@ -2737,8 +2748,13 @@ void Process::build_frame_cache() {
         /* then check for an FDE entry */
         fde = find_fde (pc);
         if (fde != NULL) {
-            execute_fde (fde, pc, frame, nframe, false); 
-            goto next_iteration;
+            execute_fde (fde, pc, frame, nframe, false);
+
+	    fde = find_fde (nframe->get_pc());
+	    if (fde != NULL) {
+		execute_fde (fde, nframe->get_pc(), frame, nframe, false);
+		goto next_iteration;
+	    }
         }
 
         /* no luck, fall back on frame pointer */
@@ -2978,7 +2994,7 @@ void Process::execute_cfa (Architecture *arch, CFATable *table,
     }
 }
 
-void Process::execute_fde_1(FDE * fde, Address pc, Frame * from, Frame *to, bool debug) {
+void Process::execute_fde(FDE * fde, Address pc, Frame * from, Frame *to, bool debug) {
     int caf = 0 ;// code alignment factor
     int daf = 0 ;// data alignment factor
     int ra = 0 ;// return address register
@@ -3008,11 +3024,6 @@ void Process::execute_fde_1(FDE * fde, Address pc, Frame * from, Frame *to, bool
         table.print() ;
     }
     table.apply (from, to) ;
-}
-
-void Process::execute_fde(FDE * fde, Address pc, Frame * from, Frame *to, bool debug) {
-	execute_fde_1(fde, pc, from, to, debug);
-	execute_fde_1(fde, to->get_pc(), from, to, debug);
 }
 
 Address Process::get_fde_return_address (FDE *fde, Address pc, Frame *frame) {
@@ -5127,10 +5138,10 @@ void Process::return_from_func(Address value) {              // return from func
         Thread *thr = (*current_thread) ;
         frame->publish_regs (thr, true) ;          // force register values
         thr->set_reg (arch->get_return_reg(), value) ;              // assign return value
-        frame->set_n (0) ;              // just to match GDB output
+   //     frame->set_n (0) ;              // just to match GDB output
         frame->print(os, false, false) ;
 //         frame->get_loc().show_line (os, get_cli()->isemacs()) ;
-        set_current_line (frame->get_loc().get_line()) ;
+     //   set_current_line (frame->get_loc().get_line()) ;
     }
     invalidate_frame_cache() ;
 }

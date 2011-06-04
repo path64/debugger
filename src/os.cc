@@ -69,14 +69,14 @@ i386_linux_arch::register_set_from_native(char *buf, int size, RegisterSet *reg)
 		reg->set_register("edi", (int64_t)regs_buf->rdi & 0xffffffff);
 		reg->set_register("fp", (int64_t)regs_buf->rbp & 0xffffffff);
 		reg->set_register("eax", (int64_t)regs_buf->rax & 0xffffffff);
+		reg->set_register("pc", (int64_t)regs_buf->rip & 0xffffffff);
+		reg->set_register("sp", (int64_t)regs_buf->rsp & 0xffffffff);
 		reg->set_register("ds", (int64_t)regs_buf->ds & 0xffffffff);
 		reg->set_register("es", (int64_t)regs_buf->es & 0xffffffff);
 		reg->set_register("fs", (int64_t)regs_buf->fs & 0xffffffff);
 		reg->set_register("gs", (int64_t)regs_buf->gs & 0xffffffff);
-		reg->set_register("pc", (int64_t)regs_buf->rip & 0xffffffff);
 		reg->set_register("cs", (int64_t)regs_buf->cs & 0xffffffff);
 		reg->set_register("eflags", (int64_t)regs_buf->eflags & 0xffffffff);
-		reg->set_register("sp", (int64_t)regs_buf->rsp & 0xffffffff);
 		reg->set_register("ss", (int64_t)regs_buf->ss & 0xffffffff);
 	}
 	else {
@@ -96,15 +96,17 @@ i386_linux_arch::register_set_to_native(char *buf, int size, RegisterSet *reg) {
 		regs_buf->edi = reg->get_register_as_integer("edi");
 		regs_buf->ebp = reg->get_register_as_integer("fp");
 		regs_buf->eax = reg->get_register_as_integer("eax");
+		regs_buf->esp = reg->get_register_as_integer("sp");
+		regs_buf->eip = reg->get_register_as_integer("pc");
+#if 0
 		regs_buf->xds = reg->get_register_as_integer("ds");
 		regs_buf->xes = reg->get_register_as_integer("es");
 		regs_buf->xfs = reg->get_register_as_integer("fs");
 		regs_buf->xgs = reg->get_register_as_integer("gs");
 		//regs_buf->orig_eax = reg->get_register_as_integer("orig_eax");
-		regs_buf->eip = reg->get_register_as_integer("pc");
 		regs_buf->xcs = reg->get_register_as_integer("cs");
 		regs_buf->eflags = reg->get_register_as_integer("eflags");
-		regs_buf->esp = reg->get_register_as_integer("sp");
+#endif
 	}
 	else if (size == sizeof (struct x86_64_linux_regs)) {
 		struct x86_64_linux_regs	*regs_buf = (struct x86_64_linux_regs *)buf;
@@ -132,14 +134,16 @@ i386_linux_arch::register_set_to_native(char *buf, int size, RegisterSet *reg) {
 		regs_buf->rdi |= reg->get_register_as_integer("edi");
 		regs_buf->rbp |= reg->get_register_as_integer("fp");
 		regs_buf->rax |= reg->get_register_as_integer("eax");
+		regs_buf->rip |= reg->get_register_as_integer("pc");
+		regs_buf->rsp |= reg->get_register_as_integer("sp");
+#if 0
 		regs_buf->ds |= reg->get_register_as_integer("ds");
 		regs_buf->es |= reg->get_register_as_integer("es");
 		regs_buf->fs |= reg->get_register_as_integer("fs");
 		regs_buf->gs |= reg->get_register_as_integer("gs");
-		regs_buf->rip |= reg->get_register_as_integer("pc");
 		regs_buf->cs |= reg->get_register_as_integer("cs");
 		regs_buf->eflags |= reg->get_register_as_integer("eflags");
-		regs_buf->rsp |= reg->get_register_as_integer("sp");
+#endif
 	}
 	else {
 		throw Exception ("Reg size is not right.");
@@ -342,14 +346,18 @@ x86_64_linux_arch::register_set_to_native(char *buf, int size, RegisterSet *reg)
 	regs_buf->rsi = reg->get_register_as_integer("rsi");
 	regs_buf->rdi = reg->get_register_as_integer("rdi");
 	regs_buf->rip = reg->get_register_as_integer("pc");
+#if 0
 	regs_buf->cs = reg->get_register_as_integer("cs");
 	regs_buf->eflags = reg->get_register_as_integer("eflags");
+#endif
 	regs_buf->rsp = reg->get_register_as_integer("sp");
+#if 0
 	regs_buf->ss = reg->get_register_as_integer("ss");
 	regs_buf->ds = reg->get_register_as_integer("ds");
 	regs_buf->es = reg->get_register_as_integer("es");
 	regs_buf->fs = reg->get_register_as_integer("fs");
 	regs_buf->gs = reg->get_register_as_integer("gs");
+#endif
 }
 
 void
