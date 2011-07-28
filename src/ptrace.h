@@ -5,9 +5,11 @@
 #include <sys/ptrace.h>
 #include "config.h"
 
+#ifndef HAVE_PTRACE_SETOPTIONS
+#define PTRACE_SETOPTIONS (__ptrace_request)0x4200
+#endif // !HAVE_PTRACE_SETOPTIONS
 
 #ifndef HAVE_PTRACE_O_CONSTANTS
-#define PTRACE_SETOPTIONS (__ptrace_request)0x4200
 #define PTRACE_O_TRACESYSGOOD 0x00000001
 #define PTRACE_O_TRACEFORK 0x00000002
 #define PTRACE_O_TRACEVFORK 0x00000004
@@ -18,9 +20,11 @@
 #define PTRACE_O_MASK 0x0000007f
 #endif // !HAVE_PTRACE_O_CONSTANTS
 
+#ifndef HAVE_PTRACE_GETEVENTMSG
+#define PTRACE_GETEVENTMSG (__ptrace_request)0x4201
+#endif // !HAVE_PTRACE_GETEVENTMSG
 
 #ifndef HAVE_PTRACE_EVENT_CONSTANTS
-#define PTRACE_GETEVENTMSG (__ptrace_request)0x4201
 #define PTRACE_EVENT_FORK 1
 #define PTRACE_EVENT_VFORK 2
 #define PTRACE_EVENT_CLONE 3

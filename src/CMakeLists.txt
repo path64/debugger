@@ -68,8 +68,12 @@ set(cli_sources
 
 include(CheckCSourceCompiles)
 
+CHECK_C_SOURCE_COMPILES("\#include <sys/ptrace.h> \n int main() { int x = PTRACE_SETOPTIONS; return 0; }"
+                        HAVE_PTRACE_SETOPTIONS)
 CHECK_C_SOURCE_COMPILES("\#include <sys/ptrace.h> \n int main() { int x = PTRACE_O_TRACEFORK; return 0; }"
                         HAVE_PTRACE_O_CONSTANTS)
+CHECK_C_SOURCE_COMPILES("\#include <sys/ptrace.h> \n int main() { int x = PTRACE_GETEVENTMSG; return 0; }"
+                        HAVE_PTRACE_GETEVENTMSG)
 CHECK_C_SOURCE_COMPILES("\#include <sys/ptrace.h> \n int main() { int x = PTRACE_EVENT_FORK; return 0; }"
                         HAVE_PTRACE_EVENT_CONSTANTS)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in
