@@ -36,6 +36,9 @@ author: David Allison <dallison@pathscale.com>
 #include <string>
 #include <vector>
 #include <map>
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#endif
 #include "dbg_except.h"
 
 
