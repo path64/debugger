@@ -3020,7 +3020,7 @@ bool CommandInterpreter::confirm (const char *prompt1, const char *prompt2) {
        os.print ("%s? (y or n) ", prompt2);
        os.flush();
 
-       int c = readl.getchar("nNyY");
+       int c = readl.get_char("nNyY");
        os.print("\n");
        return toupper(c) == 'Y';
     } else {

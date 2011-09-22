@@ -165,7 +165,7 @@ Readline::getline() {
 }
 
 int
-Readline::getchar(const char* allowed) {
+Readline::get_char(const char* allowed) {
    /* act independent, don't reset line */
 
    load_term();

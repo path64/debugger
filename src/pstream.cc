@@ -146,7 +146,7 @@ PStream::page_full()
    if (n <= 0) throw Exception("write to stdout failed");
 
    // read in prompt answer
-   int c = readl.getchar("q\r\n");
+   int c = readl.get_char("q\r\n");
 
    // push newline, readline doesn't
    n = write(fd, "\n", 1);
