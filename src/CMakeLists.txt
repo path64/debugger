@@ -149,11 +149,12 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ELSE()
     set(libdl "")
 ENDIF()
-target_link_libraries(pathdb-lib ncurses ${libdl} -Wl,-E)
 
 # Driver
 add_executable(pathdb driver.cc)
-target_link_libraries(pathdb pathdb-lib cli-lib)
+target_link_libraries(pathdb
+    -Wl,-E -Wl,--whole-archive pathdb-lib -Wl,--no-whole-archive
+    ncurses ${libdl} cli-lib)
 
 # doctool
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/doctext.cc"
@@ -169,7 +170,7 @@ add_executable(doctool
 
 # funclookup
 add_executable(funclookup funclookup.cc)
-target_link_libraries(funclookup pathdb-lib cli-lib)
+target_link_libraries(funclookup pathdb-lib ncurses ${libdl} cli-lib)
 
 # dependencies for stage
 add_dependencies(pathdb-stage pathdb funclookup doctool)
