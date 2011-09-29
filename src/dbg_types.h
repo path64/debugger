@@ -31,8 +31,8 @@ author: David Allison <dallison@pathscale.com>
 #ifndef dbg_types_h_included
 #define dbg_types_h_included
 
-#include <cstdint>
 #include <iostream>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>
