@@ -75,19 +75,11 @@ static std::string toString (int n) {
     return buf ;
 }
 
-// need to make sure that the symbols in dbg_proc_service.cc are linked in.  
-
-// this will never be called.  It's just to fool the linker into linking the file from the archive
-static void force_ps_link() {
-    ps_pglobal_lookup(NULL, 0, 0, NULL) ;             
-}
-
 ObjectFile::ObjectFile (std::string name, ELF * elf, std::istream & stream, SymbolTable * symtab)
     : name(name),
     elf(elf),
     stream(stream),
     symtab(symtab) {
-    (void) force_ps_link;
     (void) toString;
 }
                                                                                                                                            
