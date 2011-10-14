@@ -196,7 +196,7 @@ public:
     virtual Token get_opcode() { return NONE ; }
     virtual bool is_vector() { return false ; }
     virtual bool is_local() { return false ; }          // is the expression local to a function (contains local variables)
-    virtual Node * check_operator_overload() { return NULL ;} 
+    virtual bool check_operator_overload(EvalContext &context, DIE *ltype, Value &l, DIE *rtype, Value &r, Value &result) { return false ; }
     virtual bool is_member_expression() { return false ; }
     virtual bool is_identifier_set() { return false ; }
     virtual bool is_constant() { return false ; }

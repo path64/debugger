@@ -201,6 +201,7 @@ public:
     int get_num_threads() ;
     int get_thread_pid (int n) ;
     void *get_thread_tid (int n) ;
+    void *get_thread_tid (void *agent, void *threadhandle, int &thr_pid) { return NULL ; } ;
     void write_string (int pid, Address addr, std::string s);
     void init_events (int pid);
     pid_t get_fork_pid (pid_t pid);
