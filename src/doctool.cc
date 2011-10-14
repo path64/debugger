@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
       error("key not found");
   
    /* print out contents */
-   printf(PATHDB_HELP_ENTRIES[h->id]);
+   printf("%s", PATHDB_HELP_ENTRIES[h->id]);
 
    /* success */
    return 0;

@@ -657,8 +657,7 @@ void i386Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *reg
          if (i386_sigcontext_regs[i] == -2) {
              continue ;
          }
-         int v = proc->read (ctx + i*4, 4) ;
-        memcpy (regs + i386_sigcontext_regs[i], &v, 4) ;
+         *(int32_t *)(regs + i386_sigcontext_regs[i]) = proc->read (ctx + i*4, 4);
      }
 }
 
@@ -1229,8 +1228,7 @@ void x86_64Arch::get_sigcontext_frame (Process *proc, Address sp, RegisterSet *r
         if (x86_64_sigcontext_regs[i] == -2) {
             continue ;
         }
-         Address v = proc->read (ctx + i*sizeof(long), 8) ;
-        memcpy (regs + x86_64_sigcontext_regs[i], &v, 8) ;
+        *(int64_t *)(regs + x86_64_sigcontext_regs[i]) = proc->read (ctx + i*8, 8);
      }
 }
 

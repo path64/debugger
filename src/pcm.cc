@@ -572,7 +572,7 @@ void ProcessController::run(const std::string& args, EnvMap& env) {
 		ready_wait() ;
 }
 
-bool ProcessController::cont(int sig) {
+void ProcessController::cont(int sig) {
 	push_location ();
 
     if (current_process->cont(sig))

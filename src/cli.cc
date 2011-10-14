@@ -993,9 +993,7 @@ void ControlCommand::execute (std::string root, std::string tail) {
         } else {
 	    Address fp = pcm->get_frame_reg()->get_register_as_integer("fp");
             int sig = get_number (pcm, tail, 0) ;
-            if (pcm->cont(sig)) {
-                pcm->ready_wait() ;
-            }
+            pcm->cont(sig) ;
 	    exec_stop_show (fp, false);
             cli->rerun_push(root, tail) ;
         }
@@ -2625,7 +2623,7 @@ void globl_sighandler(int sig) {
 
 CommandInterpreter::CommandInterpreter (PStream &os,
     int flags, bool subverbose)
-  : pcm(pcm), os(os), program_running(false),
+  : os(os), program_running(false),
     instream(NULL), options(os), history(os),
     flags(flags), debugger_var_num(0), last_breakpoint_num(-1), last_listed_line (0) {
 

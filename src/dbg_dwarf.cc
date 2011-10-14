@@ -1939,9 +1939,9 @@ void Variable::print(EvalContext &ctx, int indent, int level) {
         case DW_LANG_C89:
         case DW_LANG_C_plus_plus:
             if (parent != NULL &&
-                parent->get_tag() == DW_TAG_structure_type ||
-                parent->get_tag() == DW_TAG_class_type ||
-                parent->get_tag() == DW_TAG_union_type) {
+                (parent->get_tag() == DW_TAG_structure_type ||
+                 parent->get_tag() == DW_TAG_class_type ||
+                 parent->get_tag() == DW_TAG_union_type)) {
                ctx.os.print("static ");
             }
             print_declaration (ctx, this, 0) ;

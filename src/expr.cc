@@ -42,8 +42,8 @@ author: David Allison <dallison@pathscale.com>
 #include "cli.h"
 
 static void checktypes (const Value &v1, const Value &v2) {
-    if (v1.type == VALUE_INTEGER && v2.type == VALUE_BOOL ||
-                v1.type == VALUE_BOOL && v2.type == VALUE_INTEGER) {
+    if ((v1.type == VALUE_INTEGER && v2.type == VALUE_BOOL) ||
+        (v1.type == VALUE_BOOL && v2.type == VALUE_INTEGER)) {
         return ;
     }
 
@@ -3724,7 +3724,7 @@ Node *CExpressionHandler::primary() {
                     } else {
                         sym = sym->find_symbol (name, reqpc) ;
                     }
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", name.c_str(), context.c_str()) ;
                     }
                     context += name ;
@@ -3790,7 +3790,7 @@ Node *CExpressionHandler::primary() {
                         }
                     }
                     sym = sym->find_symbol (s, reqpc) ;
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", s.c_str(), context.c_str()) ;
                     }
                     context += s ;
@@ -4800,7 +4800,7 @@ Node *FortranExpressionHandler::primary() {
                         }
                     }
                     sym = sym->find_symbol (name, reqpc) ;
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", name.c_str(), context.c_str()) ;
                     }
                     context += name ;
@@ -4863,7 +4863,7 @@ Node *FortranExpressionHandler::primary() {
                         }
                     }
                     sym = sym->find_symbol (s, reqpc) ;
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", s.c_str(), context.c_str()) ;
                     }
                     context += s ;

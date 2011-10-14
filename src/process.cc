@@ -69,18 +69,11 @@ author: David Allison <dallison@pathscale.com>
 #	define DW_CFA_offset_extended_sf 0x11
 #endif
 
-static std::string toString (int n) {
-    char buf[30] ;
-    snprintf (buf, sizeof(buf), "%d", n) ;
-    return buf ;
-}
-
 ObjectFile::ObjectFile (std::string name, ELF * elf, std::istream & stream, SymbolTable * symtab)
     : name(name),
     elf(elf),
     stream(stream),
     symtab(symtab) {
-    (void) toString;
 }
                                                                                                                                            
 ObjectFile::~ObjectFile() {
@@ -1867,8 +1860,9 @@ void Process::set_debug_reg (int reg, Address value) {
     target->set_debug_reg ((*current_thread)->get_pid(), reg, value) ;
 }
 
-struct StateHolder
+class StateHolder
 {
+public:
 	StateHolder(RegisterSetProperties *props, RegisterSetProperties *fp_props)
 	{
 		regs = props->new_empty_register_set();

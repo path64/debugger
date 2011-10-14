@@ -101,7 +101,7 @@ public:
     void set_signal_actions (std::string name, std::vector<std::string> &actions) ;
 
     void run (const std::string& args, EnvMap& env);
-    bool cont (int sig = 0) ;
+    void cont (int sig = 0) ;
     void single_step () ;
     void wait () ;
     void interrupt() ;
