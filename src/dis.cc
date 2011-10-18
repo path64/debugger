@@ -448,8 +448,8 @@ int64_t OpteronDisassembler::extract_value (const char *desc, int &len) {
         len = 2 ;
         break ;
     case 'd':
-    case 'z': {
-        int len = has_flag66 ? 2 : 4;
+    case 'z':
+        len = has_flag66 ? 2 : 4;
         for (int i = 0 ; i < len ; i++) {
             immed |= ((int64_t)*instptr++) << (i*8) ;
         }
@@ -457,20 +457,11 @@ int64_t OpteronDisassembler::extract_value (const char *desc, int &len) {
             immed <<= 32 ;
             immed >>= 32 ;
         }
-        len = 4 ;
         break ;
-    }
     case 'v':
-        if (rex_w()) {
-            for (int i = 0 ; i < 8 ; i++) { 
-                immed |= ((int64_t)*instptr++) << (i*8) ;
-            }
-            len = 8 ;
-        } else {
-            for (int i = 0 ; i < 4 ; i++) {
-                immed |= ((int64_t)*instptr++) << (i*8) ;
-            }
-            len = 4 ;
+        len = rex_w() ? 8 : 4 ;
+        for (int i = 0 ; i < len ; i++) { 
+            immed |= ((int64_t)*instptr++) << (i*8) ;
         }
         break ;
     case 'q':
