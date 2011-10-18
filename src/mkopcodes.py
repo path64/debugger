@@ -185,7 +185,7 @@ def parse_optable(name, lines, i):
             else:
                 outstr = outstr + ", NULL, NULL, NULL"
             outfile.write(outstr + "},\n")
-    outfile.write("{NULL, NULL, NULL}} ;\n")
+    outfile.write("{NULL, NULL, NULL, NULL}} ;\n")
     return i
 
 
