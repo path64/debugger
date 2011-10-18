@@ -2623,9 +2623,9 @@ void globl_sighandler(int sig) {
 
 CommandInterpreter::CommandInterpreter (PStream &os,
     int flags, bool subverbose)
-  : os(os), program_running(false),
-    instream(NULL), options(os), history(os),
-    flags(flags), debugger_var_num(0), last_breakpoint_num(-1), last_listed_line (0) {
+  : os(os), last_listed_line(0),
+    program_running(false), instream(NULL), options(os), history(os),
+    flags(flags), debugger_var_num(0), last_breakpoint_num(-1) {
 
     pcm = new ProcessController(this, subverbose) ;
     load_env();

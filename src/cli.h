@@ -98,9 +98,9 @@ public:
 
 protected:
     CommandInterpreter *cli ;
+    PStream &os ;
     ProcessController *pcm ;
     const char **commands;
-    PStream &os ;
 
 public:
 

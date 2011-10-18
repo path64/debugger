@@ -191,13 +191,13 @@ protected:
 private:
     std::string program ;
     Architecture * arch ;
-    Target *target ;
-    PStream &os ;
     std::vector<Process *> processes ;          // all processes
 
     bool file_present ;
     Process *current_process ;
     CommandInterpreter *cli ;
+    PStream &os ;
+    Target *target ;
     AliasManager aliases ;
     DirectoryTable &dirlist ;
     bool subverbose ;

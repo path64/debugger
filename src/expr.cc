@@ -697,12 +697,12 @@ IntrinsicIdentifier::~IntrinsicIdentifier() {
 }
 
 MemberExpression::MemberExpression (SymbolTable *symtab, Node *l, std::string name)
-    : Node(symtab), left(l), membername(name) {
+    : Node(symtab), membername(name), left(l) {
 
 	type = left->get_type() ;
 	DIE *prev_type = NULL;
 	while (type && (type->get_tag() == DW_TAG_const_type || type->get_tag() == DW_TAG_reference_type || type->get_tag() == DW_TAG_formal_parameter)) {
-		DIE *prev_type = type;
+		prev_type = type;
 		type = type->get_type() ;
 	}
 

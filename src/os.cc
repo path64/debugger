@@ -469,7 +469,7 @@ x86_64_freebsd_arch::x86_64_freebsd_arch()
     regnames["gs"] = 15 * sizeof (uint64_t) + sizeof (uint32_t) + sizeof (uint16_t) ;
 
    // from x86_64 machine/reg.h, unavailable on i386 host
-    const int st_start = sizeof (unsigned long) * 4 ;
+    st_start = sizeof (uint64_t) * 4 ;
 
     reset_reg ();
 

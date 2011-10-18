@@ -165,9 +165,9 @@ void PtraceTarget::step (int pid) {
 }
 
 void PtraceTarget::init_events (int pid) {
+#if defined (__linux__)
     long opts = 0;
 
-#if defined (__linux__)
     /* construct options */
     opts |= PTRACE_O_TRACEFORK;
     opts |= PTRACE_O_TRACEVFORK;
@@ -495,9 +495,9 @@ PtraceTarget::thread_suspend (Thread *thr)
 #if defined (__linux__)
 	int e = syscall (SYS_tkill, thr->get_pid(), SIGSTOP) ;
 #elif defined (__FreeBSD__)
-	 int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
+	int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
 	if (e == 0)
-	  int e = ptrace (PT_SUSPEND, (intptr_t)thr->get_tid (), 0, 0) ;
+		e = ptrace (PT_SUSPEND, (intptr_t)thr->get_tid (), 0, 0) ;
 #endif
 	if (e != 0)
 		printf ("failed to suspend thread %d\n", thr->get_num()) ;

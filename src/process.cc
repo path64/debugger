@@ -3700,7 +3700,7 @@ void Process::step(bool by_line, bool over, int n) {
 
     stepping_lines = by_line ;
     stepping_over = over ;
-    Address before_fp = get_reg ("fp") ;
+//  Address before_fp = get_reg ("fp") ;
     bool in_stl = false;
     bool skip_stl = false;
 
@@ -3765,7 +3765,7 @@ void Process::until() {
     Address current_pc = get_reg ("pc") ;
     stepping_lines = true ;
     stepping_over = true ;
-    Address before_fp = get_reg ("fp") ;
+//  Address before_fp = get_reg ("fp") ;
     while (state == READY) {
         single_step() ;
         Address sp = get_reg("sp") ;
