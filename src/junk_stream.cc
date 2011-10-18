@@ -93,7 +93,7 @@ void JunkStream::print (EvalContext &ctx, int64_t i, int size, bool issigned)  {
        }
    } else {
        if (ctx.fmt.code == 'f') {              // floating point
-           PStream::print (fmt, *(double*)&i);
+           PStream::print (fmt, *(double *)(void *)&i);
        } else {
            PStream::print (fmt, i);
        }

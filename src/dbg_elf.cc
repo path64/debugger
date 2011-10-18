@@ -402,7 +402,7 @@ static bool
 check_section_header(std::istream *s, Section *sec, std::string name,
 		     int size, int tag)
 {
-	size_t	header_size;
+	ssize_t	header_size;
 
 	header_size = name.size() + 1;
 	header_size = ((header_size + 3) & ~3);
@@ -412,7 +412,7 @@ check_section_header(std::istream *s, Section *sec, std::string name,
 	if (header_size > sec->get_size())
 		return false;
 
-	if (sec->read_word4 (*s, 0) != name.size() + 1)
+	if (sec->read_word4 (*s, 0) != (int)name.size() + 1)
 		return false;
 
 	if (sec->read_word4 (*s, 4) != size)

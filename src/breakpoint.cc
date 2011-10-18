@@ -1014,7 +1014,7 @@ void HardwareWatchpoint::set() {
             current_value = compiled_expr->evaluate (context) ;
             if (compiled_expr->get_type()->is_real()) {
                 if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                    current_value.real = (double)(*(float*)&current_value.real) ;
+                    current_value.real = (double)(*(float*)(void*)&current_value.real) ;
                 }
             }
         }
@@ -1105,7 +1105,7 @@ Breakpoint_action ChangeWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1178,7 +1178,7 @@ Breakpoint_action ReadWriteWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1254,7 +1254,7 @@ Breakpoint_action ReadWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1321,7 +1321,7 @@ Breakpoint_action WriteWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }

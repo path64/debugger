@@ -399,7 +399,7 @@ RegisterExpression::RegisterExpression(SymbolTable *symtab, std::string name)
 {
 	// FIXME? Floating point registers?
 	RegisterType regtype = symtab->arch->type_of_register(name);
-	int t;
+	int t = 0;
 	switch (regtype)
 	{
 		case RT_INTEGRAL:
@@ -538,7 +538,7 @@ Value Identifier::evaluate(EvalContext &context) {
 
     if (type->is_real()) {
         if (type->get_size() == 4) {                    // float?
-            v.real = (double)(*(float*)&v.real) ;
+            v.real = (double)(*(float*)(void*)&v.real) ;
         }
         v.type = VALUE_REAL ;
     }
@@ -950,7 +950,7 @@ Value MemberExpression::evaluate(EvalContext &context) {
 
     if (type->is_real()) {
         if (type->get_real_size(context) == 4) {
-           mem.real = (double)(*(float*)&mem.real) ;
+           mem.real = (double)(*(float*)(void*)&mem.real) ;
         }
         mem.type = VALUE_REAL ;
     }
@@ -1055,7 +1055,7 @@ Value MemberExpression::evaluate(EvalContext &context, DIE *member) {
 
     if (type->is_real()) {
         if (type->get_real_size(context) == 4) {
-           mem.real = (double)(*(float*)&mem.real) ;
+           mem.real = (double)(*(float*)(void*)&mem.real) ;
         }
         mem.type = VALUE_REAL ;
     }
@@ -1563,7 +1563,7 @@ Value Expression::evaluate(EvalContext &context) {
             // doubles
             if (type->is_real()) {
                 if (type->get_size() == 4) {                    // float?
-                    v.real = (double)(*(float*)&v.real) ;
+                    v.real = (double)(*(float*)(void*)&v.real) ;
                 }
                 v.type = VALUE_REAL ;
             }
@@ -2436,7 +2436,7 @@ Value CallExpression::evaluate(EvalContext &context) {
         if (type != NULL && type->is_real()) {
             v = context.process->get_fpreg (arch->get_return_fpreg()) ; 
             if (type->get_size() == 4) {
-                v.real = (double)(*(float*)&v.real) ;
+                v.real = (double)(*(float*)(void*)&v.real) ;
             }
             v.type = VALUE_REAL ;
         } else {
@@ -2611,7 +2611,7 @@ Value ArrayExpression::get_dimension_value (EvalContext &context, TypeArray *die
                 Value newv = die->get_index (context, dim, v.integer, j) ;
                 if (!context.addressonly && type->is_real() && !type->is_complex()) {
                     if (type->get_size() == 4) {                    // float?
-                        newv.real = (double)(*(float*)&newv.real) ;
+                        newv.real = (double)(*(float*)(void*)&newv.real) ;
                     }
                     newv.type = VALUE_REAL ;
                 }
@@ -2626,7 +2626,7 @@ Value ArrayExpression::get_dimension_value (EvalContext &context, TypeArray *die
             // convert to real value if necessary
             if (!context.addressonly && type->is_real() && !type->is_complex()) {
                 if (type->get_size() == 4) {                    // float?
-                    newv.real = (double)(*(float*)&newv.real) ;
+                    newv.real = (double)(*(float*)(void*)&newv.real) ;
                 }
                 newv.type = VALUE_REAL ;
             }

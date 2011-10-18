@@ -657,9 +657,9 @@ TypeStruct::print_value(EvalContext & context, Value & value,
 	       Value v = child->evaluate(childcontext,value);
 	       if (child->get_type()->is_real()) {
 		  if (child->get_type()->get_real_size(context) == 4) {
-		     v.real = (double) (*(float *) &v.real);	// convert 
-								// to
-								// double
+		     v.real = (double)(*(float *)(void *)&v.real);	// convert 
+									// to
+									// double
 		  }
 	       }
 	       child->get_type()->print_value(context, v, indent + 2);
@@ -719,9 +719,9 @@ TypeStruct::print_value(EvalContext & context, Value & value,
 	       Value v = child->evaluate(childcontext,value);
 	       if (child->get_type()->is_real()) {
 		  if (child->get_type()->get_real_size(context) == 4) {
-		     v.real = (double) (*(float *) &v.real);	// convert 
-								// to
-								// double
+		     v.real = (double)(*(float *)(void *)&v.real);	// convert 
+									// to
+									// double
 		  }
 	       }
 	       child->get_type()->print_value(context, v, indent + 2);
@@ -768,9 +768,9 @@ TypeStruct::print_value(EvalContext & context, Value & value,
 	       Value v = child->evaluate(childcontext,value);
 	       if (child->get_type()->is_real()) {
 		  if (child->get_type()->get_real_size(context) == 4) {
-		     v.real = (double) (*(float *) &v.real);	// convert 
-								// to
-								// double
+		     v.real = (double)(*(float *)(void *)&v.real);	// convert 
+									// to
+									// double
 		  }
 	       }
 	       child->get_type()->print_value(context, v, indent + 2);

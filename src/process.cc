@@ -1325,7 +1325,7 @@ int Process::get_main_language() {
 void Process::print_function_paras (int fid, DIE *die) {
 	build_frame_cache() ;
 
-	if (fid < 0 || fid >= frame_cache.size())
+	if (fid < 0 || (size_t)fid >= frame_cache.size())
 		throw Exception("Frame is not right.");
 
 	print_function_paras (frame_cache[fid], die);
@@ -1369,7 +1369,7 @@ void Process::print_function_paras (Frame *frame, DIE *die) {
         DIE *type = para->get_type() ;
         if (type->is_real()) {
             if (type->get_size() == 4) {                    // float?
-                value.real = (double)(*(float*)&value.real) ;
+                value.real = (double)(*(float*)(void*)&value.real) ;
             }
             value.type = VALUE_REAL ;
         }
@@ -1801,7 +1801,7 @@ void Process::set_value (Value& loc, Value &v, int size) {
         } else if (v.type == VALUE_REAL) {
             if (size == 4) {                            // float?
                 float f = (float)v.real ;
-                write (loc.integer, *(int*)&f, size) ;
+                write (loc.integer, *(int*)(void*)&f, size) ;
             } else {
                 write (loc.integer, v.integer, size) ;
             }
@@ -5776,7 +5776,7 @@ Address Process::get_frame_pc (int tid, int fid)
 {
 	int	get_error = 0;
 	int	current_thread_id_record = -1;
-	Address ret;
+	Address ret = 0;
 
 	try {
 		//Set tid to current_thread if need.

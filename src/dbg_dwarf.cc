@@ -968,7 +968,7 @@ void Common_block::print_value(EvalContext &context, Value &value, int indent) {
         Value v = child->evaluate (context) ;
         if (child->get_type()->is_real()) {
             if (child->get_type()->get_real_size(context) == 4) {
-                v.real = (double)(*(float*)&v.real) ;           // convert to double
+                v.real = (double)(*(float*)(void*)&v.real) ;    // convert to double
             }
         }
         child->get_type()->print_value (context, v, indent+4) ;
@@ -1231,13 +1231,13 @@ void Base_type::print_value(EvalContext &context, Value &value, int indent) {
       if (size == 8) {          // 4 byte components
           int x = context.process->read (addr, 4) ;
           int y = context.process->read (addr+4, 4) ;
-          re = (double)(*((float*)&x)) ;
-          im = (double)(*((float*)&y)) ;
+          re = (double)(*((float*)(void*)&x)) ;
+          im = (double)(*((float*)(void*)&y)) ;
       } else {
           int64_t x = context.process->read (addr, 8) ;
           int64_t y = context.process->read (addr+8, 8) ;
-          re = (*((double*)&x)) ;
-          im = (*((double*)&y)) ;
+          re = (*((double*)(void*)&x)) ;
+          im = (*((double*)(void*)&y)) ;
       }
       context.os.print ("(%g,%g)", re, im) ;
       return; 

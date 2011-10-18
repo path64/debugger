@@ -760,7 +760,7 @@ void DebuggerCommand::execute (std::string root, std::string tail) {
         }
     } else if (root == "processes") {
         os.print ("  Index    PID      State      Command\n") ;
-	for (uint i = 0 ; i < pcm->get_processes_number() ; i++) {
+	for (int i = 0 ; i < pcm->get_processes_number() ; i++) {
 		os.print ("%s%-8d %-8d %-10s %s\n", (pcm->get_current_process() == i)?"* ":"  ",i, pcm->get_pid(i), pcm->get_state(i), pcm->get_program(i).c_str()) ;
 	}
 //     } else if (root == "kill") {

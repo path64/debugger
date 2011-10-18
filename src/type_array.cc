@@ -451,7 +451,7 @@ TypeArray::print_dim_c(EvalContext & context, TypeArray * array,
 	    }
 	    if (type->is_real()) {
 	       if (type->get_size() == 4) {
-		  val.real = (double) (*(float *) &val.real);
+		  val.real = (double) (*(float *)(void *)&val.real);
 	       }
 	       val.type = VALUE_REAL;
 	    }
@@ -603,9 +603,9 @@ TypeArray::print_dim_fortran(EvalContext & context, TypeArray * array,
 	    }
 	    if (type->is_real()) {
 	       if (type->get_size() == 4) {
-		  val.real = (double) (*(float *) &val.real);	// convert 
-								// to
-								// double
+		  val.real = (double)(*(float *)(void *)&val.real);	// convert 
+									// to
+									// double
 	       }
 	       val.type = VALUE_REAL;
 	    }
