@@ -798,9 +798,9 @@ x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
 void
 x86_64Arch::reset_reg ()
 {
-    regnames["pc"] = translate_regname("pc") ;                   // alias for rip
-    regnames["sp"] = translate_regname("sp") ;                   // alias for rsp
-    regnames["fp"] = translate_regname("fp") ;                   // alias for rbp
+    regnames["pc"] = translate_regname("rip") ; // alias for rip
+    regnames["sp"] = translate_regname("rsp") ; // alias for rsp
+    regnames["fp"] = translate_regname("rbp") ; // alias for rbp
 
     regnames["st0"] = st_start + 0 * 16 ;
     regnames["st1"] = st_start + 1 * 16 ;
