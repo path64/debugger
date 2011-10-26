@@ -628,8 +628,8 @@ Breakpoint_action StepBreakpoint::hit_active(PStream &os) {
     return BP_ACTION_IGNORE ;
 }
 
-CascadeBreakpoint::CascadeBreakpoint (Architecture *_arch, Process *_proc, Address _addr, int _num)
-    : SoftwareBreakpoint(_arch, _proc, "", _addr, _num)
+CascadeBreakpoint::CascadeBreakpoint (Architecture *_arch, Process *_proc, Address a, int _num)
+    : SoftwareBreakpoint(_arch, _proc, "", a, _num)
  {
 }
 

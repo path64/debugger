@@ -1624,11 +1624,11 @@ void Expression::set_value (EvalContext &context, Value &value, DIE *exprtype) {
 }
 
 
-AssignmentExpression::AssignmentExpression (SymbolTable *_symtab, Token _tok, Node *_left, Node *_right)
+AssignmentExpression::AssignmentExpression (SymbolTable *_symtab, Token _tok, Node *l, Node *r)
     : Node(_symtab), tok(_tok),
-    left(_left),
-    right(_right) {
-    type = _left->get_type() ;
+    left(l),
+    right(r) {
+    type = l->get_type() ;
 }
 
 AssignmentExpression::~AssignmentExpression() {
@@ -1981,9 +1981,9 @@ Value ConstructorExpression::evaluate(EvalContext &context) {
 }
 
 
-CallExpression::CallExpression (SymbolTable *_symtab, Node *_left, std::vector<Node*> & a)
+CallExpression::CallExpression (SymbolTable *_symtab, Node *l, std::vector<Node*> & a)
     : Node(_symtab),
-    left(_left),
+    left(l),
     args(a), is_func(false) {
 
 
