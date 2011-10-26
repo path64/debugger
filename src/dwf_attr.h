@@ -50,8 +50,8 @@ enum AVType {
 } ;
 
 struct AttributeValue {
-    AttributeValue (DIE *die) : type (AV_DIE), die(die) { }
-    AttributeValue (BVector block) : type (AV_BLOCK), block(block) {}
+    AttributeValue (DIE *_die) : type (AV_DIE), die(_die) { }
+    AttributeValue (BVector _block) : type (AV_BLOCK), block(_block) {}
     AttributeValue (std::string s) : type (AV_STRING), str(s) { }
     AttributeValue (int64_t i):type (AV_INTEGER), integer(i) {}
     AttributeValue (int i):type (AV_INTEGER), integer(i) {}
@@ -149,7 +149,7 @@ std::ostream &operator << (std::ostream &os, AttributeValue &v) ;
 
 class FixupAttribute : public Attribute {
 public:
-    FixupAttribute (int form, DIE *parent) : Attribute (form),parent(parent) {}
+    FixupAttribute (int _form, DIE *_parent) : Attribute (_form),parent(_parent) {}
     ~FixupAttribute() {}
     void fixup (DIE *die) ;
 private:

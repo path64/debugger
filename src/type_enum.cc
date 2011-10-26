@@ -33,8 +33,8 @@ author: David Allison <dallison@pathscale.com>
 #include "process.h"
 #include "junk_stream.h"
 
-TypeEnum::TypeEnum (DwCUnit * cu, DIE * parent, Abbreviation * abbrev)
-: DIE (cu, parent, abbrev)
+TypeEnum::TypeEnum (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+: DIE (_cu, _parent, _abbrev)
 {
 }
 

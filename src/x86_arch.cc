@@ -47,13 +47,13 @@ author: David Allison <dallison@pathscale.com>
 //    bottom 80 bits (10 bytes) are used.
 
 
-IntelArch::IntelArch (int num_debug_regs) 
-    : num_debug_regs(num_debug_regs), regs_valid(false)
+IntelArch::IntelArch (int _num_debug_regs) 
+    : num_debug_regs(_num_debug_regs), regs_valid(false)
      {
-     debug_regs = new Address [num_debug_regs] ;
-     refcounts = new int [num_debug_regs] ;
-     memset (debug_regs, 0, num_debug_regs * sizeof (Address)) ;
-     memset (refcounts, 0, num_debug_regs * sizeof (int)) ;
+     debug_regs = new Address [_num_debug_regs] ;
+     refcounts = new int [_num_debug_regs] ;
+     memset (debug_regs, 0, _num_debug_regs * sizeof (Address)) ;
+     memset (refcounts, 0, _num_debug_regs * sizeof (int)) ;
      status = 0 ;
      control = 0 ;
      st_start = 0;
@@ -745,8 +745,6 @@ int i386Arch::call_size(Process * proc, Address addr) {
 
 x86_64Arch::x86_64Arch () : IntelArch (4), mode(64)
  {
-    // there are 8 SSE registers
-    const int sse_start = st_start + sizeof(int) * 32 ;
 
     regnames["xmm0"] = sse_start + 0 * 16 ;
     regnames["xmm1"] = sse_start + 1 * 16 ;
@@ -1336,52 +1334,52 @@ bool x86_64Arch::is_call(Process * proc, Address addr) {
 
 int x86_64Arch::call_size(Process * proc, Address addr) {
     int64_t opcode = proc->read (addr, 8) ;// read 8 bytes
-    int call_size = 0;
+    int size = 0;
     for (;;) {
         if ((opcode & 0xff) == 0xe8) {
-           call_size += 5 ;
-           return call_size ;
+           size += 5 ;
+           return size ;
         }
         if ((opcode & 0xff) == 0xff) {      // group 5 calls
             int modrm = (opcode & 0xff00) >> 8 ;
             int mod = (modrm >> 6) & 3 ;
             int rm = modrm & 7 ;
             if (mod == 3) {                 // direct register
-               call_size += 2 ;
-               return call_size ;
+               size += 2 ;
+               return size ;
             }
             switch (mod) {
             case 0: 
                 if (rm == 5) {              // disp32 follows
-                    call_size += 6 ;
-                    return call_size ;
+                    size += 6 ;
+                    return size ;
                 }
                 if (rm == 4) {              // SIB follows
-                    call_size += 3 ;
-                    return call_size ;
+                    size += 3 ;
+                    return size ;
                 }
-                call_size += 2 ;
-                return call_size ;
+                size += 2 ;
+                return size ;
                 break ;
             case 1:                         // disp8 follows
                 if (rm == 4) {              // SIB
-                    call_size += 4 ;
-                    return call_size ;
+                    size += 4 ;
+                    return size ;
                 }
-                call_size += 3 ;
-                return call_size ;
+                size += 3 ;
+                return size ;
             case 2:                         // disp32 follows
                 if (rm == 4) {              // SIB
-                    call_size += 7 ;
-                    return call_size ;
+                    size += 7 ;
+                    return size ;
                 }
-                call_size += 6 ;
-                return call_size ;
+                size += 6 ;
+                return size ;
             }
         }
         int op = opcode & 0xffLL ;
         if (op >= 0x40 && op <= 0x4f) {
-            call_size++ ;                    // prefix size
+            size++ ;                    // prefix size
             opcode >>= 8 ;                   // remove prefix
             continue ;
         }

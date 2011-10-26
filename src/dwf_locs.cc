@@ -119,10 +119,10 @@ DwLocExpr::add(DwLocType type,
    data.push_back(P);
 }
 
-DwLocEval::DwLocEval(DwCUnit* cu, Process* process,
-  Address frame_base, AttributeValue& attr)
-: stack(100), sp(0), top_is_reg(false), cu(cu),
-   frame_base(frame_base), attr(attr), process(process)
+DwLocEval::DwLocEval(DwCUnit *_cu, Process *_process,
+  Address _frame_base, AttributeValue &_attr)
+: stack(100), sp(0), top_is_reg(false), cu(_cu),
+   frame_base(_frame_base), attr(_attr), process(_process)
 {
 }
 

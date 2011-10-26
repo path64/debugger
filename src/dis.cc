@@ -102,8 +102,8 @@ void Disassembler::annotate_address (Process *proc, Address addr) {
    }
 }
 
-int OpteronDisassembler::disassemble (Process *proc, PStream &os, Address addr, unsigned char *insts, LocalMap &lcls) {
-    this->proc = proc ;
+int OpteronDisassembler::disassemble (Process *_proc, PStream &os, Address addr, unsigned char *insts, LocalMap &lcls) {
+    this->proc = _proc ;
     this->locals = &lcls ;
     instructions = insts ;
     instptr = insts ;

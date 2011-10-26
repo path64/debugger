@@ -194,7 +194,7 @@ public:
     SymbolValue (): type(SV_NONE), addr(0) {}
     SymbolValue (DIE *die): type(SV_DIEVEC) { dievec.push_back (die);}
     SymbolValue (std::vector<DIE*> &dies): type(SV_DIEVEC), dievec(dies) {}
-    SymbolValue (Address addr): type(SV_ADDRESS), addr(addr) {}
+    SymbolValue (Address _addr): type(SV_ADDRESS), addr(_addr) {}
     SymbolValueType type ;
     Address addr ;
     std::vector<DIE*> dievec ;

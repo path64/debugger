@@ -64,9 +64,9 @@ class RegisterSetProperties
 		/**
 		 * Returns the register number for a named register.
 		 */
-		int register_number_for_name(const std::string &name)
+		int register_number_for_name(const std::string &_name)
 		{
-			std::map<std::string, int>::iterator i = registerNumbers.find(name);
+			std::map<std::string, int>::iterator i = registerNumbers.find(_name);
 			return (registerNumbers.end() == i) ? -1 : i->second;
 		}
 		/**

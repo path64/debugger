@@ -35,8 +35,8 @@ author: David Allison <dallison@pathscale.com>
 #include "process.h"
 #include "dbg_stl.h"
 
-TypeStruct::TypeStruct(DwCUnit * cu, DIE * parent, Abbreviation * abbrev)
-:  DIE(cu, parent, abbrev), symbolsok(false)
+TypeStruct::TypeStruct(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+:  DIE(_cu, _parent, _abbrev), symbolsok(false)
 {
 }
 

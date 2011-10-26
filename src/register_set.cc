@@ -40,9 +40,9 @@ void RegisterSet::print(PStream &os)
 			{
 				os.print("0");
 			}
-			for (int i = 63 ; i >= 0 ; i--)
+			for (int j = 63 ; j >= 0 ; j--)
 			{
-				int64_t bit = (v & (1LL << i)) ;
+				int64_t bit = (v & (1LL << j)) ;
 				os.print ("%c", bit ? '1' : '0') ;
 			}
 		}

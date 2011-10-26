@@ -98,19 +98,19 @@ get_die_reference(DwCUnit * cu, Attribute * attr, Offset offset)
    return die;
 }
 
-DIE::DIE(DwCUnit * cu, DIE * parent, Abbreviation * abbrev)
-:  cu(cu),
-parent(parent),
-abbrev(abbrev),
+DIE::DIE(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+:  cu(_cu),
+parent(_parent),
+abbrev(_abbrev),
 id(0), tag(0), children_offset(0), more_info(NULL), definition(NULL)
 {
 }
 
-DIE::DIE(DwCUnit * cu, DIE * parent, int tag)
-:  cu(cu),
-parent(parent),
+DIE::DIE(DwCUnit *_cu, DIE *_parent, int _tag)
+:  cu(_cu),
+parent(_parent),
 abbrev(NULL),
-id(0), tag(tag), children_offset(0), more_info(NULL), definition(NULL)
+id(0), tag(_tag), children_offset(0), more_info(NULL), definition(NULL)
 {
 }
 
@@ -157,7 +157,7 @@ bool DIE::is_case_blind()
 
 // this is like reading a normal Attribute, except we need to know what the offset is
 Offset
-DIE::read_sibling(DwCUnit * cu, AttributeAbbreviation * attrabbrev,
+DIE::read_sibling(DwCUnit *_cu, AttributeAbbreviation * attrabbrev,
 		      Attribute * attr, BStream & stream)
 {
    int form = attrabbrev->getForm();
@@ -165,22 +165,22 @@ DIE::read_sibling(DwCUnit * cu, AttributeAbbreviation * attrabbrev,
    switch (form) {
    case DW_FORM_ref1:{
 	 offset = stream.read1u();
-	 attr->value = get_die_reference(cu, attr, offset);
+	 attr->value = get_die_reference(_cu, attr, offset);
 	 break;
       }
    case DW_FORM_ref2:{
 	 offset = stream.read2u();
-	 attr->value = get_die_reference(cu, attr, offset);
+	 attr->value = get_die_reference(_cu, attr, offset);
 	 break;
       }
    case DW_FORM_ref4:{
 	 offset = stream.read4u();
-	 attr->value = get_die_reference(cu, attr, offset);
+	 attr->value = get_die_reference(_cu, attr, offset);
 	 break;
       }
    case DW_FORM_ref8:{
 	 offset = stream.read8u();
-	 attr->value = get_die_reference(cu, attr, offset);
+	 attr->value = get_die_reference(_cu, attr, offset);
 	 break;
       }
    default:
@@ -221,7 +221,7 @@ bool DIE::is_skippable()
 }
 
 void
- DIE::read(DwCUnit * cu, BStream & stream, bool readall)
+ DIE::read(DwCUnit *_cu, BStream & stream, bool readall)
 {
    id = stream.offset();
    // read the attribute values
@@ -242,10 +242,10 @@ void
       int attrtag = attrabbrev->getTag();
       if (attrtag == DW_AT_sibling) {
 	 sibling_present = true;
-	 sibling = read_sibling(cu, attrabbrev, attr, stream) + cu->start_offset;
+	 sibling = read_sibling(_cu, attrabbrev, attr, stream) + _cu->start_offset;
       } else if (attrtag == DW_AT_specification
 		 || attrtag == DW_AT_abstract_origin) {
-	 attr->value = attrabbrev->read(cu, attr, stream);
+	 attr->value = attrabbrev->read(_cu, attr, stream);
 	 // if the referenced DIE hasn't been read yet, a fixup is added for it.
 	 if (attr->value.type == AV_DIE) {
 	    DIE * d = attr->value;
@@ -254,7 +254,7 @@ void
 	    }
 	 }
       } else {
-	 attr->value = attrabbrev->read(cu, attr, stream);
+	 attr->value = attrabbrev->read(_cu, attr, stream);
       }
       //std::cout << "attribute value (type:" << attr->value.type << ", value: " << attr->value << ")\n" ;
       attributes[attrtag] = attr;
@@ -268,8 +268,8 @@ void
 
       if (!readall && sibling_present && is_skippable()) {
 	 children_offset = stream.offset();
-	 cu->add_lazy_die(this, children_offset - cu->start_offset,
-			  sibling - cu->start_offset);
+	 _cu->add_lazy_die(this, children_offset - _cu->start_offset,
+			  sibling - _cu->start_offset);
 
 	 //printf ("%x skipping to sibling at offset %x\n", id, sibling) ;
 	 stream.seek(sibling);	// move to the sibling
@@ -279,14 +279,14 @@ void
       for (;;) {
 	 int offset = stream.offset();
 	 int64_t childabbrevnum = stream.read_uleb();
-	 Abbreviation * childabbrev = cu->getAbbreviation(childabbrevnum);
+	 Abbreviation * childabbrev = _cu->getAbbreviation(childabbrevnum);
 	 if (childabbrev->getTag() == 0) {
 	    break;
 	 }
-	 DIE * child = cu->make_die(cu, this, childabbrev);
+	 DIE * child = _cu->make_die(_cu, this, childabbrev);
 	 if (child != NULL) {
-	    child->read(cu, stream);
-	    cu->add_die(offset - cu->start_offset, child);
+	    child->read(_cu, stream);
+	    _cu->add_die(offset - _cu->start_offset, child);
 	    children.push_back(child);
 	 }
       }
@@ -335,7 +335,7 @@ void
 }
 
 void
- DIE::dumpAttributes(DwCUnit * cu, int indent)
+ DIE::dumpAttributes(DwCUnit *_cu, int indent)
 {
    /*
     * XXX: implement me 
@@ -357,9 +357,9 @@ void
 }
 
 Attribute *
-DIE::find_attribute(int tag)
+DIE::find_attribute(int _tag)
 {
-   AttributeMap::iterator attr = attributes.find(tag);
+   AttributeMap::iterator attr = attributes.find(_tag);
    if (attr == attributes.end()) {
       return NULL;
    }
@@ -368,9 +368,9 @@ DIE::find_attribute(int tag)
 
 AttributeValue no_value;
 
-AttributeValue & DIE::getAttribute(int tag, bool fullsearch, bool stophere)
+AttributeValue & DIE::getAttribute(int _tag, bool fullsearch, bool stophere)
 {
-   Attribute * attr = find_attribute(tag);
+   Attribute * attr = find_attribute(_tag);
    if (attr == NULL) {
 
       // if the attribute is not found, look for it using the DW_AT_specification or
@@ -386,7 +386,7 @@ AttributeValue & DIE::getAttribute(int tag, bool fullsearch, bool stophere)
 	    //printf ("dereferencing die %llx\n", id) ;
 	    DIE * origin = dereference_die_reference(cu, more);
 	    if (origin != NULL) {
-	       return origin->getAttribute(tag, fullsearch);
+	       return origin->getAttribute(_tag, fullsearch);
 	    } else {
                return no_value;
             }
@@ -394,7 +394,7 @@ AttributeValue & DIE::getAttribute(int tag, bool fullsearch, bool stophere)
       }
       // if there is more info, look there
       if (fullsearch && more_info != NULL) {
-	 return more_info->getAttribute(tag, fullsearch, true);
+	 return more_info->getAttribute(_tag, fullsearch, true);
       } else {
 	 return no_value;
       }
@@ -413,18 +413,18 @@ AttributeValue & DIE::getAttribute(int tag, bool fullsearch, bool stophere)
 }
 
 void
-DIE::addAttribute(int tag, const AttributeValue & value)
+DIE::addAttribute(int _tag, const AttributeValue & value)
 {
    Attribute* attr;
 
-   if (tag == DW_AT_specification ||
-       tag == DW_AT_abstract_origin) {
+   if (_tag == DW_AT_specification ||
+       _tag == DW_AT_abstract_origin) {
        attr = new FixupAttribute(0, this);
    } else {
        attr = new Attribute (0);
    }
 
-   attributes[tag] = attr;
+   attributes[_tag] = attr;
    attr->value = value;
 }
 
@@ -613,9 +613,9 @@ void
 void
  DIE::dump(int indent)
 {
-   DwTagId tag = (DwTagId) get_tag();
+   DwTagId _tag = (DwTagId) get_tag();
    doindent(indent);
-   std::cout << globl_dwf_names.get(tag);
+   std::cout << globl_dwf_names.get(_tag);
    dumpAttributes(cu, indent + 2);
    dumpChildren(indent);
 }
@@ -681,9 +681,9 @@ void
 	 ctx.os.print("(");
 	 bool
 	     comma = false;
-	 for (uint i = 0; i < type->getChildren().size(); i++) {
+	 for (uint j = 0; j < type->getChildren().size(); j++) {
 	    DIE *
-		para = type->getChildren()[i];
+		para = type->getChildren()[j];
 	    if (comma) {
 	       ctx.os.print(", ");
 	    }
@@ -706,9 +706,9 @@ void
 	       print_type(stack, i - 1, ctx, indent);
 	    }
 	 }
-	 for (uint i = 0; i < type->getChildren().size(); i++) {
+	 for (uint j = 0; j < type->getChildren().size(); j++) {
 	    DIE *
-		subrange = type->getChildren()[i];
+		subrange = type->getChildren()[j];
 	    AttributeValue & upperbound =
 		subrange->getAttribute(DW_AT_upper_bound);
 	    if (upperbound.type != AV_NONE) {

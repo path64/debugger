@@ -37,18 +37,18 @@ author: David Allison <dallison@pathscale.com>
 
 #include <fstream>
 
-File::File (DirectoryTable &dt, std::string cdir, std::string name, int dir, int mtime, int size)
-    : name(name),
-      dir(dir),
-      mtime(mtime),
-      size(size),
+File::File (DirectoryTable &dt, std::string cdir, std::string _name, int _dir, int _mtime, int _size)
+    : name(_name),
+      dir(_dir),
+      mtime(_mtime),
+      size(_size),
       dirtable(dt),
       stream(NULL),
       comp_dir(cdir),
       time(0),
       warned(false)
 {
-    basename = name ;
+    basename = _name ;
     if (dir != 0) {
         dirname = dirtable[dir] ;
         this->name = dirname + "/" + basename ;
@@ -71,14 +71,14 @@ void File::open(DirectoryTable &dirlist) {
    pathname = name ;
    // search using the dirlist, backwards
    for (int i = (int)dirlist.size() - 1 ; i >= 0 ; i--) {
-       std::string dirname = dirlist[i] ;
-       if (dirname == "$cwd") {
-           dirname = getenv ("PWD") ;
-       } else if (dirname == "$cdir") {
-           dirname = comp_dir ;
+       std::string _dirname = dirlist[i] ;
+       if (_dirname == "$cwd") {
+           _dirname = getenv ("PWD") ;
+       } else if (_dirname == "$cdir") {
+           _dirname = comp_dir ;
        }
-       if (file_exists (dirname + "/" + name)) {
-           pathname = dirname + '/' + name ;
+       if (file_exists (_dirname + "/" + name)) {
+           pathname = _dirname + '/' + name ;
            break ;
        }
    }

@@ -60,7 +60,7 @@ Target *Target::new_live_target(Architecture *arch) {
     return new PtraceTarget (arch);
 }
 
-Target::Target (Architecture *arch) : arch(arch) {}
+Target::Target (Architecture *_arch) : arch(_arch) {}
 
 //
 // functions common to all targets
@@ -138,12 +138,12 @@ void LiveTarget::write_string (int pid, Address addr, std::string s) {
 
 int CoreThread::nextid = 1 ;
 
-CoreTarget::CoreTarget (Architecture *arch, std::string corefile) : Target(arch), corefile(corefile) {
-    fd = open (corefile.c_str(), O_RDONLY) ;
+CoreTarget::CoreTarget (Architecture *_arch, std::string _corefile) : Target(_arch), corefile(_corefile) {
+    fd = open (_corefile.c_str(), O_RDONLY) ;
     if (fd == -1) {
        throw Exception ("Unable to open core file") ;
     }
-    core = new ELF (corefile) ;
+    core = new ELF (_corefile) ;
     std::istream *s = core->open() ;
     
     int nsegs = core->get_num_segments() ;
@@ -180,17 +180,17 @@ int CoreTarget::attach (const char* prog, const char* args, EnvMap& env)
 // main program before reading the dynamic information.  The dynamic information may
 // refer to an address within the main program.
 void CoreTarget::map_file (ELF *file) {
-    int fd = open (file->get_name().c_str(), O_RDONLY) ;
-    if (fd < 0) {
+    int _fd = open (file->get_name().c_str(), O_RDONLY) ;
+    if (_fd < 0) {
         throw Exception ("Cannot open ELF file") ;
     }
-    open_files.push_back (fd) ;
+    open_files.push_back (_fd) ;
     std::vector<SegmentList::iterator> found_segs ;
     for (SegmentList::iterator i = pending_segments.begin() ; i != pending_segments.end() ; i++) {
         Address addr = (*i)->get_start() ;
         ProgramSegment *seg = file->find_segment (addr) ;
         if (seg != NULL) {
-            void *vaddr = seg->map (fd) ;
+            void *vaddr = seg->map (_fd) ;
             if (vaddr == NULL) {
                 printf ("warning: failed to map segment for address 0x%llx\n", (unsigned long long)addr) ;
                 continue ;
@@ -217,12 +217,12 @@ void CoreTarget::map_code (std::vector<ELF*> &files) {
         for (unsigned int j = 0 ; j < files.size() ; j++) {
              ProgramSegment *seg = files[j]->find_segment (addr) ;
              if (seg != NULL) {
-                 int fd = open (files[j]->get_name().c_str(), O_RDONLY) ;
-                 if (fd < 0) {
+                 int _fd = open (files[j]->get_name().c_str(), O_RDONLY) ;
+                 if (_fd < 0) {
                      throw Exception ("Cannot open ELF file") ;
                  }
-                 open_files.push_back (fd) ;
-                 void *vaddr = seg->map (fd) ;
+                 open_files.push_back (_fd) ;
+                 void *vaddr = seg->map (_fd) ;
                  if (vaddr == NULL) {
                      printf ("warning: failed to map segment for address 0x%llx\n", (unsigned long long)addr) ;
                      continue ;
@@ -304,15 +304,15 @@ void CoreTarget::detach(int pid, bool kill) {
        munmap(i->val, i->hi - i->lo + 1);
     }
 
-    for (unsigned int i = 0 ; i < open_files.size() ; i++) {
-        close (open_files[i]) ;
+    for (unsigned int j = 0 ; j < open_files.size() ; j++) {
+        close (open_files[j]) ;
     }
     delete core ;
     close (fd) ;
 
-	for (unsigned int i = 0 ; i < threads.size() ; i++) {
-		if (threads[i]->reg)
-			free (threads[i]->reg);
+	for (unsigned int j = 0 ; j < threads.size() ; j++) {
+		if (threads[j]->reg)
+			free (threads[j]->reg);
 	}
 }
 

@@ -33,15 +33,15 @@ author: David Allison <dallison@pathscale.com>
 #include "type_array.h"
 #include "dwf_cunit.h"
 
-TypeArray::TypeArray(DwCUnit * cu, DIE * parent,
-		     Abbreviation * abbrev)
-:  DIE(cu, parent, abbrev), dimsok(false)
+TypeArray::TypeArray(DwCUnit *_cu, DIE *_parent,
+		     Abbreviation *_abbrev)
+:  DIE(_cu, _parent, _abbrev), dimsok(false)
 {
 }
 
-TypeArray::TypeArray(DwCUnit * cu, DIE * parent, int tag)
+TypeArray::TypeArray(DwCUnit *_cu, DIE *_parent, int _tag)
     :
-DIE(cu, parent, tag),
+DIE(_cu, _parent, _tag),
 dimsok(false)
 {
 }

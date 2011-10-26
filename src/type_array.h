@@ -41,8 +41,8 @@ struct Dimension {
    } Dimension(int i):low(0),
       high(i),notset(false) {
    }
-   Dimension(int lo, int hi, bool notset):low(lo),
-      high(hi),notset(notset) {
+   Dimension(int lo, int hi, bool _notset):low(lo),
+      high(hi),notset(_notset) {
    }
    int low;
    int high;

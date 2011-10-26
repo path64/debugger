@@ -326,42 +326,42 @@ static const char* unescape (int ch) {
    return NULL; 
 }
 
-void JunkStream::print_char (EvalContext& ctx, int ch) {
-   const char* s_esc = unescape(ch);
+void JunkStream::print_char (EvalContext& ctx, int _ch) {
+   const char* s_esc = unescape(_ch);
 
    if ( s_esc != NULL ) {
       PStream::print ("\'%s\'", s_esc);
       return;
    }
 
-   if ( !isprint(ch) ) {
-      PStream::print ("\'\\%03o\'", ch);
+   if ( !isprint(_ch) ) {
+      PStream::print ("\'\\%03o\'", _ch);
       return;
    }
 
-   PStream::print ("\'%c\'", ch);
+   PStream::print ("\'%c\'", _ch);
    return;
 
 }
 
-void JunkStream::print (EvalContext &ctx, signed char ch)  {
+void JunkStream::print (EvalContext &ctx, signed char _ch)  {
    const char *fmt = to_format_string (ctx.fmt, true);
 
    if (fmt != NULL) {
-      PStream::print (fmt, ch);
+      PStream::print (fmt, _ch);
       return;
    }
 
    int code = ctx.fmt.code;
 
    if (code == 't') {
-      print_binary (ch, 8);
+      print_binary (_ch, 8);
       return;
    }
 
    if (code == 'n') {
-      unsigned char u_ch = ch;
-      PStream::print ("%d ", ch);
+      unsigned char u_ch = _ch;
+      PStream::print ("%d ", _ch);
       print_char(ctx, u_ch);
       return;
    }
@@ -371,24 +371,24 @@ void JunkStream::print (EvalContext &ctx, signed char ch)  {
    */
 }
 
-void JunkStream::print (EvalContext &ctx, unsigned char ch)  {
+void JunkStream::print (EvalContext &ctx, unsigned char _ch)  {
    const char *fmt = to_format_string (ctx.fmt, true);
 
    if (fmt != NULL) {
-      PStream::print (fmt, ch);
+      PStream::print (fmt, _ch);
       return;
    }
 
    int code = ctx.fmt.code;
 
    if (code == 't') {
-      print_binary (ch, 8);
+      print_binary (_ch, 8);
       return;
    }
 
    if (code == 'n') {
-      PStream::print ("%u ", ch);
-      print_char(ctx, ch);
+      PStream::print ("%u ", _ch);
+      print_char(ctx, _ch);
       return;
    }
 

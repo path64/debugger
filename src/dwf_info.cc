@@ -46,8 +46,8 @@ author: David Allison <dallison@pathscale.com>
 #include <ios>
 #include <algorithm>
 
-DwInfo::DwInfo(ELF * elffile, std::istream& _stream)
-:  elffile(elffile), stream(_stream), string_table(NULL), location_table(NULL)
+DwInfo::DwInfo(ELF *_elffile, std::istream& _stream)
+:  elffile(_elffile), stream(_stream), string_table(NULL), location_table(NULL)
 {
 
    // populate the opcode operand counts
@@ -67,9 +67,9 @@ DwInfo::DwInfo(ELF * elffile, std::istream& _stream)
       opcode_opcounts[i] = 1;
    }
 
-   Section *got_section = elffile->find_section(".got");
+   Section *got_section = _elffile->find_section(".got");
    if (got_section != NULL) {
-      got = got_section->get_addr() + elffile->get_base();
+      got = got_section->get_addr() + _elffile->get_base();
    } else {
       got = 0;
    }
@@ -94,12 +94,12 @@ DwInfo::~DwInfo()
 }
 
 Address
-DwInfo::read_address(BStream & stream)
+DwInfo::read_address(BStream &_stream)
 {
    if (elffile->is_elf64()) {
-      return stream.read8u();
+      return _stream.read8u();
    } else {
-      return stream.read4u();
+      return _stream.read4u();
    }
 }
 
@@ -207,13 +207,13 @@ DwInfo::disassemble_location(DwCUnit * cu, BVector location)
 }
 
 void
-DwInfo::read_frame_entry(Section * section, BStream & stream,
+DwInfo::read_frame_entry(Section * section, BStream &_stream,
 			    bool is_eh)
 {
-   Offset offset = stream.offset();
+   Offset offset = _stream.offset();
 
    /* get length of the whole CFA entry */
-   int length = stream.read4u();
+   int length = _stream.read4u();
 
    /* length of remaining after id */
    int rlen;			/* XXX: rearrange FDE and just use length */
@@ -222,7 +222,7 @@ DwInfo::read_frame_entry(Section * section, BStream & stream,
     * zero length is null terminator 
     */
    if (length == 0) {
-      stream.seek(0, BSTREAM_END);
+      _stream.seek(0, BSTREAM_END);
       return;
    }
 
@@ -234,10 +234,10 @@ DwInfo::read_frame_entry(Section * section, BStream & stream,
     */
    Address id;
    if (is_dwf64()) {
-      id = stream.read8u();
+      id = _stream.read8u();
       rlen = length - 8;
    } else {
-      id = stream.read4u();
+      id = _stream.read4u();
       rlen = length - 4;
    }
 
@@ -246,11 +246,11 @@ DwInfo::read_frame_entry(Section * section, BStream & stream,
     */
    if (id == -1 || (is_eh && id == 0)) {
       CIE *entry = new CIE(this, offset);
-      entry->read(section, stream, id, rlen, is_eh);
+      entry->read(section, _stream, id, rlen, is_eh);
       cies[offset] = entry;
    } else {
       FDE *entry = new FDE(this);
-      entry->read(section, stream, id, offset + 4, length, is_eh);
+      entry->read(section, _stream, id, offset + 4, length, is_eh);
       fdes[entry->get_start_address()] = entry;
       fdevec.push_back(entry);
    }
@@ -271,11 +271,11 @@ DwInfo::read_frames(std::string section_name)
       // std::cout << "No " << section_name << " frames present" << '\n' ;
       return;
    }
-   BStream stream(debug_frame, do_swap());
+   BStream _stream(debug_frame, do_swap());
    bool is_eh = section_name == ".eh_frame";
-   while (!stream.eof()) {
+   while (!_stream.eof()) {
       try {
-	 read_frame_entry(section, stream, is_eh);
+	 read_frame_entry(section, _stream, is_eh);
       }
       catch(Exception e) {
 	 e.report(std::cout);

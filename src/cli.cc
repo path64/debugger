@@ -131,7 +131,7 @@ void CommandCompletor::reset() {
     matches.clear() ;
 }
 
-Command::Command (CommandInterpreter *cli, ProcessController *p, const char **commands) :cli(cli), os(cli->os),  pcm(p), commands(commands) {
+Command::Command (CommandInterpreter *_cli, ProcessController *p, const char **_commands) :cli(_cli), os(_cli->os),  pcm(p), commands(_commands) {
 }
 
 // split a command into parts, mindful of strings in quotes
@@ -568,8 +568,8 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
             if (matches.size() == 0) {
                 funcname = func ;
             } else if (matches.size() > 1) {
-                PStream &os = cli->get_os() ;
-                os.print ("Choose one of the following functions:\n") ;
+                PStream &_os = cli->get_os() ;
+                _os.print ("Choose one of the following functions:\n") ;
                 int n = 1 ;
 
                 const char* fmt_str;
@@ -581,17 +581,17 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
                    fmt_str = "%d.  %s\n";
                 }
 
-                os.print (fmt_str, 0, "cancel");
+                _os.print (fmt_str, 0, "cancel");
                 for (unsigned int i = 0 ; i < matches.size() ; i++) {
-                    os.print (fmt_str, n++, matches[i].c_str()) ;
+                    _os.print (fmt_str, n++, matches[i].c_str()) ;
                 }
                 if (allow_all) {
-                    os.print ("a.  all\n") ;
+                    _os.print ("a.  all\n") ;
                 }
 
                 for (;;) {
-                    os.print ("> ") ;
-                    os.flush() ;
+                    _os.print ("> ") ;
+                    _os.flush() ;
                     std::string r ;
                     std::cin.clear(); 
                     std::getline (std::cin, r) ;
@@ -603,7 +603,7 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
                     } else {
                         n = atoi(r.c_str()) ;
                         if (n < 0 || n > (int)matches.size()) {
-                            os.print ("Please enter a number between 0 and %d.\n", matches.size()) ;
+                            _os.print ("Please enter a number between 0 and %d.\n", matches.size()) ;
                             continue ;
                         }
                     }
@@ -642,7 +642,7 @@ void Command::get_address_arg (std::string tail, std::vector<Address> &result, b
 
 
 
-DebuggerCommand::DebuggerCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+DebuggerCommand::DebuggerCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 const char *DebuggerCommand::cmds[] = {
@@ -932,7 +932,7 @@ void DebuggerCommand::execute (std::string root, std::string tail) {
 
 // general control commands
 
-ControlCommand::ControlCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+ControlCommand::ControlCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 const char *ControlCommand::cmds[] = {
@@ -1087,7 +1087,7 @@ void ControlCommand::execute (std::string root, std::string tail) {
 // break command
 //
 
-BreakpointCommand::BreakpointCommand (CommandInterpreter *cli, ProcessController *pcm): Command (cli, pcm, cmds) {
+BreakpointCommand::BreakpointCommand (CommandInterpreter *_cli, ProcessController *_pcm): Command (_cli, _pcm, cmds) {
 }
 
 const char *BreakpointCommand::cmds[] = {
@@ -1294,7 +1294,7 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
         printf ("End with a line saying just \"end\".\n") ;
          
         cli->rerun_push(root, tail) ;
-        std::vector<ComplexCommand *> cmds ;
+        std::vector<ComplexCommand *> _cmds ;
         for (;;) {
             std::string line = cli->readline (">", false) ;
             if (line == "end") {
@@ -1302,9 +1302,9 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
             }
             cli->rerun_push(line) ;
             ComplexCommand *cmd = cli->command (line) ;
-            cmds.push_back (cmd) ;
+            _cmds.push_back (cmd) ;
         }
-        pcm->set_breakpoint_commands (bpnum, cmds) ;
+        pcm->set_breakpoint_commands (bpnum, _cmds) ;
     } else if (root == "delete") {
         if (tail == "" || strncmp (tail.c_str(),"breakpoints", tail.size()) == 0) {               // delete all?
             if (pcm->breakpoint_count() > 0 && cli->confirm (NULL, "Delete all breakpoints")) {
@@ -1601,7 +1601,7 @@ void BreakpointCommand::execute (std::string root, std::string tail) {
 }
 
 
-StackCommand::StackCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+StackCommand::StackCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 
 }
 
@@ -1715,7 +1715,7 @@ void StackCommand::execute (std::string root, std::string tail) {
     }
 }
 
-PrintCommand::PrintCommand (CommandInterpreter *cli, ProcessController *pcm): Command (cli, pcm, cmds) {
+PrintCommand::PrintCommand (CommandInterpreter *_cli, ProcessController *_pcm): Command (_cli, _pcm, cmds) {
     last_format = new Format() ;
 }
 
@@ -2260,7 +2260,7 @@ void PrintCommand::execute (std::string root, std::string tail) {
     *last_format = fmt ;
 }
 
-QuitCommand::QuitCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+QuitCommand::QuitCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 const char *QuitCommand::cmds[] = {
@@ -2279,8 +2279,8 @@ void QuitCommand::execute (std::string root, std::string tail) {
 }
 
 
-InfoCommand::InfoCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
-    subcommands = new InfoSubcommand (cli, pcm) ;
+InfoCommand::InfoCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
+    subcommands = new InfoSubcommand (_cli, _pcm) ;
 }
 
 const char *InfoCommand::cmds[] = {
@@ -2298,7 +2298,7 @@ void InfoCommand::execute (std::string root, std::string tail) {
 }
 
 
-InfoSubcommand::InfoSubcommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+InfoSubcommand::InfoSubcommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 const char *InfoSubcommand::cmds[] = {
@@ -2331,7 +2331,7 @@ void InfoSubcommand::execute (std::string root, std::string tail) {
     }
 }
 
-SetSubcommand::SetSubcommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+SetSubcommand::SetSubcommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 // the validation of the set sub commands is done during execution, so here we
@@ -2459,9 +2459,9 @@ void CommandInterpreter::shrink_history() {
    history.set_size(hsize);
 }
 
-SetCommand::SetCommand(CommandInterpreter *cli, ProcessController *pcm)
- : Command (cli, pcm, cmds) {
-    subcommands = new SetSubcommand (cli, pcm) ;
+SetCommand::SetCommand(CommandInterpreter *_cli, ProcessController *_pcm)
+ : Command (_cli, _pcm, cmds) {
+    subcommands = new SetSubcommand (_cli, _pcm) ;
 }
 
 const char *SetCommand::cmds[] = {
@@ -2479,7 +2479,7 @@ void SetCommand::execute (std::string root, std::string tail) {
 }
 
 
-CatchSubcommand::CatchSubcommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+CatchSubcommand::CatchSubcommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 
@@ -2529,8 +2529,8 @@ void CatchSubcommand::execute (std::string root, std::string tail) {
 }
 
 
-CatchCommand::CatchCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
-    subcommands = new CatchSubcommand (cli, pcm) ;
+CatchCommand::CatchCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
+    subcommands = new CatchSubcommand (_cli, _pcm) ;
 }
 
 const char *CatchCommand::cmds[] = {
@@ -2549,7 +2549,7 @@ void CatchCommand::execute (std::string root, std::string tail) {
 }
 
 
-ShowSubcommand::ShowSubcommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
+ShowSubcommand::ShowSubcommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
 }
 
 // the validation of the show sub commands is done during execution, so here we
@@ -2582,18 +2582,18 @@ void ShowSubcommand::execute (std::string root, std::string tail) {
         } else if (strncmp (root.c_str(), "environment", root.size()) == 0) {
             cli->show_env(tail);
         } else {
-            std::string complete = root;
+            std::string _complete = root;
             if (tail != "") {
-               complete += " " + tail;
+               _complete += " " + tail;
             }
-            cli->show_opt(complete.c_str()) ;
+            cli->show_opt(_complete.c_str()) ;
         }
     }
 }
 
 
-ShowCommand::ShowCommand(CommandInterpreter *cli, ProcessController *pcm) : Command (cli, pcm, cmds) {
-    subcommands = new ShowSubcommand (cli, pcm) ;
+ShowCommand::ShowCommand(CommandInterpreter *_cli, ProcessController *_pcm) : Command (_cli, _pcm, cmds) {
+    subcommands = new ShowSubcommand (_cli, _pcm) ;
 }
 
 const char *ShowCommand::cmds[] = {
@@ -2621,11 +2621,11 @@ void globl_sighandler(int sig) {
     }
 }
 
-CommandInterpreter::CommandInterpreter (PStream &os,
-    int flags, bool subverbose)
-  : os(os), last_listed_line(0),
-    program_running(false), instream(NULL), options(os), history(os),
-    flags(flags), debugger_var_num(0), last_breakpoint_num(-1) {
+CommandInterpreter::CommandInterpreter (PStream &_os,
+    int _flags, bool subverbose)
+  : os(_os), last_listed_line(0),
+    program_running(false), instream(NULL), options(_os), history(_os),
+    flags(_flags), debugger_var_num(0), last_breakpoint_num(-1) {
 
     pcm = new ProcessController(this, subverbose) ;
     load_env();
@@ -2770,12 +2770,12 @@ void CommandInterpreter::run(Process *proc, Address endsp) {
                  break ;
             }
         }
-        std::string command ;
+        std::string _command ;
         bool repeat_command = false ;           // command was a repeat
         if (!injected_commands.empty()) {
             ComplexCommand *ccmd = injected_commands.front() ;
             injected_commands.pop() ;
-            bool quit = false ;
+            bool _quit = false ;
             try {
                 execute_complex_command (ccmd) ;
             } catch (Exception e) {
@@ -2789,7 +2789,7 @@ void CommandInterpreter::run(Process *proc, Address endsp) {
                 std::cerr << s << "\n" ;
             } catch (QuitOutput q) {
                 os.print ("Quit\n") ;   
-                quit = true ;
+                _quit = true ;
             } catch (bool b) {
             } catch (...) {
                 os.flush() ;
@@ -2797,7 +2797,7 @@ void CommandInterpreter::run(Process *proc, Address endsp) {
             }
             delete ccmd ;
             // if we've been asked to quit, flush the injected commands queue
-            if (quit) {         
+            if (_quit) {         
                 while (!injected_commands.empty()) {
                     injected_commands.pop() ;
                 }
@@ -2807,18 +2807,18 @@ void CommandInterpreter::run(Process *proc, Address endsp) {
             try {
                 completor->reset() ;
                 std::string prompt = get_str_opt(PRM_PROMPT);
-                command = readline (prompt.c_str(), true) ;
+                _command = readline (prompt.c_str(), true) ;
                 if (instream != NULL && instream->eof()) {
                     break ;
                 }
                 if (instream != NULL) {
-                    printf ("%s\n", command.c_str()) ;
+                    printf ("%s\n", _command.c_str()) ;
                 }
-                if (command == "") {
-                    command = lastcommand ;
+                if (_command == "") {
+                    _command = lastcommand ;
                     repeat_command = true ;
                 }
-                lastcommand = command ;
+                lastcommand = _command ;
             } catch (const char *s) {
                 printf ("%s\n", s) ;
                 continue ;
@@ -2826,7 +2826,7 @@ void CommandInterpreter::run(Process *proc, Address endsp) {
         }
         try {
             init_pstream();
-            execute_command (command, repeat_command) ;
+            execute_command (_command, repeat_command) ;
         } catch (Exception e) {
             os.flush() ;
             e.report (std::cout) ;
@@ -3048,8 +3048,8 @@ try_again:
    }
 }
 
-void CommandInterpreter::inject_command (ComplexCommand *command) {
-    injected_commands.push (command->clone()) ;
+void CommandInterpreter::inject_command (ComplexCommand *_command) {
+    injected_commands.push (_command->clone()) ;
 }
 
 void CommandInterpreter::load_env () {
@@ -3606,22 +3606,22 @@ static void find_command_or_topic (XML::Element *root, std::string name, std::ve
     }
 }
 
-void CommandInterpreter::command_help (XML::Element *command, std::string tail, int level) {
+void CommandInterpreter::command_help (XML::Element *_command, std::string tail, int level) {
     if (level > 10) {
         os.print ("Max command help level exceeded\n") ;
         return ;
     }
     if (tail == "") {           // end of command help
-        os.print ("Command syntax: %s %s\n", command->getAttribute("name").c_str(), command->getAttribute ("args").c_str()) ;
-        XML::Element *purpose = command->find ("purpose") ;
+        os.print ("Command syntax: %s %s\n", _command->getAttribute("name").c_str(), _command->getAttribute ("args").c_str()) ;
+        XML::Element *purpose = _command->find ("purpose") ;
         print_body (os, purpose) ;
         os.print ("\n") ;
 
-        XML::Element *helptext = command->find ("help") ;
+        XML::Element *helptext = _command->find ("help") ;
         print_body (os, helptext) ;
         os.print ("\n") ;
 
-        std::vector<XML::Element*> &children = command->getChildren() ;
+        std::vector<XML::Element*> &children = _command->getChildren() ;
         bool header_output = false ;
         for (unsigned int i = 0 ; i < children.size() ; i++) {
             XML::Element *subcommand = children[i] ;
@@ -3638,7 +3638,7 @@ void CommandInterpreter::command_help (XML::Element *command, std::string tail, 
             }
         }
 
-        XML::Element *seealso = command->find ("seealso") ;
+        XML::Element *seealso = _command->find ("seealso") ;
         if (seealso != NULL) {
             os.print ("\nSee the following commands for more information:\n\n") ;
             std::string t = seealso->getAttribute ("commands") ;
@@ -3698,7 +3698,7 @@ void CommandInterpreter::command_help (XML::Element *command, std::string tail, 
         }
 
         std::vector<XML::Element*> results ;
-        find_command_or_topic (command, root, results) ;
+        find_command_or_topic (_command, root, results) ;
         if (results.size() == 0) {
             os.print ("Sorry, no help available for %s.  Try 'help Commands'\n", root.c_str()) ;
             return ;
@@ -3713,8 +3713,8 @@ void CommandInterpreter::command_help (XML::Element *command, std::string tail, 
                 if (topic == "Commands") {                              // commands is special, list all commands
                     print_body (os, subcommand) ;
                     std::vector<XML::Element*> &children = help_root->getChildren() ;
-                    for (unsigned int i = 0 ; i < children.size() ; i++) {
-                        XML::Element *child = children[i] ;
+                    for (unsigned int j = 0 ; j < children.size() ; j++) {
+                        XML::Element *child = children[j] ;
                         if (child->name == "command") {
                             XML::Element *purpose = child->find ("purpose") ;
                             if (purpose != NULL) {
@@ -3954,16 +3954,16 @@ void CommandInterpreter::execute_complex_command (ComplexCommand *cmd, int depth
 }
 
 
-std::string CommandInterpreter::complete_command (std::string command, int ch) {
+std::string CommandInterpreter::complete_command (std::string _command, int ch) {
     CommandVec matches ;
     int pos = 0 ;
-    while (pos < ch && isspace (command[pos])) pos++ ;
+    while (pos < ch && isspace (_command[pos])) pos++ ;
     std::string root ;
-    while (pos < ch && !isspace (command[pos])) {
-        root += command[pos++] ;
+    while (pos < ch && !isspace (_command[pos])) {
+        root += _command[pos++] ;
     }
 
-    if (command == "") {
+    if (_command == "") {
         return "" ;
     }
 
@@ -3981,11 +3981,11 @@ std::string CommandInterpreter::complete_command (std::string command, int ch) {
             // adjust ch to the new position
             int diff = alias->second.size() - root.size() ;
             ch += diff ;
-            command = alias->second + command.substr (pos) ;            // replace root
+            _command = alias->second + _command.substr (pos) ;          // replace root
             pos = 0 ;
             root = "" ;
-            while (pos < ch && !isspace (command[pos])) {               // reset root
-                root += command[pos++] ;
+            while (pos < ch && !isspace (_command[pos])) {              // reset root
+                root += _command[pos++] ;
             }
         }
     }
@@ -4027,12 +4027,12 @@ std::string CommandInterpreter::complete_command (std::string command, int ch) {
 
     // if we get here, the position is beyond the first word.  Ask the appropriate
     // command processor to complete the rest
-    while (pos < (int)command.size() && pos < ch && isspace (command[pos])) pos++ ;
+    while (pos < (int)_command.size() && pos < ch && isspace (_command[pos])) pos++ ;
     Command *processor = matches[0].processor ;
 
     std::vector<std::string> matches2 ;
 
-    processor->complete (root, command.substr(pos), ch - pos, matches2) ;
+    processor->complete (root, _command.substr(pos), ch - pos, matches2) ;
 
     // if no matches are found just return empty
     // this is needed to protected code which follows
@@ -4074,14 +4074,14 @@ std::string CommandInterpreter::complete_command (std::string command, int ch) {
     }
 
     // fully-qualify the remaining completions
-    for (uint i = 0 ; i < matches2.size() ; i++)
+    for (i = 0 ; i < matches2.size() ; i++)
     { 
-        matches2[i].insert(0, command.substr(pos)) ;
+        matches2[i].insert(0, _command.substr(pos)) ;
     }
 
     // hand over list of matches
     completor->set_matches (matches2) ;
-    completor->set_leadin(command.substr(0,pos));
+    completor->set_leadin(_command.substr(0,pos));
 
     return prefix;
 }

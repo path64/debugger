@@ -52,10 +52,10 @@ author: David Allison <dallison@pathscale.com>
 #include <ctype.h>
 #include <sys/stat.h>
 
-Value AttributeValue::toValue(DIE* type) {
-    if (type->is_integral()) {
+Value AttributeValue::toValue(DIE* _type) {
+    if (_type->is_integral()) {
         return Value(VALUE_INTEGER, integer) ; 
-    } else if (type->is_real()) {
+    } else if (_type->is_real()) {
         return Value(VALUE_REAL, integer) ;
     } else {
         // XXX: needs to be implemented
@@ -152,8 +152,8 @@ BVector LocationListTable::getexpr (DwCUnit* cu, Offset offset, Address pc) {
     return loclist.getexpr(cu, pc);
 }
 
-AttributeAbbreviation::AttributeAbbreviation (int tag, int form)
-    : tag(tag), form(form) { }
+AttributeAbbreviation::AttributeAbbreviation (int _tag, int _form)
+    : tag(_tag), form(_form) { }
 
 AttributeAbbreviation::~AttributeAbbreviation() {
 }
@@ -274,10 +274,10 @@ AttributeValue AttributeAbbreviation::read(DwCUnit *cu, Attribute * attr, BStrea
 }
 
 
-Abbreviation::Abbreviation (int num, int tag, bool haschildren)
-    : num(num),
-    tag(tag),
-    haschildren(haschildren) {
+Abbreviation::Abbreviation (int _num, int _tag, bool _haschildren)
+    : num(_num),
+    tag(_tag),
+    haschildren(_haschildren) {
 }
 
 Abbreviation::~Abbreviation() {
@@ -296,13 +296,13 @@ void Abbreviation::read(BStream & bstream) {
        // read the attributes
        for (;;) {
            int t = bstream.read_uleb() ;
-           int tag = t ;
+           int _tag = t ;
            t = bstream.read_uleb() ;
            int form =t ;
-           if (tag == 0 && form == 0) {
+           if (_tag == 0 && form == 0) {
                break ;
            }
-           attributes.push_back (new AttributeAbbreviation (tag, form)) ;
+           attributes.push_back (new AttributeAbbreviation (_tag, form)) ;
        }
 }
 
@@ -346,8 +346,8 @@ AttributeAbbreviation *Abbreviation::getAttribute(int i) {
        return attributes[i] ;
 }
 
-Attribute::Attribute (int form)
-    : form(form) {
+Attribute::Attribute (int _form)
+    : form(_form) {
 }
 
 Attribute::~Attribute() {
@@ -365,12 +365,12 @@ void FixupAttribute::fixup(DIE *die) {
 
 
 
-Formal_parameter::Formal_parameter (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Formal_parameter::Formal_parameter (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
-Formal_parameter::Formal_parameter (DwCUnit *cu, DIE *parent, int tag)
-    : DIE(cu, parent, tag) {
+Formal_parameter::Formal_parameter (DwCUnit *_cu, DIE *_parent, int _tag)
+    : DIE(_cu, _parent, _tag) {
 }
 
 
@@ -426,8 +426,8 @@ bool Formal_parameter::is_local_var() {
     return true ;
 }
 
-Lexical_block::Lexical_block (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev), symbolsok(false) {
+Lexical_block::Lexical_block (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev), symbolsok(false) {
 }
 
 Lexical_block::~Lexical_block() {
@@ -510,8 +510,8 @@ void Lexical_block::get_local_variables (std::vector<DIE*> &vec) {
     }
 }
 
-Member::Member (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Member::Member (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Member::~Member() {
@@ -594,8 +594,8 @@ Value Member::evaluate(EvalContext &context) {
     throw Exception("cannot evaluate non-static members");
 }
 
-Reference_type::Reference_type (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Reference_type::Reference_type (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Reference_type::~Reference_type() {
@@ -698,8 +698,8 @@ void Reference_type::print_value(EvalContext &context, Value &value, int indent)
         }
 }
 
-Compile_unit::Compile_unit (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) ,
+Compile_unit::Compile_unit (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) ,
     symbolsok(false) {
 }
 
@@ -800,12 +800,12 @@ void  Compile_unit::find_symbol(std::string name, Address pc, std::vector<DIE*> 
     }
 }
 
-String_type::String_type (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+String_type::String_type (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
-String_type::String_type (DwCUnit *cu, DIE *parent, int tag)
-    : DIE(cu, parent, tag) {
+String_type::String_type (DwCUnit *_cu, DIE *_parent, int _tag)
+    : DIE(_cu, _parent, _tag) {
 }
 
 String_type::~String_type() {
@@ -896,8 +896,8 @@ void String_type::print_value(EvalContext &context, Value &value, int indent) {
         }
 }
 
-Common_block::Common_block (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev), symbolsok(false) {
+Common_block::Common_block (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev), symbolsok(false) {
 }
 
 Common_block::~Common_block() {
@@ -978,8 +978,8 @@ void Common_block::print_value(EvalContext &context, Value &value, int indent) {
 
 
 
-Inheritance::Inheritance (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Inheritance::Inheritance (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Inheritance::~Inheritance() {
@@ -1035,12 +1035,12 @@ Value Inheritance::evaluate(EvalContext &context) {
 }
 
 
-Base_type::Base_type (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Base_type::Base_type (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
-Base_type::Base_type (DwCUnit *cu, DIE *parent, int tag)
-    : DIE(cu, parent, tag) {
+Base_type::Base_type (DwCUnit *_cu, DIE *_parent, int _tag)
+    : DIE(_cu, _parent, _tag) {
 }
 
 Base_type::~Base_type() {
@@ -1338,8 +1338,8 @@ void Base_type::print_value(EvalContext &context, Value &value, int indent) {
 
 }
 
-Enumerator::Enumerator (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Enumerator::Enumerator (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Enumerator::~Enumerator() {
@@ -1355,8 +1355,8 @@ Value Enumerator::evaluate(EvalContext &context) {
 }
 
 
-Namelist::Namelist (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Namelist::Namelist (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Namelist::~Namelist() {
@@ -1366,8 +1366,8 @@ void Namelist::print(EvalContext &ctx, int indent, int level) {
         doindent (ctx, indent) ;
 }
 
-Namelist_item::Namelist_item (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Namelist_item::Namelist_item (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Namelist_item::~Namelist_item() {
@@ -1377,8 +1377,8 @@ void Namelist_item::print(EvalContext &ctx, int indent, int level) {
         doindent (ctx, indent) ;
 }
 
-Subprogram::Subprogram (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev), symbolsok(false) {
+Subprogram::Subprogram (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev), symbolsok(false) {
 }
 
 Subprogram::~Subprogram() {
@@ -1656,14 +1656,14 @@ void Subprogram::find_symbol (std::string name, Address pc, std::vector<DIE*> &r
                 // common block names seem to be mangled.  Store both mangled and            
                 // demanged forms
                 std::string childname = child->getAttribute (DW_AT_name).str ;
-                const char *name = childname.c_str() ;
-                const char *ch = name + childname.size() - 1;
+                const char *_name = childname.c_str() ;
+                const char *ch = _name + childname.size() - 1;
                 char *demangled = NULL ;
                 // a name is possibly mangled if it ends in an underscore
                 if (*ch == '_') {
                     if (ch[-1] == '_') {                // two underscores?
                         ch-- ;
-                        const char *s = name ;
+                        const char *s = _name ;
                         bool contains_uscore = false ;
                         while (s != ch) {
                             if (*s == '_') {
@@ -1673,12 +1673,12 @@ void Subprogram::find_symbol (std::string name, Address pc, std::vector<DIE*> &r
                             s++ ;
                         }
                         if (contains_uscore) {
-                            demangled = strndup (name, ch-name) ;
+                            demangled = strndup (_name, ch-_name) ;
                         } else {
-                            demangled = strndup (name, ch-name+1) ;
+                            demangled = strndup (_name, ch-_name+1) ;
                         }
                     } else {                    // single underscore
-                        demangled = strndup (name, ch-name) ;
+                        demangled = strndup (_name, ch-_name) ;
                     }
                 }
                 symbols[Utils::toUpper(childname)] = child ;            // add raw child name
@@ -1902,8 +1902,8 @@ Address Subprogram::get_virtual_table (EvalContext &context, Address thisptr) {
     return cls->get_virtual_table (context, thisptr) ;
 }
 
-Template_type_param::Template_type_param (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Template_type_param::Template_type_param (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Template_type_param::~Template_type_param() {
@@ -1913,8 +1913,8 @@ void Template_type_param::print(EvalContext &ctx, int indent, int level) {
         doindent (ctx, indent) ;
 }
 
-Template_value_param::Template_value_param (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Template_value_param::Template_value_param (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Template_value_param::~Template_value_param() {
@@ -1925,8 +1925,8 @@ void Template_value_param::print(EvalContext &ctx, int indent, int level) {
 }
 
 
-Variable::Variable (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+Variable::Variable (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 Variable::~Variable() {
@@ -2014,14 +2014,14 @@ bool Variable::is_local_var() {
 
 
 
-LineInfo::LineInfo (DwCUnit *cu, Address address, int file, int lineno, int column, bool is_stmt, bool basic_block)
-    : cu(cu),
-    address(address),
-    file(file),
-    lineno(lineno),
-    column(column),
-    is_stmt(is_stmt),
-    basic_block(basic_block) {
+LineInfo::LineInfo (DwCUnit *_cu, Address _address, int _file, int _lineno, int _column, bool _is_stmt, bool _basic_block)
+    : cu(_cu),
+    address(_address),
+    file(_file),
+    lineno(_lineno),
+    column(_column),
+    is_stmt(_is_stmt),
+    basic_block(_basic_block) {
 }
 
 LineInfo::~LineInfo() {

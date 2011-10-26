@@ -129,14 +129,14 @@ static std::string find_program (std::string program) {
 //
 // }
 
-ProcessController::ProcessController (CommandInterpreter *cli, bool subverbose)
+ProcessController::ProcessController (CommandInterpreter *_cli, bool _subverbose)
     : arch(NULL),
       file_present(false),
       current_process(NULL),
-      cli(cli),
-      os (cli->os),
+      cli(_cli),
+      os (_cli->os),
       target(NULL),
-      dirlist(cli->dirlist), subverbose(subverbose) {
+      dirlist(_cli->dirlist), subverbose(_subverbose) {
     // create dummy process
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
     current_process = proc ;

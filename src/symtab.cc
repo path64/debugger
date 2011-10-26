@@ -81,9 +81,9 @@ void AliasManager::complete (std::string name, std::vector<std::string> &result)
 
 }
 
-Symbol::Symbol (std::string name, DIE * die)
-    : name(name),
-    die(die) {
+Symbol::Symbol (std::string _name, DIE *_die)
+    : name(_name),
+    die(_die) {
 }
 
 Symbol::~Symbol() {
@@ -151,11 +151,11 @@ static std::string get_cpp_basename (const char *fullname, int &nlevels) {
     return std::string (s, p-s+1) ;
 }
 
-SymbolTable::SymbolTable (Architecture *arch, ELF * elf, std::istream & stream, AliasManager *aliases, PStream *os, bool reporterror)
-    : DwInfo(elf, stream),
-      arch(arch),
+SymbolTable::SymbolTable (Architecture *_arch, ELF *elf, std::istream &_stream, AliasManager *_aliases, PStream *os, bool reporterror)
+    : DwInfo(elf, _stream),
+      arch(_arch),
       debugger_cu(NULL),
-      aliases(aliases)
+      aliases(_aliases)
       //dirlist(dirlist)
 {
     read(os, reporterror) ;
@@ -257,14 +257,14 @@ void SymbolTable::read(PStream *os, bool reporterror) {
             LineMatrix &lines = cu->get_line_matrix() ;
             int lastfile = -1 ;
             LineInfoVec *lastlines = NULL ;
-            for (uint i = 0 ; i < lines.size() ; i++) {
-                lineaddresses.push_back (lines[i]) ;            // add to main line map (indexed on address)
+            for (uint j = 0 ; j < lines.size() ; j++) {
+                lineaddresses.push_back (lines[j]) ;            // add to main line map (indexed on address)
 
                 LineInfoVec *linevec = NULL ;
-                if (lines[i]->file == lastfile) {
+                if (lines[j]->file == lastfile) {
                     linevec = lastlines ;
                 } else {
-                    std::string &filename = filetable[lines[i]->file]->basename ;                // filename for this line
+                    std::string &filename = filetable[lines[j]->file]->basename ;                // filename for this line
                     FileMap::iterator fi = files.find (filename) ;                              // exitsts in map?
                     if (fi == files.end()) {                                            // no, add new entry
                         linevec = new LineInfoVec() ;
@@ -273,9 +273,9 @@ void SymbolTable::read(PStream *os, bool reporterror) {
                         linevec = fi->second ;
                     }
                 }
-                linevec->push_back (lines[i]) ;                 // add line to line vec for file
+                linevec->push_back (lines[j]) ;                 // add line to line vec for file
                 // cache for next time
-                lastfile = lines[i]->file ;
+                lastfile = lines[j]->file ;
                 lastlines = linevec ;
             }
 
@@ -371,7 +371,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
         int mid = (end + start) / 2 ;
         if (addr == lineaddresses[mid]->address) {
             LineInfo * info = lineaddresses[mid] ;
-            FileTable & files = info->cu->get_file_table() ;
+            FileTable &_files = info->cu->get_file_table() ;
             FunctionLocation * func = find_function_by_address (addr) ;
             int offset = 0 ;
             if (func == NULL) {
@@ -382,7 +382,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
                 loc.set_lineinfo(info);
                 loc.set_symtab(this);
                 loc.set_addr(addr);
-                loc.set_file(files[info->file]);
+                loc.set_file(_files[info->file]);
                 //loc.set_dirlist(&dirlist);
                 loc.set_line(info->lineno);
                 loc.set_symname(symname);
@@ -403,7 +403,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
                 loc.set_symtab(this);
                 loc.set_addr(addr);
                 loc.set_funcloc(func);
-                loc.set_file(files[info->file]);
+                loc.set_file(_files[info->file]);
                 //loc.set_dirlist(&dirlist);
                 loc.set_line(info->lineno);
                 loc.set_symname(symname);
@@ -420,7 +420,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
             loc.set_symtab(this);
             loc.set_addr(addr);
             loc.set_funcloc(func);
-            loc.set_file(files[info->file]);
+            loc.set_file(_files[info->file]);
             loc.set_line(info->lineno);
             //loc.set_dirlist(&dirlist);
             loc.set_symname(funcname);
@@ -437,7 +437,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
         end = 0 ;
     }
     LineInfo *info = lineaddresses[end] ;
-    FileTable & files = info->cu->get_file_table() ;
+    FileTable &_files = info->cu->get_file_table() ;
     FunctionLocation * func = find_function_by_address (addr) ;
     int offset = 0 ;
     if (func == NULL) {
@@ -450,7 +450,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
         loc.set_addr(addr);
         //loc.set_dirlist(&dirlist);
         loc.set_symtab(this);
-        loc.set_file(files[info->file]);
+        loc.set_file(_files[info->file]);
         loc.set_symname(find_alias(symname));
         loc.set_offset(offset);
         return loc;
@@ -470,7 +470,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
         //loc.set_dirlist(&dirlist);
         loc.set_symtab(this);
         loc.set_funcloc(func);
-        loc.set_file(files[info->file]);
+        loc.set_file(_files[info->file]);
         loc.set_symname(symname);
         loc.set_offset(offset);
         return loc;
@@ -485,7 +485,7 @@ Location SymbolTable::find_address(Address addr, bool guess) {
     loc.set_lineinfo(info);
     loc.set_symtab(this);
     loc.set_addr(addr);
-    loc.set_file(files[info->file]);
+    loc.set_file(_files[info->file]);
     //loc.set_dirlist(&dirlist);
     loc.set_line(guess ? info->lineno : -1);
     loc.set_symname(funcname);
@@ -856,9 +856,9 @@ void SymbolTable::list_source_files (PStream &os, uint width) {
     std::set<std::string> done ;
     for (uint i = 0 ; i < compilation_units.size() ; i++) {
         DwCUnit *cu = compilation_units[i] ;
-        FileTable &files = cu->get_file_table() ;
-        for (uint j = 1 ; j < files.size() ; j++) {
-            std::string name = files[j]->name ;
+        FileTable &_files = cu->get_file_table() ;
+        for (uint j = 1 ; j < _files.size() ; j++) {
+            std::string name = _files[j]->name ;
             if (done.count(name) == 0) {
                 if (comma) os.print (", ") ;
                 if ((x + name.size() + 2) >= width) {
@@ -901,13 +901,13 @@ void SymbolTable::complete_function (std::string name, std::vector<std::string> 
 File *SymbolTable::find_file (std::string name) {
     for (uint i = 0 ; i < compilation_units.size() ; i++) {
         DwCUnit *cu = compilation_units[i] ;
-        FileTable &files = cu->get_file_table() ;
-        for (uint j = 1 ; j < files.size() ; j++) {
-            if (files[j]->basename == name) {
-                return files[j] ;
+        FileTable &_files = cu->get_file_table() ;
+        for (uint j = 1 ; j < _files.size() ; j++) {
+            if (_files[j]->basename == name) {
+                return _files[j] ;
             }
-            if (files[j]->name == name) {
-                return files[j] ;
+            if (_files[j]->name == name) {
+                return _files[j] ;
             }
         }
     }

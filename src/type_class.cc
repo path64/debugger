@@ -30,8 +30,8 @@ author: David Allison <dallison@pathscale.com>
 
 #include "type_class.h"
 
-TypeClass::TypeClass (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : TypeStruct(cu, parent, abbrev) {
+TypeClass::TypeClass (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : TypeStruct(_cu, _parent, _abbrev) {
 }
 
 TypeClass::~TypeClass() {

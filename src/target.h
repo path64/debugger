@@ -121,7 +121,7 @@ protected:
 	 * construct an instance of the correct concrete subclass for the current
 	 * platform.
 	 */
-    LiveTarget (Architecture *arch) : Target(arch) {}
+    LiveTarget (Architecture *_arch) : Target(_arch) {}
 public:
 	/**
 	 * Returns a live target for this platform.
