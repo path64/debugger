@@ -31,7 +31,7 @@ i386_linux_arch::i386_linux_arch()
     st_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 ;
 
     // there are 8 SSE registers
-    sse_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 + 32 * sizeof(long);
+    sse_start = st_start + 32 * sizeof(long);
 
     reset_reg ();
 }
@@ -260,6 +260,9 @@ x86_64_linux_arch::x86_64_linux_arch()
 
     st_start = sizeof (unsigned short) * 4 + sizeof(long) * 2 + sizeof(int) * 2 ;
 
+    // there are 8 SSE registers
+    sse_start = st_start + sizeof(int) * 32 ;
+
     reset_reg ();
 
 static int x86_64_linux_sigcontext_regs[] = {
@@ -468,8 +471,11 @@ x86_64_freebsd_arch::x86_64_freebsd_arch()
     regnames["fs"] = 15 * sizeof (uint64_t) + sizeof (uint32_t) ;
     regnames["gs"] = 15 * sizeof (uint64_t) + sizeof (uint32_t) + sizeof (uint16_t) ;
 
-   // from x86_64 machine/reg.h, unavailable on i386 host
+    // XXX Not supported
     st_start = sizeof (uint64_t) * 4 ;
+
+    // XXX Not supported
+    sse_start = st_start + sizeof(int) * 32 ;
 
     reset_reg ();
 
@@ -600,12 +606,11 @@ i386_freebsd_arch::i386_freebsd_arch()
 
 
 
-    // from i386 machine/reg.h, unavailable on x86_64 host
+    // XXX Not supported
     st_start = sizeof (unsigned long) * 8 ;
 
-    // there are 8 SSE registers
-    // from i386 machine/reg.h, unavailable on x86_64 host
-    sse_start = sizeof (unsigned long) * 8 + (8 * 16) ;
+    // XXX Not supported
+    sse_start = st_start + 8 * 16 ;
 
     ctx_offset = sizeof (freebsd_sigset_t) + sizeof (int) ; // skip sc_mask and sc_onstack members
 
