@@ -31,7 +31,11 @@ author: David Allison <dallison@pathscale.com>
 #include "target.h"
 #include "pstream.h"
 #include <errno.h>
-#include "ptrace.h"
+#ifdef __linux__
+#include <sys/ptrace.h>
+#else
+#error Find out where ptrace.h is supposed to be or port PTRACE_GETEVENTMSG and PTRACE_SETOPTIONS below 
+#endif
 #include "dbg_thread_db.h"
 #include <thread_db.h>
 #include <unistd.h>
