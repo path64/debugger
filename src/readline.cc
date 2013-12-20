@@ -165,7 +165,7 @@ Readline::getline() {
 }
 
 int
-Readline::getchar(const char* allowed) {
+Readline::get_char(const char* allowed) {
    /* act independent, don't reset line */
 
    load_term();
@@ -533,7 +533,7 @@ void Readline::write_sync() {
    }
 
    /* move back to current row */
-   for (unsigned i=0; i<(lrow-crow); i++) {
+   for (unsigned j=0; j<(lrow-crow); j++) {
       tputs(s_cursor_up, 2, putchar);
    }
 }

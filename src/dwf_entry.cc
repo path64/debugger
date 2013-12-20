@@ -104,14 +104,14 @@ DwEntry::read_children() {
    BStream bs(bvec, cunit->do_swap());
 
    if (abbrv->has_kids()) {
-      DwEntry* child;
+      DwEntry *_child;
 
       /* skip this entry */
       bs.read_uleb();
       read(bs, false);
 
-      child = read_tree(cunit, this, bs, sec_off);
-      set_child(child);
+      _child = read_tree(cunit, this, bs, sec_off);
+      set_child(_child);
    }
    c_loaded = true;
 }

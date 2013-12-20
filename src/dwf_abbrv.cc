@@ -117,8 +117,8 @@ DwAbbrv::dump_entry(BStream& bs, DwCUnit* cu) {
       case DW_FORM_blockv:
       {
          BVector val = scan_blk(bs, f_id);
-         for (unsigned i=0; i<val.length(); i++) {
-            byte a = val[i];
+         for (unsigned j=0; j<val.length(); j++) {
+            byte a = val[j];
             printf("0x%02x ", (int)a);
          }
          break;
@@ -279,7 +279,7 @@ DwAbbrv::scan_str(BStream& bs, DwFormId id) {
 
 BVector
 DwAbbrv::scan_blk(BStream& bs, DwFormId id) {
-   const byte* data;
+   const byte *_data;
    long L;
 
    switch (id) {
@@ -290,10 +290,10 @@ DwAbbrv::scan_blk(BStream& bs, DwFormId id) {
    default: throw Exception("invalid DWARF data form");
    }
 
-   data = bs.address();
+   _data = bs.address();
    bs.seek(L, BSTREAM_CUR);
 
-   return BVector(data, L);
+   return BVector(_data, L);
 }
 
 Offset

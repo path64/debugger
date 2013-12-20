@@ -31,8 +31,8 @@ author: David Allison <dallison@pathscale.com>
 #include "type_union.h"
 #include "process.h"
 
-TypeUnion::TypeUnion (DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : TypeStruct(cu, parent, abbrev), locations_added(false) {
+TypeUnion::TypeUnion (DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : TypeStruct(_cu, _parent, _abbrev), locations_added(false) {
 
     // a structure is always a reference to the structure.  Sizeof will have to
     // get the real size of it

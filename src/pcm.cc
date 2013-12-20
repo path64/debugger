@@ -49,22 +49,6 @@ author: David Allison <dallison@pathscale.com>
 #include <unistd.h>
 #include <sys/sysctl.h>
 
-// peek inside the exe file to see if it's an elf64 file
-static bool is_elf64 (const char *filename) {
-    char buf[8] ;
-    std::ifstream in (filename) ;
-    if (!in) {
-       throw Exception ("Unable to open file") ;
-    }
-    for (int i = 0 ; i < 5 ; i++) {
-       buf[i] = in.get() ;
-    }
-    if (buf[0] != 0x7f || buf[1] != 'E' || buf[2] != 'L' || buf[3] != 'F') {
-        throw Exception ("File is not an executable file") ;
-    }
-    return buf[4] == 2 ;
-}
-
 static bool file_exists (std::string filename) {
     struct stat st ;
     int e = stat (filename.c_str(), &st) ;
@@ -145,14 +129,14 @@ static std::string find_program (std::string program) {
 //
 // }
 
-ProcessController::ProcessController (CommandInterpreter *cli, bool subverbose)
+ProcessController::ProcessController (CommandInterpreter *_cli, bool _subverbose)
     : arch(NULL),
-      cli(cli),
-      os (cli->os),
-      target(NULL),
       file_present(false),
       current_process(NULL),
-      dirlist(dirlist), subverbose(subverbose) {
+      cli(_cli),
+      os (_cli->os),
+      target(NULL),
+      dirlist(_cli->dirlist), subverbose(_subverbose) {
     // create dummy process
     Process *proc = new Process (this, "", NULL, NULL, os, ATTACH_NONE) ;
     current_process = proc ;
@@ -572,7 +556,7 @@ void ProcessController::run(const std::string& args, EnvMap& env) {
 		ready_wait() ;
 }
 
-bool ProcessController::cont(int sig) {
+void ProcessController::cont(int sig) {
 	push_location ();
 
     if (current_process->cont(sig))

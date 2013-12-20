@@ -4,7 +4,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PATHDB_STAGE_DIR}/bin")
 
 set(pathdb_sources
     dbg_thread_db.cc
-    dbg_proc_service.cc
     pcm.cc
     breakpoint.cc
     process.cc
@@ -149,11 +148,11 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ELSE()
     set(libdl "")
 ENDIF()
-target_link_libraries(pathdb-lib ncurses ${libdl} -Wl,-E)
+target_link_libraries(pathdb-lib ncurses ${libdl})
 
 # Driver
-add_executable(pathdb driver.cc)
-target_link_libraries(pathdb pathdb-lib cli-lib)
+add_executable(pathdb dbg_proc_service.cc driver.cc)
+target_link_libraries(pathdb pathdb-lib cli-lib -Wl,-E)
 
 # doctool
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/doctext.cc"

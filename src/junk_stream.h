@@ -44,7 +44,7 @@ class Value;
 
 class JunkStream : PStream {
 public:
-    JunkStream(int fd) : PStream(fd) {}
+    JunkStream(int _fd) : PStream(_fd) {}
 
     void print (const Value &v);
     void print (EvalContext &ctx, int64_t i, int size, bool issigned);

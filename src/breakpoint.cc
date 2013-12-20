@@ -37,13 +37,13 @@ author: David Allison <dallison@pathscale.com>
 #include "cli.h"
 #include "gen_loc.h"
 
-Breakpoint::Breakpoint (Architecture * arch, Process *proc, std::string text, Address addr, int num)
-    : addr(addr),
+Breakpoint::Breakpoint (Architecture *_arch, Process *_proc, std::string _text, Address _addr, int _num)
+    : addr(_addr),
       disabled(false),
-      arch(arch),
-      proc(proc),
-      num(num),
-      text(text),
+      arch(_arch),
+      proc(_proc),
+      num(_num),
+      text(_text),
       condition(NULL),
       ignore_count(0),
       hit_count(0),
@@ -201,12 +201,12 @@ const char *Breakpoint::get_disposition() {
 }
 
 
-SoftwareBreakpoint::SoftwareBreakpoint (Architecture * arch, Process *proc, std::string text, Address addr, int num)
-    : Breakpoint (arch, proc, text, addr, num),
+SoftwareBreakpoint::SoftwareBreakpoint (Architecture *_arch, Process *_proc, std::string _text, Address _addr, int _num)
+    : Breakpoint (_arch, _proc, _text, _addr, _num),
     oldvalue(0),
     deleted(false) {
 
-    location = proc->lookup_address (addr) ;
+    location = proc->lookup_address (_addr) ;
 }
 
 SoftwareBreakpoint::~SoftwareBreakpoint() {
@@ -350,8 +350,8 @@ void SoftwareBreakpoint::remove() {
 // this is called when a breakpoint is hit.  It should check the condition
 // if any and call hit_active to get the actual breakpoint action
 
-UserBreakpoint::UserBreakpoint (Architecture * arch, Process *proc, std::string text, Address addr, int num)
-    : SoftwareBreakpoint(arch, proc, text, addr, num)
+UserBreakpoint::UserBreakpoint (Architecture *_arch, Process *_proc, std::string _text, Address _addr, int _num)
+    : SoftwareBreakpoint(_arch, _proc, _text, _addr, _num)
  {
 
 }
@@ -394,8 +394,8 @@ void UserBreakpoint::print(PStream &os) {
     }
 }
 
-Catchpoint::Catchpoint (Architecture * arch, Process *proc, int num, CatchpointType type, std::string data)
-    : SoftwareBreakpoint(arch, proc, "", 0, num), type(type), data(data)
+Catchpoint::Catchpoint (Architecture *_arch, Process *_proc, int _num, CatchpointType _type, std::string _data)
+    : SoftwareBreakpoint(_arch, _proc, "", 0, _num), type(_type), data(_data)
  {
 }
 
@@ -574,8 +574,8 @@ const char *Catchpoint::get_type() {
 }
 
 
-TempBreakpoint::TempBreakpoint (Architecture * arch, Process *proc, Address addr, int num)
-    : SoftwareBreakpoint(arch, proc, "", addr, num)
+TempBreakpoint::TempBreakpoint (Architecture *_arch, Process *_proc, Address _addr, int _num)
+    : SoftwareBreakpoint(_arch, _proc, "", _addr, _num)
  {
     set_disposition (DISP_DELETE) ;
 }
@@ -598,8 +598,8 @@ Breakpoint_action TempBreakpoint::hit_active(PStream &os) {
     return BP_ACTION_STOP ;
 }
 
-StepBreakpoint::StepBreakpoint (Architecture * arch, Process *proc, Address addr, int num)
-    : SoftwareBreakpoint(arch, proc, "", addr, num), fp(0)
+StepBreakpoint::StepBreakpoint (Architecture *_arch, Process *_proc, Address _addr, int _num)
+    : SoftwareBreakpoint(_arch, _proc, "", _addr, _num), fp(0)
  {
     fp = proc->get_reg ("fp") ;                 // read the current frame pointer
 }
@@ -628,8 +628,8 @@ Breakpoint_action StepBreakpoint::hit_active(PStream &os) {
     return BP_ACTION_IGNORE ;
 }
 
-CascadeBreakpoint::CascadeBreakpoint (Architecture * arch, Process *proc, Address addr, int num)
-    : SoftwareBreakpoint(arch, proc, "", addr, num)
+CascadeBreakpoint::CascadeBreakpoint (Architecture *_arch, Process *_proc, Address a, int _num)
+    : SoftwareBreakpoint(_arch, _proc, "", a, _num)
  {
 }
 
@@ -662,8 +662,8 @@ Breakpoint_action CascadeBreakpoint::hit_active(PStream &os) {
     return action ;
 }
 
-DynamicLinkBreakpoint::DynamicLinkBreakpoint (Architecture * arch, Process *proc, Address a, int num)
-    : SoftwareBreakpoint(arch, proc, "", a, num),
+DynamicLinkBreakpoint::DynamicLinkBreakpoint (Architecture *_arch, Process *_proc, Address _addr, int _num)
+    : SoftwareBreakpoint(_arch, _proc, "", _addr, _num),
     phase(1) {
 
 
@@ -699,9 +699,9 @@ Breakpoint_action DynamicLinkBreakpoint::hit_active(PStream &os) {
     return BP_ACTION_CONT ;
 }
 
-ThreadBreakpoint::ThreadBreakpoint (Architecture * arch, Process *proc, Address addr, int num, bool iscreate)
-    : SoftwareBreakpoint(arch, proc, "", addr, num),
-    iscreate(iscreate) {
+ThreadBreakpoint::ThreadBreakpoint (Architecture *_arch, Process *_proc, Address _addr, int _num, bool _iscreate)
+    : SoftwareBreakpoint(_arch, _proc, "", _addr, _num),
+    iscreate(_iscreate) {
 
 }
 
@@ -730,8 +730,8 @@ Breakpoint_action ThreadBreakpoint::hit_active(PStream &os) {
 #endif
 }
 
-SharedLibraryBreakpoint::SharedLibraryBreakpoint (Architecture * arch, Process *proc, Address addr, int num)
-    : SoftwareBreakpoint(arch, proc, "", addr, num)  {
+SharedLibraryBreakpoint::SharedLibraryBreakpoint (Architecture *_arch, Process *_proc, Address _addr, int _num)
+    : SoftwareBreakpoint(_arch, _proc, "", _addr, _num)  {
 
 }
 
@@ -786,8 +786,8 @@ Breakpoint_action SharedLibraryBreakpoint::hit_active(PStream &os) {
 // general watchpoint
 //
 
-Watchpoint::Watchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr, Address addr, int size, int num)
-    : Breakpoint (arch, proc, expr, addr, num), expr(expr), compiled_expr(cexpr), size(size), local(false) {
+Watchpoint::Watchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr, Address _addr, int _size, int _num)
+    : Breakpoint (_arch, _proc, _expr, _addr, _num), expr(_expr), compiled_expr(cexpr), size(_size), local(false) {
 
     try {
         fp = proc->get_reg ("fp") ;                 // read the current frame pointer
@@ -893,8 +893,8 @@ bool Watchpoint::check_scope() {
     return true ;
 }
 
-SoftwareWatchpoint::SoftwareWatchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr,  Address addr, int size, int num)
-    : Watchpoint (arch, proc, expr, cexpr, addr, size, num), current_value(0) {
+SoftwareWatchpoint::SoftwareWatchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr,  Address _addr, int _size, int _num)
+    : Watchpoint (_arch, _proc, _expr, cexpr, _addr, _size, _num), current_value(0) {
 }
 
 Breakpoint *SoftwareWatchpoint::clone() {
@@ -982,12 +982,12 @@ void SoftwareWatchpoint::show_header (PStream &os) {
 }
 
 
-HardwareWatchpoint::HardwareWatchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr, Address addr, WatchpointType type, int size, int num)
-    : Watchpoint (arch, proc, expr, cexpr, addr, size, num),
+HardwareWatchpoint::HardwareWatchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr, Address _addr, WatchpointType _type, int _size, int _num)
+    : Watchpoint (_arch, _proc, _expr, cexpr, _addr, _size, _num),
       current_value(0),
-      type(type) 
+      type(_type) 
 {
-    debug_reg = arch->allocate_debug_reg(addr) ;            // allocate a debug reg
+    debug_reg = arch->allocate_debug_reg(_addr) ;            // allocate a debug reg
 }
 
 Breakpoint *HardwareWatchpoint::clone() {
@@ -1014,7 +1014,7 @@ void HardwareWatchpoint::set() {
             current_value = compiled_expr->evaluate (context) ;
             if (compiled_expr->get_type()->is_real()) {
                 if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                    current_value.real = (double)(*(float*)&current_value.real) ;
+                    current_value.real = (double)(*(float*)(void*)&current_value.real) ;
                 }
             }
         }
@@ -1080,8 +1080,8 @@ void HardwareWatchpoint::show_header (PStream &os) {
 // watchpoint for a change in value
 //
 
-ChangeWatchpoint::ChangeWatchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr, Address addr, int size, int num)
-    : HardwareWatchpoint (arch, proc, expr, cexpr, addr, WP_RW, size, num) {
+ChangeWatchpoint::ChangeWatchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr, Address _addr, int _size, int _num)
+    : HardwareWatchpoint (_arch, _proc, _expr, cexpr, _addr, WP_RW, _size, _num) {
 }
 
 Breakpoint *ChangeWatchpoint::clone() {
@@ -1105,7 +1105,7 @@ Breakpoint_action ChangeWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1153,8 +1153,8 @@ Breakpoint_action ChangeWatchpoint::hit_active(PStream &os) {
 // watchpoint for a read/write of address
 //
 
-ReadWriteWatchpoint::ReadWriteWatchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr, Address addr, int size, int num)
-    : HardwareWatchpoint (arch, proc, expr, cexpr, addr, WP_RW, size, num) {
+ReadWriteWatchpoint::ReadWriteWatchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr, Address _addr, int _size, int _num)
+    : HardwareWatchpoint (_arch, _proc, _expr, cexpr, _addr, WP_RW, _size, _num) {
 }
 
 Breakpoint *ReadWriteWatchpoint::clone() {
@@ -1178,7 +1178,7 @@ Breakpoint_action ReadWriteWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1229,8 +1229,8 @@ void ReadWriteWatchpoint::show_header (PStream &os) {
 
 // not supported on x86, so we use a r/w watchpoint instead
 
-ReadWatchpoint::ReadWatchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr, Address addr, int size, int num)
-    : HardwareWatchpoint (arch, proc, expr, cexpr, addr, WP_RW, size, num) {
+ReadWatchpoint::ReadWatchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr, Address _addr, int _size, int _num)
+    : HardwareWatchpoint (_arch, _proc, _expr, cexpr, _addr, WP_RW, _size, _num) {
 }
 
 Breakpoint *ReadWatchpoint::clone() {
@@ -1254,7 +1254,7 @@ Breakpoint_action ReadWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1296,8 +1296,8 @@ void ReadWatchpoint::show_header (PStream &os) {
 // watchpoint for a write of address
 //
 
-WriteWatchpoint::WriteWatchpoint (Architecture * arch, Process *proc, std::string expr, Node *cexpr, Address addr, int size, int num)
-    : HardwareWatchpoint (arch, proc, expr, cexpr, addr, WP_WRITE, size, num) {
+WriteWatchpoint::WriteWatchpoint (Architecture *_arch, Process *_proc, std::string _expr, Node *cexpr, Address _addr, int _size, int _num)
+    : HardwareWatchpoint (_arch, _proc, _expr, cexpr, _addr, WP_WRITE, _size, _num) {
 }
 
 Breakpoint *WriteWatchpoint::clone() {
@@ -1321,7 +1321,7 @@ Breakpoint_action WriteWatchpoint::hit_active(PStream &os) {
         newval = compiled_expr->evaluate (context) ;
         if (compiled_expr->get_type()->is_real()) {
             if (compiled_expr->get_type()->get_real_size(context) == 4) {
-                newval.real = (double)(*(float*)&newval.real) ;
+                newval.real = (double)(*(float*)(void*)&newval.real) ;
             }
         }
     }
@@ -1370,8 +1370,8 @@ void WriteWatchpoint::show_header (PStream &os) {
 // hardware breakpoint
 //
 
-HardwareBreakpoint::HardwareBreakpoint (Architecture * arch, Process *proc, std::string text, Address addr, int num)
-    : HardwareWatchpoint (arch, proc, text, NULL, addr, WP_EXEC, 1, num) {              // XXX: size is 1?
+HardwareBreakpoint::HardwareBreakpoint (Architecture *_arch, Process *_proc, std::string _text, Address _addr, int _num)
+    : HardwareWatchpoint (_arch, _proc, _text, NULL, _addr, WP_EXEC, 1, _num) {         // XXX: size is 1?
     location = proc->lookup_address (addr) ;
 }
 

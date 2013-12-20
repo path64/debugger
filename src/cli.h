@@ -63,7 +63,7 @@ typedef std::vector<Match> CommandVec ;
 
 class CommandCompletor : public Completor {
 public:
-    CommandCompletor (CommandInterpreter *cli, PStream &os) : cli(cli), os(os) {}
+    CommandCompletor (CommandInterpreter *_cli, PStream &_os) : cli(_cli), os(_os) {}
     virtual ~CommandCompletor() { }
 	
     std::string complete (std::string text, int ch) ;
@@ -98,9 +98,9 @@ public:
 
 protected:
     CommandInterpreter *cli ;
+    PStream &os ;
     ProcessController *pcm ;
     const char **commands;
-    PStream &os ;
 
 public:
 

@@ -87,8 +87,8 @@ class Architecture
 {
 public:
 	Architecture() {
-		int regset_size = 0;
-		int fpregset_size = 0;
+		regset_size = 0;
+		fpregset_size = 0;
 	}
 	virtual ~Architecture() {}
 	/**

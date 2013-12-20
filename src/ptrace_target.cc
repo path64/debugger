@@ -17,7 +17,7 @@
 #define CHAR_BIT	8
 #endif
 
-PtraceTarget::PtraceTarget (Architecture *arch) : LiveTarget(arch), is_attached(false)
+PtraceTarget::PtraceTarget (Architecture *_arch) : LiveTarget(_arch), is_attached(false)
 {
 #if LONG_BIT == 64
 #if defined (__linux__)
@@ -48,13 +48,13 @@ int PtraceTarget::attach (const char* path, const char* args, EnvMap& env)
    // to the fork ourselves as system() will cause SIGINT
    // and SIGQUIT to be ignored.
 
-   int pid = fork();
-   if (pid == -1) {
+   int _pid = fork();
+   if (_pid == -1) {
       // Fork failed 
       return -1;
    }
 
-   if (pid == 0) { /* Child executes */
+   if (_pid == 0) { /* Child executes */
 
       // Absorb stored environmental variables 
       EnvMap::iterator j;
@@ -90,50 +90,50 @@ int PtraceTarget::attach (const char* path, const char* args, EnvMap& env)
       exit(1);
    }
 
-   return pid;
+   return _pid;
 }
 
 
 
-int PtraceTarget::attach (std::string filename, int pid) {
-    //int e = ptrace (PTRACE_ATTACH, pid, (void*)0, 0) ;
-    int e = Trace::attach (pid) ;
+int PtraceTarget::attach (std::string filename, int _pid) {
+    //int e = ptrace (PTRACE_ATTACH, _pid, (void*)0, 0) ;
+    int e = Trace::attach (_pid) ;
     if (e != 0) {
         throw Exception ("Unable to attach to process") ;
     }
     is_attached = true ;
-    return pid ;
+    return _pid ;
 }
 
-int PtraceTarget::attach (int pid) {
-    //int e = ptrace (PTRACE_ATTACH, pid, (void*)0, 0) ;
-    int e = Trace::attach (pid) ;
+int PtraceTarget::attach (int _pid) {
+    //int e = ptrace (PTRACE_ATTACH, _pid, (void*)0, 0) ;
+    int e = Trace::attach (_pid) ;
     if (e != 0) {
         throw Exception ("Unable to attach to process") ;
     }
     is_attached = true ;
-    return pid ;
+    return _pid ;
 }
 
 
 // detach from the live target.  We need to kill the process and then wait for it to
 // die.  The only safe way to do it is to send a SIGKILL to it.
-void PtraceTarget::detach(int pid, bool kill) {
+void PtraceTarget::detach(int _pid, bool kill) {
     if (is_attached || !kill) {
-        //int e = ptrace (PTRACE_DETACH, pid, (void*)0, 0) ;
-	int e = Trace::detach (pid) ;
+        //int e = ptrace (PTRACE_DETACH, _pid, (void*)0, 0) ;
+	int e = Trace::detach (_pid) ;
         if (e != 0) {
             throw Exception ("Unable to detach from process") ;
         }
     } else {
-        //int e = ptrace (PTRACE_KILL,pid, (void*)0, 0) ;
-	int e = Trace::kill (pid) ;
+        //int e = ptrace (PTRACE_KILL, _pid, (void*)0, 0) ;
+	int e = Trace::kill (_pid) ;
         if (e != 0) {
             perror ("kill") ;
             throw Exception ("Unable to kill the target process") ;
         }
         int status = 0 ;
-        e = waitpid (pid, &status, 0) ;             //XXX: WUNTRACED?
+        e = waitpid (_pid, &status, 0) ;            //XXX: WUNTRACED?
         if (e == -1) {
             perror ("wait") ;
             throw Exception ("Unable to reap child process") ;
@@ -142,32 +142,32 @@ void PtraceTarget::detach(int pid, bool kill) {
     }
 }
 
-void PtraceTarget::interrupt(int pid) {
-    kill (pid, SIGINT) ;
+void PtraceTarget::interrupt(int _pid) {
+    kill (_pid, SIGINT) ;
 }
 
-void PtraceTarget::cont (int pid, int signal) {
-    //long e = ptrace (PTRACE_CONT, pid, (void*)0, reinterpret_cast<void*>(signal)) ;
-    int e = Trace::cont (pid, signal) ;
+void PtraceTarget::cont (int _pid, int signal) {
+    //long e = ptrace (PTRACE_CONT, _pid, (void*)0, reinterpret_cast<void*>(signal)) ;
+    int e = Trace::cont (_pid, signal) ;
     if (e < 0) {
        perror ("cont") ;
        throw Exception ("Unable to continue")  ;
     }
 }
 
-void PtraceTarget::step (int pid) {
-    //long e = ptrace (PTRACE_SINGLESTEP, pid, (void*)0, 0);
-    int e = Trace::single_step (pid) ;
+void PtraceTarget::step (int _pid) {
+    //long e = ptrace (PTRACE_SINGLESTEP, _pid, (void*)0, 0);
+    int e = Trace::single_step (_pid) ;
     if (e < 0) {
        perror ("cont");
        throw Exception("Unable to step a single instruction");
     }
 }
 
-void PtraceTarget::init_events (int pid) {
+void PtraceTarget::init_events (int _pid) {
+#if defined (__linux__)
     long opts = 0;
 
-#if defined (__linux__)
     /* construct options */
     opts |= PTRACE_O_TRACEFORK;
     opts |= PTRACE_O_TRACEVFORK;
@@ -175,25 +175,25 @@ void PtraceTarget::init_events (int pid) {
     opts |= PTRACE_O_TRACEVFORKDONE; 
 
     /* tell ptrace to catch multiprocessing events */ 
-    //long e = ptrace(PTRACE_SETOPTIONS, pid, (void*)0, opts);
-    int e = Trace::set_options (pid, opts) ;
+    //long e = ptrace(PTRACE_SETOPTIONS, _pid, (void*)0, opts);
+    int e = Trace::set_options (_pid, opts) ;
     if (e != 0) {
         printf("Warning: unable to enable ptrace events\n");
     }
 #endif
 }
 
-pid_t PtraceTarget::get_fork_pid(pid_t pid) {
+pid_t PtraceTarget::get_fork_pid(pid_t _pid) {
     pid_t fpid;
-    //long e = ptrace (PTRACE_GETEVENTMSG, pid, (void*)0, &fpid);
-    int e = Trace::get_fork_pid (pid, &fpid) ;
+    //long e = ptrace (PTRACE_GETEVENTMSG, _pid, (void*)0, &fpid);
+    int e = Trace::get_fork_pid (_pid, &fpid) ;
     if (e != 0) {
         printf("Warning: unable to get ptrace fork events\n"); 
     }
     return fpid;
 }
 
-void PtraceTarget::write(int pid, Address addr, Address data, int size) {
+void PtraceTarget::write(int _pid, Address addr, Address data, int size) {
 /*  This function writes a number of bytes to an arbitrary address in
  *  the user process's memory.  Since the interface is word-based but
  *  the address may abut against a segment boundary, we have to read
@@ -224,7 +224,7 @@ void PtraceTarget::write(int pid, Address addr, Address data, int size) {
        if (arch->is_little_endian()) {
           addr += offset;
           while (size > 0) {
-             write(pid, addr, data, lo_size);
+             write(_pid, addr, data, lo_size);
              data >>= (CHAR_BIT*lo_size);
              addr += lo_size;
              size -= lo_size;
@@ -234,7 +234,7 @@ void PtraceTarget::write(int pid, Address addr, Address data, int size) {
        } else {
           addr += offset + size - lo_size;
           while (size > 0) {
-             write(pid, addr, data, lo_size);
+             write(_pid, addr, data, lo_size);
              data >>= (CHAR_BIT*lo_size);
              size -= lo_size;
 
@@ -264,7 +264,7 @@ void PtraceTarget::write(int pid, Address addr, Address data, int size) {
     hi_mask = lo_mask << (CHAR_BIT*offset);
 
     /* read in from the shifted address */
-    val = read(pid, addr, psize);
+    val = read(_pid, addr, psize);
 
     /* mask out the unwanted bits */
     val = val & ~hi_mask;
@@ -275,29 +275,29 @@ void PtraceTarget::write(int pid, Address addr, Address data, int size) {
     /* write to now-shifted address */
     errno = 0;
     void* caddr = reinterpret_cast<void*>(addr);
-    //val = ptrace (PTRACE_POKETEXT, pid, caddr, val);
-    Trace::write_text (pid, caddr, val) ;
+    //val = ptrace (PTRACE_POKETEXT, _pid, caddr, val);
+    Trace::write_text (_pid, caddr, val) ;
 
     /* bad things! bad things! */
     if (errno != 0) {
        switch (errno) {
-       case EPERM: throw Exception("Process %d cannot be traced", pid);
-       case ESRCH: throw Exception("Process %d does not exist", pid);
+       case EPERM: throw Exception("Process %d cannot be traced", _pid);
+       case ESRCH: throw Exception("Process %d does not exist", _pid);
        default: throw Exception ("Unable to write memory at 0x%llx", addr);
        }
     }
 }
 
-bool PtraceTarget::test_address(int pid, Address addr) {
+bool PtraceTarget::test_address(int _pid, Address addr) {
     try {
-       read(pid, addr, 1);
+       read(_pid, addr, 1);
        return 1;
     } catch (...) {
        return 0;
     }
 }
                                                                                                                                            
-Address PtraceTarget::read(int pid, Address addr, int size) {
+Address PtraceTarget::read(int _pid, Address addr, int size) {
 /*  This function reads and returns a number of bytes from an arbitrary
  *  address in the user process's memory.  Since the interface is word-
  *  based but the address may abut against a segment boundary, we have
@@ -329,7 +329,7 @@ Address PtraceTarget::read(int pid, Address addr, int size) {
        if (arch->is_little_endian()) {
           val=0; addr += offset;
           while (size > 0) {
-             Address lo = read(pid, addr, lo_size);
+             Address lo = read(_pid, addr, lo_size);
              val |= lo << (CHAR_BIT*num);
              num += lo_size;
              addr += lo_size;
@@ -340,7 +340,7 @@ Address PtraceTarget::read(int pid, Address addr, int size) {
        } else {
           val=0; addr += offset + size - lo_size;
           while (size > 0) {
-             Address lo = read(pid, addr, lo_size);
+             Address lo = read(_pid, addr, lo_size);
              val |= lo << (CHAR_BIT*num);
              num += lo_size;
              size -= lo_size;
@@ -372,8 +372,8 @@ Address PtraceTarget::read(int pid, Address addr, int size) {
     /* read in from now-shifted address */
     errno = 0;
     void* caddr = reinterpret_cast<void*>(addr);
-    //val = ptrace (PTRACE_PEEKTEXT, pid, caddr, 0);
-    val = Trace::read_text (pid, caddr) ;
+    //val = ptrace (PTRACE_PEEKTEXT, _pid, caddr, 0);
+    val = Trace::read_text (_pid, caddr) ;
 
     /* mask out our bits, and shift into place */
     val = (val & hi_mask) >> (CHAR_BIT*offset);
@@ -386,8 +386,8 @@ Address PtraceTarget::read(int pid, Address addr, int size) {
        switch (errno) {
 		   // FIXME: Throwing these generic exceptions is silly.  We can't
 		   // catch them and find anything useful from them.
-       case EPERM: throw Exception("Process %d cannot be traced", pid);
-       case ESRCH: throw Exception("Process %d does not exist", pid);
+       case EPERM: throw Exception("Process %d cannot be traced", _pid);
+       case ESRCH: throw Exception("Process %d does not exist", _pid);
        default: throw Exception ("Unable to read memory at 0x%llx", addr);
        }
     }
@@ -395,82 +395,82 @@ Address PtraceTarget::read(int pid, Address addr, int size) {
     return val;
 }
 
-Address PtraceTarget::readptr (int pid, Address addr) {
+Address PtraceTarget::readptr (int _pid, Address addr) {
 	if (arch->ptrsize() == 8) {
-		return read(pid, addr, arch->ptrsize());
+		return read(_pid, addr, arch->ptrsize());
 	}
 	if (arch->ptrsize() != 4)
 		throw Exception ("Size of this arch is not support");
 
-	return (int32_t)read(pid, addr, arch->ptrsize());
+	return (int32_t)read(_pid, addr, arch->ptrsize());
 }
 
-void PtraceTarget::get_regs(int pid, RegisterSet *reg) {
+void PtraceTarget::get_regs(int _pid, RegisterSet *reg) {
 	char	regs_buf[regset_size];
 
-	if (Trace::get_regs (pid, regs_buf) < 0) {
+	if (Trace::get_regs (_pid, regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
 	arch->register_set_from_native(regs_buf, regset_size, reg);
 }
 
-void PtraceTarget::set_regs(int pid, RegisterSet *reg) {
+void PtraceTarget::set_regs(int _pid, RegisterSet *reg) {
 	char	regs_buf[regset_size];
 
-	if (Trace::get_regs (pid, regs_buf) < 0) {
+	if (Trace::get_regs (_pid, regs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
 	arch->register_set_to_native(regs_buf, regset_size, reg);
-	if (Trace::set_regs (pid, regs_buf) < 0) {
+	if (Trace::set_regs (_pid, regs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}
 }
 
-void PtraceTarget::get_fpregs(int pid, RegisterSet *reg) {
+void PtraceTarget::get_fpregs(int _pid, RegisterSet *reg) {
 	char	fregs_buf[fpregset_size];
 
-	if (Trace::get_fpregs (pid, &fregs_buf) < 0)
+	if (Trace::get_fpregs (_pid, &fregs_buf) < 0)
 		throw Exception ("Unable to read registers");
 	arch->fpregister_set_from_native(fregs_buf, fpregset_size, reg);
 }
 
-void PtraceTarget::set_fpregs(int pid, RegisterSet *reg) {
+void PtraceTarget::set_fpregs(int _pid, RegisterSet *reg) {
 	char	fregs_buf[fpregset_size];
 
-	if (Trace::get_fpregs (pid, &fregs_buf) < 0) {
+	if (Trace::get_fpregs (_pid, &fregs_buf) < 0) {
 		throw Exception ("Unable to read registers")  ;
 	}
 	arch->fpregister_set_to_native(fregs_buf, fpregset_size, reg);
-	if (Trace::set_fpregs (pid, &fregs_buf) < 0) {
+	if (Trace::set_fpregs (_pid, &fregs_buf) < 0) {
 		throw Exception ("Unable to write registers %d", errno)  ;
 	}
 }
 
-void PtraceTarget::get_fpxregs(int pid, RegisterSet *reg) {
+void PtraceTarget::get_fpxregs(int _pid, RegisterSet *reg) {
 	//XXX
-//     long e = ptrace (PTRACE_GETFPXREGS, pid, (void*)0, regs) ;
+//     long e = ptrace (PTRACE_GETFPXREGS, _pid, (void*)0, regs) ;
 //     if (e < 0) {
 //         throw Exception ("Unable to read floating point registers")  ;
 //     }
 }
 
-void PtraceTarget::set_fpxregs(int pid, RegisterSet *reg) {
+void PtraceTarget::set_fpxregs(int _pid, RegisterSet *reg) {
 //XXX
-	//     long e = ptrace (PTRACE_SETFPXREGS, pid, (void*)0, regs) ;
+	//     long e = ptrace (PTRACE_SETFPXREGS, _pid, (void*)0, regs) ;
 //     if (e < 0) {
 //         throw Exception ("Unable to write floating point registers")  ;
 //     }
 }
 
-long PtraceTarget::get_debug_reg (int pid, int reg) {
-    return Trace::get_dbgreg (pid, reg) ;
+long PtraceTarget::get_debug_reg (int _pid, int reg) {
+    return Trace::get_dbgreg (_pid, reg) ;
 }
 
-void PtraceTarget::set_debug_reg (int pid, int reg, long value) {
+void PtraceTarget::set_debug_reg (int _pid, int reg, long value) {
     /* find offset and write struct user */
     //Address addr = STRUCT_USER_OFFSET(u_debugreg[reg]);
-    //long e = ptrace (PTRACE_POKEUSER, pid, addr, value) ;
-    int e = Trace::set_dbgreg (pid, reg, value) ;
+    //long e = ptrace (PTRACE_POKEUSER, _pid, addr, value) ;
+    int e = Trace::set_dbgreg (_pid, reg, value) ;
     if (e < 0) {
         throw Exception ("Unable to write debug register")  ;
     }
@@ -495,9 +495,9 @@ PtraceTarget::thread_suspend (Thread *thr)
 #if defined (__linux__)
 	int e = syscall (SYS_tkill, thr->get_pid(), SIGSTOP) ;
 #elif defined (__FreeBSD__)
-	 int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
+	int e = syscall (SYS_thr_kill2, thr->get_pid(), thr->get_tid(), SIGSTOP) ;
 	if (e == 0)
-	  int e = ptrace (PT_SUSPEND, (intptr_t)thr->get_tid (), 0, 0) ;
+		e = ptrace (PT_SUSPEND, (intptr_t)thr->get_tid (), 0, 0) ;
 #endif
 	if (e != 0)
 		printf ("failed to suspend thread %d\n", thr->get_num()) ;

@@ -57,7 +57,7 @@ public:
    void setcli(CommandInterpreter *c);
 
    const std::string& getline();
-   int getchar(const char* allowed);
+   int get_char(const char* allowed);
    void get_dims(int& row, int& col);
 
    void load_term();

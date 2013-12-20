@@ -101,7 +101,7 @@ public:
     void set_signal_actions (std::string name, std::vector<std::string> &actions) ;
 
     void run (const std::string& args, EnvMap& env);
-    bool cont (int sig = 0) ;
+    void cont (int sig = 0) ;
     void single_step () ;
     void wait () ;
     void interrupt() ;
@@ -182,7 +182,7 @@ public:
     void set_breakpoint_commands (int bpnum, std::vector<ComplexCommand *>& cmds) ;
     void clear_breakpoints (Address addr) ;
 
-    void set_cli (CommandInterpreter *cli) { this->cli = cli ; }
+    void set_cli (CommandInterpreter *_cli) { this->cli = _cli ; }
     CommandInterpreter *get_cli() { return cli ; }
     bool is_running(int n) ;
     AliasManager *get_aliases() { return &aliases ; }
@@ -191,13 +191,13 @@ protected:
 private:
     std::string program ;
     Architecture * arch ;
-    Target *target ;
-    PStream &os ;
     std::vector<Process *> processes ;          // all processes
 
     bool file_present ;
     Process *current_process ;
     CommandInterpreter *cli ;
+    PStream &os ;
+    Target *target ;
     AliasManager aliases ;
     DirectoryTable &dirlist ;
     bool subverbose ;

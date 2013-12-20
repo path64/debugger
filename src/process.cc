@@ -69,26 +69,11 @@ author: David Allison <dallison@pathscale.com>
 #	define DW_CFA_offset_extended_sf 0x11
 #endif
 
-static std::string toString (int n) {
-    char buf[30] ;
-    snprintf (buf, sizeof(buf), "%d", n) ;
-    return buf ;
-}
-
-// need to make sure that the symbols in dbg_proc_service.cc are linked in.  
-
-// this will never be called.  It's just to fool the linker into linking the file from the archive
-static void force_ps_link() {
-    ps_pglobal_lookup(NULL, 0, 0, NULL) ;             
-}
-
-ObjectFile::ObjectFile (std::string name, ELF * elf, std::istream & stream, SymbolTable * symtab)
-    : name(name),
-    elf(elf),
-    stream(stream),
-    symtab(symtab) {
-    (void) force_ps_link;
-    (void) toString;
+ObjectFile::ObjectFile (std::string _name, ELF *_elf, std::istream &_stream, SymbolTable *_symtab)
+    : name(_name),
+    elf(_elf),
+    stream(_stream),
+    symtab(_symtab) {
 }
                                                                                                                                            
 ObjectFile::~ObjectFile() {
@@ -96,8 +81,8 @@ ObjectFile::~ObjectFile() {
     delete symtab ;
 }
 
-LinkMap::LinkMap (Architecture *arch, Process *proc, Address addr)
-    : addr(addr) {
+LinkMap::LinkMap (Architecture *arch, Process *proc, Address _addr)
+    : addr(_addr) {
 
     ps = arch->ptrsize() ;
     base = proc->readptr (addr) ;
@@ -136,16 +121,16 @@ Address LinkMap::get_addr() {
 }
 
 
-Frame::Frame (Process *proc, Architecture *arch, int n, Location &loc, RegisterSet *r)
+Frame::Frame (Process *_proc, Architecture *_arch, int _n, Location &_loc, RegisterSet *r)
 {
-	init(proc, arch, n);
+	init(_proc, _arch, _n);
 	regs->take_values_from(r);
-	set_loc(loc);
+	set_loc(_loc);
 }
 
-Frame::Frame (Process *proc, Architecture *arch, int n)
+Frame::Frame (Process *_proc, Architecture *_arch, int _n)
 {
-	init (proc, arch, n);
+	init (_proc, _arch, _n);
 }
 
 
@@ -288,10 +273,10 @@ void BadFrame::print(PStream &os) {
 #endif
 
 
-Rule::Rule (CFARuleType type, int reg, int offset)
-    : type(type),
-    reg(reg),
-    offset(offset) {
+Rule::Rule (CFARuleType _type, int _reg, int _offset)
+    : type(_type),
+    reg(_reg),
+    offset(_offset) {
 }
 
 Rule::~Rule() {
@@ -318,9 +303,9 @@ std::string Rule::toString()
    throw Exception("not reached");
 }
 
-CFATable::CFATable (Architecture *arch, Process *proc, Address loc, int ra_reg)
-    : arch(arch), proc(proc), loc(loc),
-    ra_reg(ra_reg),
+CFATable::CFATable (Architecture *_arch, Process *_proc, Address _loc, int _ra_reg)
+    : arch(_arch), proc(_proc), loc(_loc),
+    ra_reg(_ra_reg),
     cfa(new Rule (CFA_CFA, 0, 0)),
     ra(new Rule (CFA_UNDEFINED, 0, 0)), saved_regs(NULL), saved_ra(NULL) {
 
@@ -409,6 +394,7 @@ void CFATable::print() {
 }
 
 void CFATable::apply(Frame *from, Frame * to) {
+	int cfa_reg;
 
         // set the PC of the next frame to the return address
         //printf ("setting pc to return address\n") ;
@@ -420,7 +406,7 @@ void CFATable::apply(Frame *from, Frame * to) {
             to->set_pc (from->get_pc()) ;
             break ;
         case CFA_OFFSET: {
-            int cfa_reg = arch->translate_regnum (cfa->reg) ;
+            cfa_reg = arch->translate_regnum (cfa->reg) ;
             //printf ("cfa reg is %d (0x%llx)\n", cfa->reg, from->get_reg(cfa_reg)) ;
             //proc->dump (from->get_reg (cfa_reg), 32) ;
             Address v = proc->readptr (from->get_reg (cfa_reg) + cfa->offset + ra->offset) ;
@@ -436,7 +422,7 @@ void CFATable::apply(Frame *from, Frame * to) {
         }
 
         // set stack pointer of the next frame to the cfa
-        int cfa_reg = arch->translate_regnum (cfa->reg) ;
+        cfa_reg = arch->translate_regnum (cfa->reg) ;
         to->set_sp (from->get_reg (cfa_reg) + cfa->offset) ;
 
         // set the fp to the previous one
@@ -465,7 +451,7 @@ void CFATable::apply(Frame *from, Frame * to) {
 		}
            	break;
             case CFA_OFFSET: {
-                int cfa_reg = arch->translate_regnum (cfa->reg) ;
+                cfa_reg = arch->translate_regnum (cfa->reg) ;
                 //proc->dump (from->get_reg (cfa_reg), 32) ;
                 Address v = proc->readptr (from->get_reg (cfa_reg) + cfa->offset + rule->offset) ;
                 std::string regname = arch->reverse_translate_regnum (arch->translate_regnum (rule->reg)) ;
@@ -492,12 +478,12 @@ void CFATable::apply(Frame *from, Frame * to) {
 }
 
 
-Process::Process (ProcessController * pcm, std::string program, Architecture * arch, Target *target, PStream &os, AttachType at)
-    : pcm(pcm),
-    program(program),
-    arch(arch),
+Process::Process (ProcessController *_pcm, std::string _program, Architecture *_arch, Target *_target, PStream &_os, AttachType at)
+    : pcm(_pcm),
+    program(_program),
+    arch(_arch),
     thread_agent(0),
-    target(target),
+    target(_target),
     pid(0),
     state(IDLE),
     signalnum(0),
@@ -517,7 +503,7 @@ Process::Process (ProcessController * pcm, std::string program, Architecture * a
     fixup_addr(0),
     dyn_start(0),
     dyn_end(0),
-    os(os),
+    os(_os),
     current_signal(0),
     displaynum(0),
     attach_type(at),
@@ -880,11 +866,11 @@ void Process::attach_core() {
     }
 }
 
-void Process::attach_process(int pid) {
-    threads.push_front (new Thread (arch, this, pid, 0)) ;                // main thread
+void Process::attach_process(int _pid) {
+    threads.push_front (new Thread (arch, this, _pid, 0)) ;               // main thread
     current_thread = threads.begin() ;
 
-    this->pid = target->attach (program, pid) ;                     // attach to target process
+    this->pid = target->attach (program, _pid) ;                    // attach to target process
     state = RUNNING ;
     wait() ; // wait for it to stop
     // state will be READY here
@@ -1135,9 +1121,9 @@ void Process::stop_threads() {
 //     }
 }
 
-Process::ThreadList::iterator Process::find_thread (int pid) {
+Process::ThreadList::iterator Process::find_thread (int _pid) {
     for (ThreadList::iterator t = threads.begin() ; t != threads.end(); t++) {
-        if ((*t)->get_pid() == pid) {
+        if ((*t)->get_pid() == _pid) {
             return t ;
         }
     }
@@ -1311,9 +1297,9 @@ int Process::get_main_language() {
             return lang ;
         }
     } else {
-        Address main = lookup_symbol ("main") ;
-        if (main != 0) {
-            Location loc = lookup_address (main) ;
+        Address _main = lookup_symbol ("main") ;
+        if (_main != 0) {
+            Location loc = lookup_address (_main) ;
             if (loc.get_funcloc() != NULL) {
                 int lang = loc.get_funcloc()->symbol->die->get_language() ;
                 return lang ;
@@ -1340,7 +1326,7 @@ int Process::get_main_language() {
 void Process::print_function_paras (int fid, DIE *die) {
 	build_frame_cache() ;
 
-	if (fid < 0 || fid >= frame_cache.size())
+	if (fid < 0 || (size_t)fid >= frame_cache.size())
 		throw Exception("Frame is not right.");
 
 	print_function_paras (frame_cache[fid], die);
@@ -1384,7 +1370,7 @@ void Process::print_function_paras (Frame *frame, DIE *die) {
         DIE *type = para->get_type() ;
         if (type->is_real()) {
             if (type->get_size() == 4) {                    // float?
-                value.real = (double)(*(float*)&value.real) ;
+                value.real = (double)(*(float*)(void*)&value.real) ;
             }
             value.type = VALUE_REAL ;
         }
@@ -1816,7 +1802,7 @@ void Process::set_value (Value& loc, Value &v, int size) {
         } else if (v.type == VALUE_REAL) {
             if (size == 4) {                            // float?
                 float f = (float)v.real ;
-                write (loc.integer, *(int*)&f, size) ;
+                write (loc.integer, *(int*)(void*)&f, size) ;
             } else {
                 write (loc.integer, v.integer, size) ;
             }
@@ -1875,8 +1861,9 @@ void Process::set_debug_reg (int reg, Address value) {
     target->set_debug_reg ((*current_thread)->get_pid(), reg, value) ;
 }
 
-struct StateHolder
+class StateHolder
 {
+public:
 	StateHolder(RegisterSetProperties *props, RegisterSetProperties *fp_props)
 	{
 		regs = props->new_empty_register_set();
@@ -2001,9 +1988,9 @@ bool Process::sw_watchpoints_active() {
     return false ;
 }
 
-Breakpoint *Process::find_breakpoint (int bpnum) {
+Breakpoint *Process::find_breakpoint (int _bpnum) {
     for ( BreakpointList::iterator item = breakpoints.begin() ; item != breakpoints.end() ; item++) {
-        if ((*item)->get_num() == bpnum) {
+        if ((*item)->get_num() == _bpnum) {
             return *item ;
         }
     }
@@ -2796,9 +2783,9 @@ next_iteration:
 }
 
 
-void Process::execute_cfa (Architecture *arch, CFATable *table,
+void Process::execute_cfa (Architecture *_arch, CFATable *table,
    BVector code, Address pc, int caf, int daf, int ra, bool debug) {
-    BStream stream (code, ! arch->is_little_endian()) ;
+    BStream stream (code, ! _arch->is_little_endian()) ;
     while (!stream.eof() && table->get_loc() <= pc) {
         int opcode = stream.read1u() ;
         if ((opcode & 0xc0) != 0) {
@@ -2939,7 +2926,7 @@ void Process::execute_cfa (Architecture *arch, CFATable *table,
             case DW_CFA_expression:
                 throw Exception ("DW_CFA_expression not implemented") ;
             case DW_CFA_offset_extended_sf: {
-                int reg = arch->translate_regnum (stream.read_uleb()) ;
+                int reg = _arch->translate_regnum (stream.read_uleb()) ;
                 int offset = stream.read_sleb() * daf ;
                 table->set_reg (reg, CFA_OFFSET, offset) ;
                 if (debug) {
@@ -3714,7 +3701,7 @@ void Process::step(bool by_line, bool over, int n) {
 
     stepping_lines = by_line ;
     stepping_over = over ;
-    Address before_fp = get_reg ("fp") ;
+//  Address before_fp = get_reg ("fp") ;
     bool in_stl = false;
     bool skip_stl = false;
 
@@ -3779,7 +3766,7 @@ void Process::until() {
     Address current_pc = get_reg ("pc") ;
     stepping_lines = true ;
     stepping_over = true ;
-    Address before_fp = get_reg ("fp") ;
+//  Address before_fp = get_reg ("fp") ;
     while (state == READY) {
         single_step() ;
         Address sp = get_reg("sp") ;
@@ -3899,10 +3886,10 @@ void Process::interrupt() {
 
 // after a fork event has been received, the child has a SIGSTOP signal pending.  We need
 // to wait for the child to receive this signal
-void Process::wait_for_child (pid_t pid) {
+void Process::wait_for_child (pid_t _pid) {
     int status = 0;
     for (;;) {
-        int result = waitpid (pid, &status, 0) ;
+        int result = waitpid (_pid, &status, 0) ;
         if (result != -1 || errno != EINTR) {
             break ;
         }
@@ -4729,8 +4716,8 @@ void Process::disassemble (Address start, int ninsts, bool newline) {
 
 // display command
 
-Display::Display (Process *proc, int n, PStream &os, std::string expr, int start, Format &fmt)
-   :n(n), os(os), expr(expr), fmt(fmt), disabled(false), local(false) {
+Display::Display (Process *proc, int _n, PStream &_os, std::string _expr, int start, Format &_fmt)
+   :n(_n), os(_os), expr(_expr), fmt(_fmt), disabled(false), local(false) {
 
     node = proc->compile_expression (expr.substr(start), start) ;
     if (node == NULL) {
@@ -4851,36 +4838,36 @@ void Process::execute_displays() {
 
 // breakpoint conditions etc
 
-void Process::set_breakpoint_condition (int bpnum, std::string cond) {
-    Breakpoint *bp = find_breakpoint (bpnum) ;
+void Process::set_breakpoint_condition (int _bpnum, std::string cond) {
+    Breakpoint *bp = find_breakpoint (_bpnum) ;
     if (bp == NULL) {
-        os.print ("No breakpoint number %d.\n", bpnum) ;
+        os.print ("No breakpoint number %d.\n", _bpnum) ;
     } else {
         bp->set_condition (cond) ;
         if (cond == "") {
-            os.print ("Breakpoint %d now unconditional.\n", bpnum) ;
+            os.print ("Breakpoint %d now unconditional.\n", _bpnum) ;
         }
     }
 }
 
-void Process::set_breakpoint_ignore_count (int bpnum, int n) {
-    Breakpoint *bp = find_breakpoint (bpnum) ;
+void Process::set_breakpoint_ignore_count (int _bpnum, int n) {
+    Breakpoint *bp = find_breakpoint (_bpnum) ;
     if (bp == NULL) {
-        os.print ("No breakpoint number %d.\n", bpnum) ;
+        os.print ("No breakpoint number %d.\n", _bpnum) ;
     } else {
         bp->set_ignore_count (n) ;
         if (n <= 0) {
-            os.print ("Will stop next time breakpoint %d is reached.\n", bpnum) ;
+            os.print ("Will stop next time breakpoint %d is reached.\n", _bpnum) ;
         } else {
-            os.print ("Will ignore next %d crossings of breakpoint %d.\n", n, bpnum) ;
+            os.print ("Will ignore next %d crossings of breakpoint %d.\n", n, _bpnum) ;
         }
     }
 }
 
-void Process::set_breakpoint_commands (int bpnum, std::vector<ComplexCommand *>& cmds) {
-    Breakpoint *bp = find_breakpoint (bpnum) ;
+void Process::set_breakpoint_commands (int _bpnum, std::vector<ComplexCommand *>& cmds) {
+    Breakpoint *bp = find_breakpoint (_bpnum) ;
     if (bp == NULL) {
-        os.print ("No breakpoint number %d.\n", bpnum) ;
+        os.print ("No breakpoint number %d.\n", _bpnum) ;
     } else {
         bp->set_commands (cmds) ;
     }
@@ -5706,7 +5693,7 @@ std::string Process::realname(std::string nm) {
 }
 
 
-void Process::print_loc(const Location& loc, Frame *frame, PStream &os, bool showthread) {
+void Process::print_loc(const Location& loc, Frame *frame, PStream &_os, bool showthread) {
 #if 0
     bool print_address = get_int_opt(PRM_P_ADDR) ;
 
@@ -5727,36 +5714,36 @@ void Process::print_loc(const Location& loc, Frame *frame, PStream &os, bool sho
                 parens = "" ;
             }
             if (print_address && !first_line) {
-                os.print ("0x%016llx in %s%s", loc.get_addr(), funcname.c_str(), parens) ;
+                _os.print ("0x%016llx in %s%s", loc.get_addr(), funcname.c_str(), parens) ;
             } else {
-                os.print ("%s%s", funcname.c_str(), parens) ;
+                _os.print ("%s%s", funcname.c_str(), parens) ;
             }
         } else {
             if (print_address && !first_line) {
-                os.print ("0x%016llx in ?? ()", loc.get_addr()) ;
+                _os.print ("0x%016llx in ?? ()", loc.get_addr()) ;
             } else {
-                os.print ("?? ()") ;
+                _os.print ("?? ()") ;
             }
         }
     } else {
         if (print_address && !first_line) {
-           os.print ("0x%016llx in %s ", loc.get_addr(), funcname.c_str()) ;
+           _os.print ("0x%016llx in %s ", loc.get_addr(), funcname.c_str()) ;
         } else {
-           os.print ("%s ", funcname.c_str()) ;
+           _os.print ("%s ", funcname.c_str()) ;
         }
         if (loc.get_funcloc() != NULL) {
            print_function_paras (frame, loc.get_funcloc()->symbol->die) ;
         }
 
-        os.print (" at %s", loc.get_file()->name.c_str());
+        _os.print (" at %s", loc.get_file()->name.c_str());
         if (loc.get_line() != -1) {
-           os.print (":%d", loc.get_line());
+           _os.print (":%d", loc.get_line());
         }
     }
     if (showthread) {
         show_current_thread() ;
     }
-    os.print ("\n") ;
+    _os.print ("\n") ;
 #endif
 }
 
@@ -5790,7 +5777,7 @@ Address Process::get_frame_pc (int tid, int fid)
 {
 	int	get_error = 0;
 	int	current_thread_id_record = -1;
-	Address ret;
+	Address ret = 0;
 
 	try {
 		//Set tid to current_thread if need.

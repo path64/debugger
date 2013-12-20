@@ -41,7 +41,7 @@ author: David Allison <dallison@pathscale.com>
 
 #include <ios>
 
-DwCUnit::DwCUnit (DwInfo *dwarf) : dwarf(dwarf), mainstream(BVector(),0), abbrev(NULL)
+DwCUnit::DwCUnit (DwInfo *_dwarf) : dwarf(_dwarf), mainstream(BVector(),0), abbrev(NULL)
  {
 }
 
@@ -561,8 +561,8 @@ DwSTab *DwCUnit::get_string_table() {
     return dwarf->get_string_table() ;
 }
 
-DIE *DwCUnit::make_die (DwCUnit *cu, DIE *parent, Abbreviation *abbrev) {
-    return dwarf->make_die (cu, parent, abbrev) ;
+DIE *DwCUnit::make_die (DwCUnit *cu, DIE *parent, Abbreviation *_abbrev) {
+    return dwarf->make_die (cu, parent, _abbrev) ;
 }
 
 Address DwCUnit::read_address (BStream &bs) {

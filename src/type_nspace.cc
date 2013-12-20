@@ -30,8 +30,8 @@ author: James Strother <jims@pathscale.com>
 
 #include "type_nspace.h"
 
-EntryNSpace::EntryNSpace(DwCUnit *cu, DIE *parent, Abbreviation *abbrev)
-    : DIE(cu, parent, abbrev) {
+EntryNSpace::EntryNSpace(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+    : DIE(_cu, _parent, _abbrev) {
 }
 
 EntryNSpace::~EntryNSpace() {

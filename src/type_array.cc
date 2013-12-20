@@ -33,15 +33,15 @@ author: David Allison <dallison@pathscale.com>
 #include "type_array.h"
 #include "dwf_cunit.h"
 
-TypeArray::TypeArray(DwCUnit * cu, DIE * parent,
-		     Abbreviation * abbrev)
-:  DIE(cu, parent, abbrev), dimsok(false)
+TypeArray::TypeArray(DwCUnit *_cu, DIE *_parent,
+		     Abbreviation *_abbrev)
+:  DIE(_cu, _parent, _abbrev), dimsok(false)
 {
 }
 
-TypeArray::TypeArray(DwCUnit * cu, DIE * parent, int tag)
+TypeArray::TypeArray(DwCUnit *_cu, DIE *_parent, int _tag)
     :
-DIE(cu, parent, tag),
+DIE(_cu, _parent, _tag),
 dimsok(false)
 {
 }
@@ -451,7 +451,7 @@ TypeArray::print_dim_c(EvalContext & context, TypeArray * array,
 	    }
 	    if (type->is_real()) {
 	       if (type->get_size() == 4) {
-		  val.real = (double) (*(float *) &val.real);
+		  val.real = (double) (*(float *)(void *)&val.real);
 	       }
 	       val.type = VALUE_REAL;
 	    }
@@ -603,9 +603,9 @@ TypeArray::print_dim_fortran(EvalContext & context, TypeArray * array,
 	    }
 	    if (type->is_real()) {
 	       if (type->get_size() == 4) {
-		  val.real = (double) (*(float *) &val.real);	// convert 
-								// to
-								// double
+		  val.real = (double)(*(float *)(void *)&val.real);	// convert 
+									// to
+									// double
 	       }
 	       val.type = VALUE_REAL;
 	    }

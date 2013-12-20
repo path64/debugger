@@ -35,13 +35,13 @@ author: David Allison <dallison@pathscale.com>
 
 #include "type_pointer.h"
 
-TypePointer::TypePointer(DwCUnit * cu, DIE * parent, Abbreviation * abbrev)
-:  DIE(cu, parent, abbrev)
+TypePointer::TypePointer(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+:  DIE(_cu, _parent, _abbrev)
 {
 }
 
-TypePointer::TypePointer(DwCUnit * cu, DIE * parent, int tag)
-: DIE(cu, parent, tag)
+TypePointer::TypePointer(DwCUnit *_cu, DIE *_parent, int _tag)
+: DIE(_cu, _parent, _tag)
 {
 }
 
@@ -144,21 +144,21 @@ TypePointer::print_value(EvalContext & context, Value & value, int indent)
 	    if (!context.process->test_address(value.integer)) {
 	       context.os.print("<Bad address>");
 	    } else {
-	       DIE *subtype = get_type();	// type pointed to
+	       DIE *_subtype = get_type();	// type pointed to
 	       Value v;
-	       if (subtype->is_struct() || subtype->is_array()
-		   || subtype->is_complex()) {
+	       if (_subtype->is_struct() || _subtype->is_array()
+		   || _subtype->is_complex()) {
 		  v = addr;
 	       } else {
 		  try {
-		     v = context.process->read(addr, subtype->get_size());
+		     v = context.process->read(addr, _subtype->get_size());
 		  }
 		  catch(Exception e) {
 		     context.os.print("<%s>", e.get().c_str());
 		     break;
 		  }
 	       }
-	       subtype->print_value(context, v);
+	       _subtype->print_value(context, v);
 	    }
 	 }
 	 break;

@@ -42,8 +42,8 @@ author: David Allison <dallison@pathscale.com>
 #include "cli.h"
 
 static void checktypes (const Value &v1, const Value &v2) {
-    if (v1.type == VALUE_INTEGER && v2.type == VALUE_BOOL ||
-                v1.type == VALUE_BOOL && v2.type == VALUE_INTEGER) {
+    if ((v1.type == VALUE_INTEGER && v2.type == VALUE_BOOL) ||
+        (v1.type == VALUE_BOOL && v2.type == VALUE_INTEGER)) {
         return ;
     }
 
@@ -297,13 +297,13 @@ std::ostream &operator<< (std::ostream &os, const Value &v) {
     return os ;
 }
 
-EvalContext::EvalContext (Process *process, Address fb, int language, PStream &os)
+EvalContext::EvalContext (Process *_process, Address _fb, int _language, PStream &_os)
     : addressonly(false),
       ignore_expr(false),
-      language(language),
-      os(os),
-      process(process),
-      fb(fb),
+      language(_language),
+      os(_os),
+      process(_process),
+      fb(_fb),
       show_contents(true),
       show_reference(true),
       truncate_aggregates(false),
@@ -316,9 +316,9 @@ EvalContext::EvalContext (Process *process, Address fb, int language, PStream &o
 EvalContext::~EvalContext() {
 }
 
-Node::Node (SymbolTable *symtab)
+Node::Node (SymbolTable *_symtab)
   : type(NULL),
-    symtab(symtab)
+    symtab(_symtab)
 {
 }
 
@@ -329,8 +329,8 @@ DIE *Node::get_type() {
         return type ;
 }
 
-ConstantNode::ConstantNode(SymbolTable *symtab) 
-    : Node(symtab) {
+ConstantNode::ConstantNode(SymbolTable *_symtab) 
+    : Node(_symtab) {
 
 }
 
@@ -339,14 +339,14 @@ ConstantNode::~ConstantNode() {
 
 
 
-IntConstant::IntConstant (SymbolTable *symtab, int64_t v, int sz)
-    : ConstantNode (symtab), v(v), size(sz) {
+IntConstant::IntConstant (SymbolTable *_symtab, int64_t _v, int sz)
+    : ConstantNode (_symtab), v(_v), size(sz) {
     switch (size) {
-    case 1: type = symtab->new_scalar_type ("bool", DW_ATE_boolean, sz) ; break ;
-    case 2: type = symtab->new_scalar_type ("short", DW_ATE_signed, sz) ; break ;
-    case 4: type = symtab->new_scalar_type ("int", DW_ATE_signed, sz) ; break ;
-    case 8: type = symtab->new_scalar_type ("long", DW_ATE_signed, sz) ; break ;
-    default: type = symtab->new_scalar_type ("int", DW_ATE_signed, sz) ; break ;
+    case 1: type = _symtab->new_scalar_type ("bool", DW_ATE_boolean, sz) ; break ;
+    case 2: type = _symtab->new_scalar_type ("short", DW_ATE_signed, sz) ; break ;
+    case 4: type = _symtab->new_scalar_type ("int", DW_ATE_signed, sz) ; break ;
+    case 8: type = _symtab->new_scalar_type ("long", DW_ATE_signed, sz) ; break ;
+    default: type = _symtab->new_scalar_type ("int", DW_ATE_signed, sz) ; break ;
     }
 }
 
@@ -357,9 +357,9 @@ Value IntConstant::evaluate(EvalContext &context) {
     return v ;
 }
 
-StringConstant::StringConstant (SymbolTable *symtab, std::string v)
-    : ConstantNode (symtab), v(v) {
-    type = symtab->new_string_type(v.size()+1) ;
+StringConstant::StringConstant (SymbolTable *_symtab, std::string _v)
+    : ConstantNode (_symtab), v(_v) {
+    type = _symtab->new_string_type(v.size()+1) ;
 }
 
 StringConstant::~StringConstant() {
@@ -369,9 +369,9 @@ Value StringConstant::evaluate(EvalContext &context) {
     return v ;
 }
 
-CharConstant::CharConstant (SymbolTable *symtab, char ch)
-    : ConstantNode (symtab), ch(ch) {
-    type = symtab->new_scalar_type ("char", DW_ATE_signed_char, 1) ;
+CharConstant::CharConstant (SymbolTable *_symtab, char _ch)
+    : ConstantNode (_symtab), ch(_ch) {
+    type = _symtab->new_scalar_type ("char", DW_ATE_signed_char, 1) ;
 }
 
 CharConstant::~CharConstant() {
@@ -382,9 +382,9 @@ Value CharConstant::evaluate(EvalContext &context) {
 }
 
 
-RealConstant::RealConstant (SymbolTable *symtab, double r, int size)
-    : ConstantNode (symtab), r(r) {
-    type = symtab->new_scalar_type ("double", DW_ATE_float, size) ;
+RealConstant::RealConstant (SymbolTable *_symtab, double _r, int size)
+    : ConstantNode (_symtab), r(_r) {
+    type = _symtab->new_scalar_type ("double", DW_ATE_float, size) ;
 }
 
 RealConstant::~RealConstant() {
@@ -394,12 +394,12 @@ Value RealConstant::evaluate(EvalContext &context) {
     return r ;
 }
 
-RegisterExpression::RegisterExpression(SymbolTable *symtab, std::string name)
-    : Node(symtab), regname(name)
+RegisterExpression::RegisterExpression(SymbolTable *_symtab, std::string name)
+    : Node(_symtab), regname(name)
 {
 	// FIXME? Floating point registers?
-	RegisterType regtype = symtab->arch->type_of_register(name);
-	int t;
+	RegisterType regtype = _symtab->arch->type_of_register(name);
+	int t = 0;
 	switch (regtype)
 	{
 		case RT_INTEGRAL:
@@ -411,7 +411,7 @@ RegisterExpression::RegisterExpression(SymbolTable *symtab, std::string name)
 		default:
 			assert(false && "Unreachable!");
 	}
-	type = symtab->new_scalar_type("register", t, symtab->arch->size_of_register(name));
+	type = _symtab->new_scalar_type("register", t, _symtab->arch->size_of_register(name));
 }
 
 RegisterExpression::~RegisterExpression() {}
@@ -425,17 +425,17 @@ void RegisterExpression::set_value (EvalContext &context, Value &value, DIE *exp
 }
 
 
-DebuggerVarExpression::DebuggerVarExpression (SymbolTable *symtab, std::string name, DebuggerVar *var) 
-    : Node(symtab),
-      var(var),
-      name(name)
+DebuggerVarExpression::DebuggerVarExpression (SymbolTable *_symtab, std::string _name, DebuggerVar *_var) 
+    : Node(_symtab),
+      var(_var),
+      name(_name)
 {
-    if (var != NULL) {
-        type = var->type ;
+    if (_var != NULL) {
+        type = _var->type ;
     } else {
-        type = symtab->new_int() ;
+        type = _symtab->new_int() ;
     }
-    symtab->keep_temp_die (type);
+    _symtab->keep_temp_die (type);
 }
 
 DebuggerVarExpression::~DebuggerVarExpression() {
@@ -469,16 +469,16 @@ void DebuggerVarExpression::set_value (EvalContext &context, Value &value, DIE *
 }
 
 
-Identifier::Identifier (SymbolTable *symtab, DIE *sym)
-    : Node(symtab), sym(sym) {
-    if (sym->get_tag() == DW_TAG_subprogram ||
-        sym->get_tag() == DW_TAG_structure_type ||
-        sym->get_tag() == DW_TAG_union_type ||
-        sym->get_tag() == DW_TAG_enumeration_type ||
-        sym->get_tag() == DW_TAG_class_type) {
-        type = sym ;
+Identifier::Identifier (SymbolTable *_symtab, DIE *_sym)
+    : Node(_symtab), sym(_sym) {
+    if (_sym->get_tag() == DW_TAG_subprogram ||
+        _sym->get_tag() == DW_TAG_structure_type ||
+        _sym->get_tag() == DW_TAG_union_type ||
+        _sym->get_tag() == DW_TAG_enumeration_type ||
+        _sym->get_tag() == DW_TAG_class_type) {
+        type = _sym ;
     } else {
-        type = sym->get_type() ;                    // useful to have a static type for fortran
+        type = _sym->get_type() ;                   // useful to have a static type for fortran
     }
 }
 
@@ -538,7 +538,7 @@ Value Identifier::evaluate(EvalContext &context) {
 
     if (type->is_real()) {
         if (type->get_size() == 4) {                    // float?
-            v.real = (double)(*(float*)&v.real) ;
+            v.real = (double)(*(float*)(void*)&v.real) ;
         }
         v.type = VALUE_REAL ;
     }
@@ -559,12 +559,12 @@ bool Identifier::is_local() {
 }
 
 // a set of identifiers
-IdentifierSet::IdentifierSet (SymbolTable *symtab, std::vector<DIE*> &syms)
-    : Node(symtab), syms(syms) {
-    if (syms[0]->get_tag() == DW_TAG_subprogram) {
-        type = syms[0] ;
+IdentifierSet::IdentifierSet (SymbolTable *_symtab, std::vector<DIE*> &_syms)
+    : Node(_symtab), syms(_syms) {
+    if (_syms[0]->get_tag() == DW_TAG_subprogram) {
+        type = _syms[0] ;
     } else {
-        type = syms[0]->get_type() ;                    // useful to have a static type for fortran
+        type = _syms[0]->get_type() ;                   // useful to have a static type for fortran
     }
 }
 
@@ -688,21 +688,21 @@ bool IdentifierSet::is_local() {
     return false ;
 }
 
-IntrinsicIdentifier::IntrinsicIdentifier (SymbolTable *symtab, std::string name, Intrinsic it)
-    : Node(symtab), name(name), it(it) {
+IntrinsicIdentifier::IntrinsicIdentifier (SymbolTable *_symtab, std::string _name, Intrinsic _it)
+    : Node(_symtab), name(_name), it(_it) {
 
 }
 
 IntrinsicIdentifier::~IntrinsicIdentifier() {
 }
 
-MemberExpression::MemberExpression (SymbolTable *symtab, Node *l, std::string name)
-    : Node(symtab), left(l), membername(name) {
+MemberExpression::MemberExpression (SymbolTable *_symtab, Node *l, std::string name)
+    : Node(_symtab), membername(name), left(l) {
 
 	type = left->get_type() ;
 	DIE *prev_type = NULL;
 	while (type && (type->get_tag() == DW_TAG_const_type || type->get_tag() == DW_TAG_reference_type || type->get_tag() == DW_TAG_formal_parameter)) {
-		DIE *prev_type = type;
+		prev_type = type;
 		type = type->get_type() ;
 	}
 
@@ -950,7 +950,7 @@ Value MemberExpression::evaluate(EvalContext &context) {
 
     if (type->is_real()) {
         if (type->get_real_size(context) == 4) {
-           mem.real = (double)(*(float*)&mem.real) ;
+           mem.real = (double)(*(float*)(void*)&mem.real) ;
         }
         mem.type = VALUE_REAL ;
     }
@@ -1055,7 +1055,7 @@ Value MemberExpression::evaluate(EvalContext &context, DIE *member) {
 
     if (type->is_real()) {
         if (type->get_real_size(context) == 4) {
-           mem.real = (double)(*(float*)&mem.real) ;
+           mem.real = (double)(*(float*)(void*)&mem.real) ;
         }
         mem.type = VALUE_REAL ;
     }
@@ -1068,14 +1068,14 @@ Value MemberExpression::evaluate(EvalContext &context, DIE *member) {
     return mem ;
 }
 
-Expression::Expression (SymbolTable *symtab, Token opcode, Node *left, Node *right)
-    : Node(symtab),
-      left(left),
-      right(right),
-      opcode(opcode)
+Expression::Expression (SymbolTable *_symtab, Token _opcode, Node *_left, Node *_right)
+    : Node(_symtab),
+      left(_left),
+      right(_right),
+      opcode(_opcode)
 {
 
-    if (left != NULL) {
+    if (_left != NULL) {
         type = left->get_type() ;           // have to do
     }
 }
@@ -1302,8 +1302,8 @@ bool Expression::check_operator_overload(EvalContext &context, DIE *ltype, Value
                 // XXX: postinc and postdec in here
             }
             
-            Node *left = new IdentifierSet (symtab, ops) ;
-            CallExpression call (symtab, left, args) ;
+            Node *is = new IdentifierSet (symtab, ops) ;
+            CallExpression call (symtab, is, args) ;
             result = call.evaluate (context) ;
             type = call.get_type() ;
             return true ;
@@ -1563,7 +1563,7 @@ Value Expression::evaluate(EvalContext &context) {
             // doubles
             if (type->is_real()) {
                 if (type->get_size() == 4) {                    // float?
-                    v.real = (double)(*(float*)&v.real) ;
+                    v.real = (double)(*(float*)(void*)&v.real) ;
                 }
                 v.type = VALUE_REAL ;
             }
@@ -1624,11 +1624,11 @@ void Expression::set_value (EvalContext &context, Value &value, DIE *exprtype) {
 }
 
 
-AssignmentExpression::AssignmentExpression (SymbolTable *symtab, Token tok, Node *l, Node *r)
-    : Node(symtab), tok(tok),
+AssignmentExpression::AssignmentExpression (SymbolTable *_symtab, Token _tok, Node *l, Node *r)
+    : Node(_symtab), tok(_tok),
     left(l),
     right(r) {
-    type = left->get_type() ;
+    type = l->get_type() ;
 }
 
 AssignmentExpression::~AssignmentExpression() {
@@ -1745,11 +1745,11 @@ Value AssignmentExpression::evaluate(EvalContext &context) {
     return left->evaluate (context) ;
 }
 
-CastExpression::CastExpression (SymbolTable *symtab, Node *left, DIE *casttype)
-    : Node(symtab),
-    left(left),
-    casttype(casttype) {
-    type = casttype ;
+CastExpression::CastExpression (SymbolTable *_symtab, Node *_left, DIE *_casttype)
+    : Node(_symtab),
+    left(_left),
+    casttype(_casttype) {
+    type = _casttype ;
 }
 
 bool CastExpression::is_local() {
@@ -1807,10 +1807,10 @@ Value CastExpression::evaluate(EvalContext &context) {
 
 /* cast kind of left expresion to that of the value in right.
    this is used for fortran expression of the form "4_8" */
-TypeCastExpression::TypeCastExpression (SymbolTable *symtab, Node *left, Node *right)
-    : Node(symtab),
-    left(left),
-    right(right)
+TypeCastExpression::TypeCastExpression (SymbolTable *_symtab, Node *_left, Node *_right)
+    : Node(_symtab),
+    left(_left),
+    right(_right)
 {
 }
 
@@ -1878,7 +1878,7 @@ Value TypeCastExpression::evaluate(EvalContext &context) {
     return vl;
 }
 
-SizeofExpression::SizeofExpression (SymbolTable *symtab, DIE *t) : Node(symtab) {
+SizeofExpression::SizeofExpression (SymbolTable *_symtab, DIE *t) : Node(_symtab) {
     type = t ;
 }
 
@@ -1890,8 +1890,8 @@ Value SizeofExpression::evaluate (EvalContext &ctx) {
     return type->get_real_size (ctx) ;
 }
 
-VectorExpression::VectorExpression (SymbolTable *symtab, std::vector<Node*> &v)
-    : Node(symtab),
+VectorExpression::VectorExpression (SymbolTable *_symtab, std::vector<Node*> &v)
+    : Node(_symtab),
     values(v) {
 
 }
@@ -1925,8 +1925,8 @@ Value VectorExpression::evaluate(EvalContext &context) {
     return v; 
 }
 
-ConstructorExpression::ConstructorExpression (SymbolTable *symtab, Node *sn, std::vector<Node*> & v)
-    : Node(symtab),
+ConstructorExpression::ConstructorExpression (SymbolTable *_symtab, Node *sn, std::vector<Node*> & v)
+    : Node(_symtab),
     structnode(sn),
     values(v) {
 
@@ -1981,8 +1981,8 @@ Value ConstructorExpression::evaluate(EvalContext &context) {
 }
 
 
-CallExpression::CallExpression (SymbolTable *symtab, Node *l, std::vector<Node*> & a)
-    : Node(symtab),
+CallExpression::CallExpression (SymbolTable *_symtab, Node *l, std::vector<Node*> & a)
+    : Node(_symtab),
     left(l),
     args(a), is_func(false) {
 
@@ -2354,8 +2354,8 @@ Value CallExpression::evaluate(EvalContext &context) {
                 } else {
                     int nregs = (size - 1) / arch->main_register_set_properties()->size_of_register() + 1 ;               // probably 1 or 2
                     for (int j = nregs-1 ; j >= 0 ; j--) {
-                        int size = arch->main_register_set_properties()->size_of_register();
-                        Address part = context.process->read (addr + j * size, size);
+                        int _size = arch->main_register_set_properties()->size_of_register();
+                        Address part = context.process->read (addr + j * _size, _size);
                         arch->write_call_arg (context.process, i + arg_adjust + j, part, cls == X8664_AC_SSE) ;
                         num_fp_args += cls == X8664_AC_SSE ;
                     }
@@ -2436,7 +2436,7 @@ Value CallExpression::evaluate(EvalContext &context) {
         if (type != NULL && type->is_real()) {
             v = context.process->get_fpreg (arch->get_return_fpreg()) ; 
             if (type->get_size() == 4) {
-                v.real = (double)(*(float*)&v.real) ;
+                v.real = (double)(*(float*)(void*)&v.real) ;
             }
             v.type = VALUE_REAL ;
         } else {
@@ -2449,11 +2449,11 @@ Value CallExpression::evaluate(EvalContext &context) {
     return v ;
 }
 
-IntrinsicExpression::IntrinsicExpression (SymbolTable *symtab, IntrinsicIdentifier *left, std::vector<Node*> & args)
-    : Node(symtab),
-    it(left->get_intrinsic()),
-    args(args) {
-    delete left ;
+IntrinsicExpression::IntrinsicExpression (SymbolTable *_symtab, IntrinsicIdentifier *l, std::vector<Node*> &_args)
+    : Node(_symtab),
+    it(l->get_intrinsic()),
+    args(_args) {
+    delete l ;
 }  
 
 IntrinsicExpression::~IntrinsicExpression() {
@@ -2546,10 +2546,10 @@ Value IntrinsicExpression::evaluate(EvalContext &context) {
 }
 
 
-ArrayExpression::ArrayExpression (SymbolTable *symtab, Node *array, std::vector<Node*> & indices)
-    : Node(symtab),
-    array(array),
-    indices(indices) {
+ArrayExpression::ArrayExpression (SymbolTable *_symtab, Node *_array, std::vector<Node*> &_indices)
+    : Node(_symtab),
+    array(_array),
+    indices(_indices) {
 
 }
 
@@ -2611,7 +2611,7 @@ Value ArrayExpression::get_dimension_value (EvalContext &context, TypeArray *die
                 Value newv = die->get_index (context, dim, v.integer, j) ;
                 if (!context.addressonly && type->is_real() && !type->is_complex()) {
                     if (type->get_size() == 4) {                    // float?
-                        newv.real = (double)(*(float*)&newv.real) ;
+                        newv.real = (double)(*(float*)(void*)&newv.real) ;
                     }
                     newv.type = VALUE_REAL ;
                 }
@@ -2626,7 +2626,7 @@ Value ArrayExpression::get_dimension_value (EvalContext &context, TypeArray *die
             // convert to real value if necessary
             if (!context.addressonly && type->is_real() && !type->is_complex()) {
                 if (type->get_size() == 4) {                    // float?
-                    newv.real = (double)(*(float*)&newv.real) ;
+                    newv.real = (double)(*(float*)(void*)&newv.real) ;
                 }
                 newv.type = VALUE_REAL ;
             }
@@ -2640,22 +2640,22 @@ static void check_array_index (int index, Value &v) {
     }
 }
 
-bool ArrayExpression::split_indices (EvalContext &context, DIE *ltype, Value &lvalue, std::vector<Node*> &indices, Value &result) {
+bool ArrayExpression::split_indices (EvalContext &context, DIE *ltype, Value &lvalue, std::vector<Node*> &_indices, Value &result) {
     if (ltype->is_array()) {
-        TypeArray *array = dynamic_cast<TypeArray*>(ltype) ;
-        uint ndims = array->get_num_dims() ;
-        if (ndims < indices.size()) {
+        TypeArray *_array = dynamic_cast<TypeArray*>(ltype) ;
+        uint ndims = _array->get_num_dims() ;
+        if (ndims < _indices.size()) {
             // more indices than dimensions.  The first 'ndims' indices belong to the
             // array, the remainder are split
             std::vector<Node*> array_indices ;
             std::vector<Node*> other_indices ;
             for (uint i = 0 ; i < ndims ; i++) {
-                array_indices.push_back (indices[i]) ;
-                indices[i] = NULL ;                             // prevent multiple deletion
+                array_indices.push_back (_indices[i]) ;
+                _indices[i] = NULL ;                            // prevent multiple deletion
             }
-            for (uint i = ndims ; i < indices.size() ; i++) {
-                other_indices.push_back (indices[i]) ;
-                indices[i] = NULL ;                             // prevent multiple deletion
+            for (uint i = ndims ; i < _indices.size() ; i++) {
+                other_indices.push_back (_indices[i]) ;
+                _indices[i] = NULL ;                            // prevent multiple deletion
             }
             ArrayExpression aex (symtab, new ValueConstant (symtab, lvalue, ltype), array_indices) ;
             Value v = aex.evaluate (context) ;
@@ -2667,15 +2667,15 @@ bool ArrayExpression::split_indices (EvalContext &context, DIE *ltype, Value &lv
         }
     } else if (ltype->is_pointer()) {
         Node* left = new ValueConstant(symtab, lvalue, ltype);
-        Node *plus = new Expression (symtab, PLUS, left, indices[0]) ;
-        indices[0] = NULL ;    // prevent multiple deletion
+        Node *plus = new Expression (symtab, PLUS, left, _indices[0]) ;
+        _indices[0] = NULL ;    // prevent multiple deletion
         Expression ex (symtab, CONTENTS, plus) ;
         Value v = ex.evaluate (context) ;
-        if (indices.size() > 1) {
+        if (_indices.size() > 1) {
             std::vector<Node*> other_indices ;
-            for (uint i = 1 ; i < indices.size() ; i++) {
-                other_indices.push_back (indices[i]) ;
-                indices[i] = NULL ;
+            for (uint i = 1 ; i < _indices.size() ; i++) {
+                other_indices.push_back (_indices[i]) ;
+                _indices[i] = NULL ;
             }
             split_indices (context, ex.get_type(), v, other_indices, result) ;
             return true ;
@@ -2723,9 +2723,9 @@ recheck:
             args.push_back (indices[0]) ;
             indices.clear() ;                       // stop deletion of indices[0]
             CallExpression call (symtab, new IdentifierSet (symtab, ops), args) ; 
-            Value v = call.evaluate (context) ;
+            Value _v = call.evaluate (context) ;
             type = call.get_type() ;
-            return v ;
+            return _v ;
         }
     }
 
@@ -2866,16 +2866,16 @@ void ArrayExpression::set_value (EvalContext &context, Value &value, DIE *exprty
 }
 
 
-ExpressionHandler::ExpressionHandler (SymbolTable *symtab, Architecture *arch, int lang)
+ExpressionHandler::ExpressionHandler (SymbolTable *_symtab, Architecture *_arch, int lang)
     : flags(0),
-      symtab(symtab),
+      symtab(_symtab),
       line(""),
       ch(0),
       spelling(""),
       number(0),
       currentToken(NONE),
       current_process(NULL), 
-      arch(arch),
+      arch(_arch),
       language(lang)
 {
 }
@@ -2953,9 +2953,9 @@ Node *ExpressionHandler::parse(std::string expr, Process *process, int &end) {
     nextToken() ;
 
     try {
-        Node *expr = expression() ;
+        Node *_expr = expression() ;
         end = lastch ;
-        return expr ;
+        return _expr ;
     } catch (const char *s) {
         std::cout << s << '\n' ;
         end = lastch ;
@@ -2977,9 +2977,9 @@ Node *ExpressionHandler::parse_single(std::string expr, Process *process, int &e
     nextToken() ;
 
     try {
-        Node *expr = single_expression() ;
+        Node *_expr = single_expression() ;
         end = lastch ;
-        return expr ;
+        return _expr ;
     } catch (const char *s) {
         std::cout << s << '\n' ;
         end = lastch ;
@@ -2997,8 +2997,8 @@ Node *ExpressionHandler::parse_single(std::string expr, Process *process, int &e
 //
 
 
-CExpressionHandler::CExpressionHandler (SymbolTable*symtab, Architecture *arch, int language)
-    : ExpressionHandler(symtab, arch, language) {
+CExpressionHandler::CExpressionHandler (SymbolTable *_symtab, Architecture *_arch, int _language)
+    : ExpressionHandler(_symtab, _arch, _language) {
 
     reserved_words["sizeof"] = SIZEOF ;
     reserved_words["int"] = INT ;
@@ -3022,10 +3022,10 @@ CExpressionHandler::CExpressionHandler (SymbolTable*symtab, Architecture *arch, 
 CExpressionHandler::~CExpressionHandler() {
 }
 
-bool CExpressionHandler::istoken(char ch) {
+bool CExpressionHandler::istoken(char _ch) {
     char tokens[] = { '=', '<', '>', '-', '+', '*', '%', '/', '^', '~', '!', '?', ':', '&', '|', '.', '[', ']', '(', ')', ',', '@', '{', '}'} ;
     for (uint i = 0 ; i < sizeof(tokens) ; i++) {
-        if (tokens[i] == ch) {
+        if (tokens[i] == _ch) {
             return true ;
         }
     }
@@ -3570,8 +3570,8 @@ void CExpressionHandler::funcarray(TypeStack &stack) {
     if (match (LPAREN)) {
         DIE *subroutine = symtab->new_subroutine_type() ;
         while (currentToken != RPAREN) {
-            DIE *type = parse_typespec() ;
-            subroutine->addChild (symtab->new_formal_parameter (type)) ;
+            DIE *_type = parse_typespec() ;
+            subroutine->addChild (symtab->new_formal_parameter (_type)) ;
             if (!match (COMMA)) {
                 break ;
             }
@@ -3724,7 +3724,7 @@ Node *CExpressionHandler::primary() {
                     } else {
                         sym = sym->find_symbol (name, reqpc) ;
                     }
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", name.c_str(), context.c_str()) ;
                     }
                     context += name ;
@@ -3790,7 +3790,7 @@ Node *CExpressionHandler::primary() {
                         }
                     }
                     sym = sym->find_symbol (s, reqpc) ;
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", s.c_str(), context.c_str()) ;
                     }
                     context += s ;
@@ -4283,8 +4283,8 @@ Node *CExpressionHandler::expression() {
 // Fortran language expression handler
 //
 
-FortranExpressionHandler::FortranExpressionHandler (SymbolTable *symtab, Architecture *arch, int language)
-    : ExpressionHandler(symtab, arch, language) {
+FortranExpressionHandler::FortranExpressionHandler (SymbolTable *_symtab, Architecture *_arch, int _language)
+    : ExpressionHandler(_symtab, _arch, _language) {
     operators[".LT."] = LESS ;
     operators[".GT."] = GREATER ;
     operators[".LE."] = LESSEQ ;
@@ -4324,12 +4324,12 @@ FortranExpressionHandler::FortranExpressionHandler (SymbolTable *symtab, Archite
 FortranExpressionHandler::~FortranExpressionHandler() {
 }
 
-bool FortranExpressionHandler::istoken(char ch) {
+bool FortranExpressionHandler::istoken(char _ch) {
     // the '_' character can be a token since getNextToken() doesn't
     // use istoken() to what characters are valid within an identifier
     char tokens[] = { '%', '=', '<', '>', '-', '+', '*', '/', '(', ')', ':', ',', '@', '{', '}', '_'} ;
     for (uint i = 0 ; i < sizeof(tokens) ; i++) {
-        if (tokens[i] == ch) {
+        if (tokens[i] == _ch) {
             return true ;
         }
     }
@@ -4800,7 +4800,7 @@ Node *FortranExpressionHandler::primary() {
                         }
                     }
                     sym = sym->find_symbol (name, reqpc) ;
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", name.c_str(), context.c_str()) ;
                     }
                     context += name ;
@@ -4863,7 +4863,7 @@ Node *FortranExpressionHandler::primary() {
                         }
                     }
                     sym = sym->find_symbol (s, reqpc) ;
-                    if (sym == SV_NONE) {
+                    if (sym == NULL) {
                         error ("No symbol \"%s\" in context %s", s.c_str(), context.c_str()) ;
                     }
                     context += s ;

@@ -31,7 +31,7 @@ i386_linux_arch::i386_linux_arch()
     st_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 ;
 
     // there are 8 SSE registers
-    sse_start = sizeof (unsigned short) * 4 + sizeof(long) * 6 + 32 * sizeof(long);
+    sse_start = st_start + 32 * sizeof(long);
 
     reset_reg ();
 }
@@ -260,6 +260,9 @@ x86_64_linux_arch::x86_64_linux_arch()
 
     st_start = sizeof (unsigned short) * 4 + sizeof(long) * 2 + sizeof(int) * 2 ;
 
+    // there are 8 SSE registers
+    sse_start = st_start + sizeof(int) * 32 ;
+
     reset_reg ();
 
 static int x86_64_linux_sigcontext_regs[] = {
@@ -440,36 +443,39 @@ x86_64_freebsd_arch::x86_64_freebsd_arch()
 	regset_size = sizeof (struct x86_64_freebsd_regs);
 	fpregset_size = sizeof (struct x86_64_freebsd_fpregs);
 
-    regnames["r15"] = 0 * sizeof (register_t) ;
-    regnames["r14"] = 1 * sizeof (register_t) ;
-    regnames["r13"] = 2 * sizeof (register_t) ;
-    regnames["r12"] = 3 * sizeof (register_t) ;
-    regnames["rbp"] = 10 * sizeof (register_t) ;
-    regnames["rbx"] = 11 * sizeof (register_t) ;
-    regnames["r11"] = 4 * sizeof (register_t) ;
-   regnames["r10"] = 5 * sizeof (register_t) ;
-    regnames["r9"] = 6 * sizeof (register_t) ;
-   regnames["r8"] = 7 * sizeof (register_t) ;
-    regnames["rax"] = 14 * sizeof (register_t) ;
-    regnames["rcx"] = 13 * sizeof (register_t) ;
-   regnames["rdx"] = 12 * sizeof (register_t) ;
-    regnames["rsi"] = 9 * sizeof (register_t) ;
-    regnames["rdi"] = 8 * sizeof (register_t) ;
-    /*regnames["orig_rax"] = 15 * sizeof (register_t) ; */        // orig_rax
-    regnames["rip"] = 17 * sizeof (register_t) ;
-    regnames["cs"] = 18 * sizeof (register_t) ;
-    regnames["eflags"] = 19 * sizeof (register_t) ;
-    regnames["rsp"] = 20 * sizeof (register_t) ;
-    regnames["ss"] = 21 * sizeof (register_t) ;
-    /*regnames["fs_base"] = 21 * sizeof (register_t) ;*/         // fs_base
-   /*regnames["gs_base"] = 22 * sizeof (register_t) ;*/         // gs_base
-    regnames["ds"] = 17 * sizeof (register_t) - sizeof (uint16_t) ;
-   regnames["es"] = 17 * sizeof (register_t) - 2 * sizeof (uint16_t) ;
-    regnames["fs"] = 15 * sizeof (register_t) + sizeof (uint32_t) ;
-    regnames["gs"] = 15 * sizeof (register_t) + sizeof (uint32_t) + sizeof (uint16_t) ;
+    regnames["r15"] = 0 * sizeof (uint64_t) ;
+    regnames["r14"] = 1 * sizeof (uint64_t) ;
+    regnames["r13"] = 2 * sizeof (uint64_t) ;
+    regnames["r12"] = 3 * sizeof (uint64_t) ;
+    regnames["rbp"] = 10 * sizeof (uint64_t) ;
+    regnames["rbx"] = 11 * sizeof (uint64_t) ;
+    regnames["r11"] = 4 * sizeof (uint64_t) ;
+    regnames["r10"] = 5 * sizeof (uint64_t) ;
+    regnames["r9"] = 6 * sizeof (uint64_t) ;
+    regnames["r8"] = 7 * sizeof (uint64_t) ;
+    regnames["rax"] = 14 * sizeof (uint64_t) ;
+    regnames["rcx"] = 13 * sizeof (uint64_t) ;
+    regnames["rdx"] = 12 * sizeof (uint64_t) ;
+    regnames["rsi"] = 9 * sizeof (uint64_t) ;
+    regnames["rdi"] = 8 * sizeof (uint64_t) ;
+    /*regnames["orig_rax"] = 15 * sizeof (uint64_t) ; */        // orig_rax
+    regnames["rip"] = 17 * sizeof (uint64_t) ;
+    regnames["cs"] = 18 * sizeof (uint64_t) ;
+    regnames["eflags"] = 19 * sizeof (uint64_t) ;
+    regnames["rsp"] = 20 * sizeof (uint64_t) ;
+    regnames["ss"] = 21 * sizeof (uint64_t) ;
+    /*regnames["fs_base"] = 21 * sizeof (uint64_t) ;*/         // fs_base
+    /*regnames["gs_base"] = 22 * sizeof (uint64_t) ;*/         // gs_base
+    regnames["ds"] = 17 * sizeof (uint64_t) - sizeof (uint16_t) ;
+    regnames["es"] = 17 * sizeof (uint64_t) - 2 * sizeof (uint16_t) ;
+    regnames["fs"] = 15 * sizeof (uint64_t) + sizeof (uint32_t) ;
+    regnames["gs"] = 15 * sizeof (uint64_t) + sizeof (uint32_t) + sizeof (uint16_t) ;
 
-   // from x86_64 machine/reg.h, unavailable on i386 host
-    const int st_start = sizeof (unsigned long) * 4 ;
+    // XXX Not supported
+    st_start = sizeof (uint64_t) * 4 ;
+
+    // XXX Not supported
+    sse_start = st_start + sizeof(int) * 32 ;
 
     reset_reg ();
 
@@ -600,12 +606,11 @@ i386_freebsd_arch::i386_freebsd_arch()
 
 
 
-    // from i386 machine/reg.h, unavailable on x86_64 host
+    // XXX Not supported
     st_start = sizeof (unsigned long) * 8 ;
 
-    // there are 8 SSE registers
-    // from i386 machine/reg.h, unavailable on x86_64 host
-    sse_start = sizeof (unsigned long) * 8 + (8 * 16) ;
+    // XXX Not supported
+    sse_start = st_start + 8 * 16 ;
 
     ctx_offset = sizeof (freebsd_sigset_t) + sizeof (int) ; // skip sc_mask and sc_onstack members
 

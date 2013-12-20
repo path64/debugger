@@ -52,8 +52,8 @@ class Architecture ;
 class EvalContext {
 public:
     EvalContext(Process *process, Address fb, int language, PStream &os) ;
-    EvalContext (int language, PStream &os)
-       : ignore_expr(false), language(language), os(os),
+    EvalContext (int _language, PStream &_os)
+       : ignore_expr(false), language(_language), os(_os),
          process(NULL), fb(0), show_contents(true),
          show_reference(true), truncate_aggregates(false), pretty(true) {} 
     ~EvalContext() ; 
@@ -178,7 +178,7 @@ enum Intrinsic {
 
 class DebuggerVar {
     public:
-    DebuggerVar (Value &val, DIE *type) : value(val), type(type) {}
+    DebuggerVar (Value &val, DIE *_type) : value(val), type(_type) {}
     Value value ;
     DIE *type ;
 } ;
@@ -190,13 +190,13 @@ public:
     DIE *get_type () ;
     void set_type (DIE *t) { type = t ; }
     virtual Value evaluate (EvalContext &context) = 0 ;
-    virtual void set_value (EvalContext &context, Value &value, DIE *type) { throw Exception ("Cannot set the value of this expression") ; }
+    virtual void set_value (EvalContext &context, Value &value, DIE *_type) { throw Exception ("Cannot set the value of this expression") ; }
     virtual bool is_intrinsic() { return false ; }
     virtual bool is_generic() { return false ; }
     virtual Token get_opcode() { return NONE ; }
     virtual bool is_vector() { return false ; }
     virtual bool is_local() { return false ; }          // is the expression local to a function (contains local variables)
-    virtual Node * check_operator_overload() { return NULL ;} 
+    virtual bool check_operator_overload(EvalContext &context, DIE *ltype, Value &l, DIE *rtype, Value &r, Value &result) { return false ; }
     virtual bool is_member_expression() { return false ; }
     virtual bool is_identifier_set() { return false ; }
     virtual bool is_constant() { return false ; }
@@ -230,7 +230,7 @@ private:
 
 class ValueConstant: public ConstantNode  {
 public:
-    ValueConstant(SymbolTable *symtab, Value &v, DIE *t): ConstantNode (symtab), value(v) { type = t ; } 
+    ValueConstant(SymbolTable *_symtab, Value &v, DIE *t): ConstantNode (_symtab), value(v) { type = t ; } 
     ~ValueConstant() {}
     Value evaluate (EvalContext &context) { return value ; }
 protected:
@@ -338,7 +338,7 @@ public:
     CastExpression(SymbolTable *symtab, Node *left, DIE *casttype) ;
     ~CastExpression() ; 
     virtual Value evaluate (EvalContext &context) ;
-    void set_value (EvalContext &context, Value &value, DIE *type) { throw Exception ("Casts are not lvalues") ; }
+    void set_value (EvalContext &context, Value &value, DIE *_type) { throw Exception ("Casts are not lvalues") ; }
     bool is_local()  ;
     int num_variables() ;
 protected:
@@ -352,7 +352,7 @@ public:
    TypeCastExpression(SymbolTable *symtab, Node *left, Node *right) ;
    ~TypeCastExpression() ;
    virtual Value evaluate (EvalContext &context) ;
-   void set_value (EvalContext &context, Value &value, DIE *type) { throw Exception ("Casts are not lvalues") ; }
+   void set_value (EvalContext &context, Value &value, DIE *_type) { throw Exception ("Casts are not lvalues") ; }
    bool is_local() ;
    int num_variables() ;
 private:
@@ -365,7 +365,7 @@ public:
     SizeofExpression(SymbolTable *symtab, DIE *t) ;
     ~SizeofExpression() ; 
     virtual Value evaluate (EvalContext &context) ;
-    void set_value (EvalContext &context, Value &value, DIE *type) { throw Exception ("sizeof is not an lvalue") ; }
+    void set_value (EvalContext &context, Value &value, DIE *_type) { throw Exception ("sizeof is not an lvalue") ; }
 protected:
 private:
 } ;
@@ -375,7 +375,7 @@ public:
     VectorExpression(SymbolTable *symtab, std::vector<Node*> &v) ;
     ~VectorExpression() ; 
     virtual Value evaluate (EvalContext &context) ;
-    void set_value (EvalContext &context, Value &value, DIE *type) { throw Exception ("Vector expressions are not lvalues") ; }
+    void set_value (EvalContext &context, Value &value, DIE *_type) { throw Exception ("Vector expressions are not lvalues") ; }
     bool is_vector() { return true ; }
     int num_variables() ;
 protected:
@@ -475,7 +475,7 @@ public:
     ConstructorExpression (SymbolTable *symtab, Node *structnode, std::vector<Node *> & values) ;
     ~ConstructorExpression() ;
     virtual Value evaluate (EvalContext &context) ;
-    void set_value (EvalContext &context, Value &value, DIE *type) { throw Exception ("Constructors are not lvalues") ; }
+    void set_value (EvalContext &context, Value &value, DIE *_type) { throw Exception ("Constructors are not lvalues") ; }
     int num_variables() ;
 protected:
     Node *structnode ;

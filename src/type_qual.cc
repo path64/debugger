@@ -31,12 +31,12 @@ author: David Allison <dallison@pathscale.com>
 #include "dwf_attr.h"
 #include "type_qual.h"
 
-TypeQualifier::TypeQualifier(DwCUnit* cu, DIE* parent, Abbreviation * abbrev)
- : DIE(cu, parent, abbrev) {
+TypeQualifier::TypeQualifier(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+ : DIE(_cu, _parent, _abbrev) {
 }
 
-TypeQualifier::TypeQualifier(DwCUnit* cu, DIE* parent, int tag)
- : DIE(cu, parent, tag) {
+TypeQualifier::TypeQualifier(DwCUnit *_cu, DIE *_parent, int _tag)
+ : DIE(_cu, _parent, _tag) {
 }
 
 TypeQualifier::~TypeQualifier() {
@@ -137,34 +137,34 @@ TypeQualifier::compare(EvalContext& ctx, DIE * die, int flags)
 }
 
 
-TypeConst::TypeConst(DwCUnit* cu, DIE* parent, Abbreviation* abbrev)
- : TypeQualifier(cu, parent, abbrev) {
+TypeConst::TypeConst(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+ : TypeQualifier(_cu, _parent, _abbrev) {
 }
 
-TypeConst::TypeConst(DwCUnit * cu, DIE * parent, int tag)
- : TypeQualifier (cu, parent, tag) {
+TypeConst::TypeConst(DwCUnit *_cu, DIE *_parent, int _tag)
+ : TypeQualifier (_cu, _parent, _tag) {
 }
 
 TypeConst::~TypeConst() {
 }
 
-TypeVolatile::TypeVolatile(DwCUnit* cu, DIE* parent, Abbreviation * abbrev)
- : TypeQualifier(cu, parent, abbrev) {
+TypeVolatile::TypeVolatile(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+ : TypeQualifier(_cu, _parent, _abbrev) {
 }
 
-TypeVolatile::TypeVolatile(DwCUnit* cu, DIE* parent, int tag)
- : TypeQualifier (cu, parent, tag) {
+TypeVolatile::TypeVolatile(DwCUnit *_cu, DIE *_parent, int _tag)
+ : TypeQualifier (_cu, _parent, _tag) {
 }
 
 TypeVolatile::~TypeVolatile() {
 }
 
-TypeTypedef::TypeTypedef(DwCUnit* cu, DIE* parent, Abbreviation * abbrev)
- : TypeQualifier(cu, parent, abbrev) {
+TypeTypedef::TypeTypedef(DwCUnit *_cu, DIE *_parent, Abbreviation *_abbrev)
+ : TypeQualifier(_cu, _parent, _abbrev) {
 }
 
-TypeTypedef::TypeTypedef(DwCUnit* cu, DIE* parent, int tag)
- : TypeQualifier (cu, parent, tag) {
+TypeTypedef::TypeTypedef(DwCUnit *_cu, DIE *_parent, int _tag)
+ : TypeQualifier (_cu, _parent, _tag) {
 }
 
 TypeTypedef::~TypeTypedef() {

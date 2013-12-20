@@ -83,24 +83,24 @@ std::string Parser::readAttributeValue (char &lastchar) {
     char ch = skipSpaces() ;
     if (ch == '"') {            // string value
         while (!str.eof()) {
-            char ch = str.get() ;
-            if (ch == '"') {
+            char _ch = str.get() ;
+            if (_ch == '"') {
                 lastchar = str.get() ;
                 break ;
             }
-            value.push_back (ch) ;
+            value.push_back (_ch) ;
         }
     } else if (ch == '>') {
         throw Exception ("Missing attribute value") ;
     } else {
         value.push_back(ch) ;
         while (!str.eof()) {
-            char ch = str.get() ;
-            if (isspace(ch) || ch == '>' || ch == '/') {
-                lastchar = ch ;
+            char _ch = str.get() ;
+            if (isspace(_ch) || _ch == '>' || _ch == '/') {
+                lastchar = _ch ;
                 break ;
             }
-            value.push_back (ch) ;
+            value.push_back (_ch) ;
         }
     }
     lastchar = skipSpaces (lastchar) ;

@@ -35,11 +35,11 @@ author: David Allison <dallison@pathscale.com>
 
 int Thread::nextid = 0 ;
 
-Thread::Thread (Architecture * arch, Process * proc, int pid, void*tid)
-    : arch(arch),
-    proc(proc),
-    pid(pid),
-    tid(tid),
+Thread::Thread (Architecture *_arch, Process *_proc, int _pid, void *_tid)
+    : arch(_arch),
+    proc(_proc),
+    pid(_pid),
+    tid(_tid),
     running(false), disabled(false), status(0) {
 
     regs = arch->main_register_set_properties()->new_empty_register_set();
@@ -55,10 +55,10 @@ Address Thread::get_reg(const std::string &name)
 	return regs->get_register_as_integer(name);
 }
 
-Address Thread::get_reg(int num)
+Address Thread::get_reg(int _num)
 {
 	// FIXME: Is num meant to be the dwarf register num here?
-	return regs->get_register_as_integer(num);
+	return regs->get_register_as_integer(_num);
 }
 
 void Thread::set_reg(const std::string &name, Address value)
@@ -67,9 +67,9 @@ void Thread::set_reg(const std::string &name, Address value)
 }
 
 // FIXME: Is num meant to be the dwarf register num here?  If so, we should rename this function
-void Thread::set_reg(int num, Address value)
+void Thread::set_reg(int _num, Address value)
 {
-	regs->set_register(num, value);
+	regs->set_register(_num, value);
 }
 
 
@@ -78,9 +78,9 @@ double Thread::get_fpreg(const std::string &name)
 	return fpregs->get_register_as_integer(name);
 }
 
-double Thread::get_fpreg(int num)
+double Thread::get_fpreg(int _num)
 {
-	return fpregs->get_register_as_integer(num);
+	return fpregs->get_register_as_integer(_num);
 }
 
 void Thread::set_fpreg(const std::string &name, double v)

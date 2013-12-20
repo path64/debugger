@@ -34,8 +34,8 @@ author: David Allison <dallison@pathscale.com>
 #include "dwf_cfa.h"
 #include <ios>
 
-CFAEntry::CFAEntry(DwInfo * dwarf)
- : instructions(), dwarf(dwarf)
+CFAEntry::CFAEntry(DwInfo *_dwarf)
+ : instructions(), dwarf(_dwarf)
 {
 }
 
@@ -58,8 +58,8 @@ CFAEntry::get_instructions()
    return instructions;
 }
 
-CIE::CIE(DwInfo * dwarf, Offset cieoffset)
- :  CFAEntry(dwarf), cieoffset(cieoffset),
+CIE::CIE(DwInfo *_dwarf, Offset _cieoffset)
+ :  CFAEntry(_dwarf), cieoffset(_cieoffset),
     code_align(0), data_align(0), retaddr(0),
     has_z_aug(false)
 {
@@ -215,8 +215,8 @@ CIE::print()
 }
 
 // Frame Description Entry
-FDE::FDE(DwInfo * dwarf)
-:  CFAEntry(dwarf), cie(NULL), start_address(0), end_address(0)
+FDE::FDE(DwInfo *_dwarf)
+:  CFAEntry(_dwarf), cie(NULL), start_address(0), end_address(0)
 {
 }
 
@@ -225,10 +225,10 @@ FDE::~FDE()
 }
 
 Address
-FDE::read_value(Section * section, CIE * cie,
+FDE::read_value(Section * section, CIE *_cie,
 		BStream & stream, int mask)
 {
-   int encoding = cie->get_fde_encoding() & mask;
+   int encoding = _cie->get_fde_encoding() & mask;
    Address baseaddr = 0;
    switch (encoding & 0x70) {
    case DW_EH_PE_absptr:
@@ -289,8 +289,8 @@ FDE::read(Section * section, BStream& stream,
 
    /* use z_aug to find instructions */
    if (cie->is_z_aug()) {
-      Address len = stream.read_uleb();
-      stream.seek(len, BSTREAM_CUR);
+      Address _len = stream.read_uleb();
+      stream.seek(_len, BSTREAM_CUR);
    }
 
    Offset codesize = length - stream.offset() + offset;

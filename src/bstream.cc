@@ -33,17 +33,17 @@ author: David Allison <dallison@pathscale.com>
 #include "err_nice.h"
 
 void
-BStream::seek(int offset, BStreamSeek whence)
+BStream::seek(int _offset, BStreamSeek whence)
 {
    switch (whence) {
    case BSTREAM_CUR:
-      pos += offset;
+      pos += _offset;
       break;
    case BSTREAM_SET:
-      pos = offset;
+      pos = _offset;
       break;
    case BSTREAM_END:
-      pos = vec.length() - offset;
+      pos = vec.length() - _offset;
       break;
    default:
       err_fatal("invalid stream whence");

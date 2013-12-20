@@ -102,8 +102,8 @@ void Disassembler::annotate_address (Process *proc, Address addr) {
    }
 }
 
-int OpteronDisassembler::disassemble (Process *proc, PStream &os, Address addr, unsigned char *insts, LocalMap &lcls) {
-    this->proc = proc ;
+int OpteronDisassembler::disassemble (Process *_proc, PStream &os, Address addr, unsigned char *insts, LocalMap &lcls) {
+    this->proc = _proc ;
     this->locals = &lcls ;
     instructions = insts ;
     instptr = insts ;
@@ -437,6 +437,20 @@ int64_t OpteronDisassembler::extract_value (const char *desc, int &len) {
         }
         len = 1 ;
         break ;
+    case 'd':
+    case 'z':
+        if (!has_flag66) {
+            for (int i = 0 ; i < 4 ; i++) {
+                immed |= ((int64_t)*instptr++) << (i*8) ;
+            }
+            if (immed & 0x80000000) {
+                immed <<= 32 ;
+                immed >>= 32 ;
+            }
+            len = 4 ;
+            break ;
+        }
+        /* FALLTHROUGH */
     case 'w':
         for (int i = 0 ; i < 2 ; i++) {
             immed |= ((int64_t)*instptr++) << (i*8) ;
@@ -447,32 +461,14 @@ int64_t OpteronDisassembler::extract_value (const char *desc, int &len) {
         }
         len = 2 ;
         break ;
-    case 'd':
-    case 'z': {
-        int len = has_flag66 ? 2 : 4;
-        for (int i = 0 ; i < len ; i++) {
-            immed |= ((int64_t)*instptr++) << (i*8) ;
-        }
-        if (immed & 0x80000000) {
-            immed <<= 32 ;
-            immed >>= 32 ;
-        }
-        len = 4 ;
-        break ;
-    }
     case 'v':
-        if (rex_w()) {
-            for (int i = 0 ; i < 8 ; i++) { 
+        if (!rex_w()) {
+            for (int i = 0 ; i < 4 ; i++) { 
                 immed |= ((int64_t)*instptr++) << (i*8) ;
             }
-            len = 8 ;
-        } else {
-            for (int i = 0 ; i < 4 ; i++) {
-                immed |= ((int64_t)*instptr++) << (i*8) ;
-            }
-            len = 4 ;
+            break ;
         }
-        break ;
+        /* FALLTHROUGH */
     case 'q':
         for (int i = 0 ; i < 8 ; i++) {
             immed |= ((int64_t)*instptr++) << (i*8) ;

@@ -32,6 +32,7 @@ author: David Allison <dallison@pathscale.com>
 #define dbg_types_h_included
 
 #include <iostream>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>

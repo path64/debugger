@@ -37,9 +37,9 @@ author: David Allison <dallison@pathscale.com>
 #include "utils.h"
 #include "target.h"
 
-ProgramSegment::ProgramSegment (ELF *elf, Address baseaddr)
-   : elf(elf), type(0), flags(0), offset(0), 
-     vaddr(0), paddr(0), filesz(0), memsz(0), align(0), baseaddr(baseaddr)
+ProgramSegment::ProgramSegment (ELF *_elf, Address _baseaddr)
+   : elf(_elf), type(0), flags(0), offset(0), 
+     vaddr(0), paddr(0), filesz(0), memsz(0), align(0), baseaddr(_baseaddr)
  {
 }
 
@@ -126,8 +126,8 @@ BVector ProgramSegment::get_contents(std::istream & stream) {
 }
 
 
-Section::Section (ELF *elf, int index)
-    : elf(elf), index(index),
+Section::Section (ELF *_elf, int _index)
+    : elf(_elf), index(_index),
     type(0),
     flags(0),
     addr(0),
@@ -219,12 +219,12 @@ BVector Section::get_contents(std::istream& stream) {
 
     /* XXX: why does this exist? same as ProgramSegment. */
 
-    byte* addr =  (byte*)malloc(size);
-    stream.read((char*)addr, size);
-    return BVector(addr, size);
+    byte* _addr =  (byte*)malloc(size);
+    stream.read((char*)_addr, size);
+    return BVector(_addr, size);
 }
 
-ELFSymbol::ELFSymbol (ELF *elf) : elf (elf)
+ELFSymbol::ELFSymbol (ELF *_elf) : elf (_elf)
  {
 }
 
@@ -290,9 +290,9 @@ void ELFSymbol::print() {
         }
 }
 
-ELF::ELF (std::string name, Offset mainoffset)
-    : name(name),
-    mainoffset(mainoffset),
+ELF::ELF (std::string _name, Offset _mainoffset)
+    : name(_name),
+    mainoffset(_mainoffset),
     fileclass(0),
     dataencoding(0),
     elfversion(0),
@@ -402,7 +402,7 @@ static bool
 check_section_header(std::istream *s, Section *sec, std::string name,
 		     int size, int tag)
 {
-	size_t	header_size;
+	ssize_t	header_size;
 
 	header_size = name.size() + 1;
 	header_size = ((header_size + 3) & ~3);
@@ -412,7 +412,7 @@ check_section_header(std::istream *s, Section *sec, std::string name,
 	if (header_size > sec->get_size())
 		return false;
 
-	if (sec->read_word4 (*s, 0) != name.size() + 1)
+	if (sec->read_word4 (*s, 0) != (int)name.size() + 1)
 		return false;
 
 	if (sec->read_word4 (*s, 4) != size)
@@ -543,20 +543,20 @@ std::istream *ELF::open(Address baseaddr) {
     return s ;
 }
 
-BVector ELF::get_section(std::istream & stream, std::string name) {
+BVector ELF::get_section(std::istream & stream, std::string _name) {
     for (unsigned int i = 0 ; i < sections.size(); i++) {
         Section *section = sections[i] ;
-        if (section->get_name() == name) {
+        if (section->get_name() == _name) {
             return section->get_contents(stream) ;
         }
     }
-    throw Exception("No such section: %s", name.c_str()) ;
+    throw Exception("No such section: %s", _name.c_str()) ;
 }
 
-Section *ELF::find_section(std::string name) {
+Section *ELF::find_section(std::string _name) {
     for (unsigned int i = 0 ; i < sections.size(); i++) {
         Section *section = sections[i] ;
-        if (section->get_name() == name) {
+        if (section->get_name() == _name) {
             return section ;
         }
     }
@@ -587,8 +587,8 @@ void ELF::read_symtab (std::istream &stream, Section *symtab, Address baseaddr, 
         symtabsize -= sym->get_size() ;
         // only insert into symbol table if the symbol is not hidden and it has a valid section index
         if (ELF32_ST_VISIBILITY (sym->get_other()) != STV_HIDDEN && sym->get_section_index() != 0) {
-            int type = ELF32_ST_TYPE(sym->get_info()) ;
-            if (type == STT_OBJECT || type == STT_FUNC || type == STT_NOTYPE) {
+            int _type = ELF32_ST_TYPE(sym->get_info()) ;
+            if (_type == STT_OBJECT || _type == STT_FUNC || _type == STT_NOTYPE) {
                 symmap.raw(sym->value, sym->value + sym->get_size() -1, sym);
 
                 std::ios::pos_type pos = stream.tellg();
@@ -632,18 +632,18 @@ void ELF::read_symbol_table(std::istream & stream, Address baseaddr) {
     }
 }
 
-Address ELF::find_symbol(std::string name, bool caseblind) {
+Address ELF::find_symbol(std::string _name, bool caseblind) {
     if (caseblind) {
         if (!caseblind_ok) {
             make_cb_symbol_table() ;
         }
-        ELFSymbolMap::iterator symi = cbsymbols.find (Utils::toUpper(name)) ;
+        ELFSymbolMap::iterator symi = cbsymbols.find (Utils::toUpper(_name)) ;
         if (symi == cbsymbols.end()) {
             return 0 ;
         }
         return symi->second->get_value() ;
     } else {
-        ELFSymbolMap::iterator symi = symbols.find (name) ;
+        ELFSymbolMap::iterator symi = symbols.find (_name) ;
         if (symi == symbols.end()) {
             return 0 ;
         }
@@ -651,18 +651,18 @@ Address ELF::find_symbol(std::string name, bool caseblind) {
     }
 }
 
-Section *ELF::find_symbol_section(std::string name, bool caseblind) {
+Section *ELF::find_symbol_section(std::string _name, bool caseblind) {
     if (caseblind) {
         if (!caseblind_ok) {
             make_cb_symbol_table() ;
         }
-        ELFSymbolMap::iterator symi = cbsymbols.find (Utils::toUpper(name)) ;
+        ELFSymbolMap::iterator symi = cbsymbols.find (Utils::toUpper(_name)) ;
         if (symi == cbsymbols.end()) {
             return NULL ;
         }
         return symi->second->get_section() ;
     } else {
-        ELFSymbolMap::iterator symi = symbols.find (name) ;
+        ELFSymbolMap::iterator symi = symbols.find (_name) ;
         if (symi == symbols.end()) {
             return NULL ;
         }
@@ -670,17 +670,17 @@ Section *ELF::find_symbol_section(std::string name, bool caseblind) {
     }
 }
 
-void ELF::find_symbol_at_address(Address addr, std::string &name, int &offset) {
+void ELF::find_symbol_at_address(Address addr, std::string &_name, int &offset) {
    ELFSymbol* sym;
 
    /* lookup of the address */
    if ( symmap.get(addr, &sym) ) {
-      name = "";
+      _name = "";
       offset = 0;
       return;
    }
 
-   name = sym->get_name();
+   _name = sym->get_name();
    offset = addr - sym->value;
 }
 
@@ -699,9 +699,9 @@ void ELF::list_symbols(PStream &os) {
     Map_Range<Address,ELFSymbol*>::iterator i;
     for (i=symmap.begin(); i!=symmap.end(); ++i) {
        ELFSymbol* sym = i->val;
-       std::string name = sym->get_name() ;
+       std::string _name = sym->get_name() ;
        Address value = sym->get_value() ;
-       os.print ("\t%-30s 0x%llx\n", name.c_str(), value) ;
+       os.print ("\t%-30s 0x%llx\n", _name.c_str(), value) ;
     }
 }
 
@@ -711,9 +711,9 @@ void ELF::list_functions(PStream &os) {
     for (i=symmap.begin(); i!=symmap.end(); ++i) {
        ELFSymbol* sym = i->val;
        if (ELF64_ST_TYPE(sym->get_info()) == STT_FUNC) {
-           std::string name = sym->get_name() ;
+           std::string _name = sym->get_name() ;
            Address value = sym->get_value() ;
-           os.print ("0x%016llx %s\n", value, name.c_str()) ;
+           os.print ("0x%016llx %s\n", value, _name.c_str()) ;
         }
     }
 }
@@ -723,9 +723,9 @@ void ELF::list_variables(PStream &os) {
     for (i=symmap.begin(); i!=symmap.end(); ++i) {
        ELFSymbol *sym = i->val;
        if (ELF64_ST_TYPE(sym->get_info()) == STT_OBJECT) {
-           std::string name = sym->get_name() ;
+           std::string _name = sym->get_name() ;
            Address value = sym->get_value() ;
-           os.print ("0x%016llx %s\n", value, name.c_str()) ;
+           os.print ("0x%016llx %s\n", value, _name.c_str()) ;
         }
     }
 }

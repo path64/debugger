@@ -57,7 +57,7 @@ author: David Allison <dallison@pathscale.com>
 
 class Format { 
 	public:
-    Format (int cnt, char code, char sz) : count (cnt),code(code), size(sz), fill(false) {}
+    Format (int cnt, char _code, char sz) : count (cnt),code(_code), size(sz), fill(false) {}
     Format () : count(1), code('n'), size('n'), fill(false) {}
     short count ;
     char code ;

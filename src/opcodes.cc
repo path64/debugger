@@ -292,7 +292,7 @@ Instruction one_byte[] = {
 { "std", NULL, NULL, NULL},
 { "~4", NULL, NULL, NULL}, 
 { "~5", NULL, NULL, NULL}, 
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
 
 
 Group groups[] = {
@@ -896,7 +896,7 @@ Instruction two_byte[] = {
 { "paddw", "Pq", "Qd", NULL},
 { "paddd", "Pq", "Qd", NULL},
 {"(bad)", NULL, NULL, NULL}, 
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
 
 
 Instruction two_byte_F3[] = {
@@ -1188,7 +1188,7 @@ Instruction two_byte_F3[] = {
 {"(bad)", NULL, NULL, NULL}, 
 {"(bad)", NULL, NULL, NULL}, 
 {"(bad)", NULL, NULL, NULL}, 
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
 
 
 Instruction two_byte_66[] = {
@@ -1482,7 +1482,7 @@ Instruction two_byte_66[] = {
 { "paddd", "Pdq", "Wdq", NULL},
 // row 32
 {"(bad)", NULL, NULL, NULL}, 
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
 
 
 Instruction two_byte_F2[] = {
@@ -1774,7 +1774,7 @@ Instruction two_byte_F2[] = {
 {"(bad)", NULL, NULL, NULL}, 
 {"(bad)", NULL, NULL, NULL}, 
 {"(bad)", NULL, NULL, NULL}, 
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
 
 
 Instruction x87_alt[] = {
@@ -1850,7 +1850,7 @@ Instruction x87_alt[] = {
 { "fild", "$z", NULL, NULL},
 { "fbstp", "$r", NULL, NULL},
 { "fistp", "$z", NULL, NULL},
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
 
 
 Instruction x87[] = {
@@ -2430,4 +2430,4 @@ Instruction x87[] = {
 {"(bad)", NULL, NULL, NULL}, 
 {"(bad)", NULL, NULL, NULL}, 
 {"(bad)", NULL, NULL, NULL}, 
-{NULL, NULL, NULL}} ;
+{NULL, NULL, NULL, NULL}} ;
